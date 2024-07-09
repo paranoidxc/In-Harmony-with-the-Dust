@@ -65,7 +65,7 @@ func pixelsToTexture(renderer *sdl.Renderer, pixels []byte, w, h int) *sdl.Textu
 	return tex
 }
 
-func APTToTextrure(node Node, w, h int, renderer *sdl.Renderer) *sdl.Texture {
+func aptToTextrure(redNode, greenNode, blueNode Node, w, h int, renderer *sdl.Renderer) *sdl.Texture {
 	// -1.0  and 1.0
 	scale := float32(255 / 2)
 	offset := float32(-1.0 * scale)
@@ -76,13 +76,15 @@ func APTToTextrure(node Node, w, h int, renderer *sdl.Renderer) *sdl.Texture {
 		for xi := 0; xi < w; xi++ {
 			x := float32(xi)/float32(w)*2 - 1
 
-			c := node.Eval(x, y)
+			r := redNode.Eval(x, y)
+			g := greenNode.Eval(x, y)
+			b := blueNode.Eval(x, y)
 
-			pixels[pixelIndex] = byte(c*scale - offset)
+			pixels[pixelIndex] = byte(r*scale - offset)
 			pixelIndex++
-			pixels[pixelIndex] = byte(c*scale - offset)
+			pixels[pixelIndex] = byte(g*scale - offset)
 			pixelIndex++
-			pixels[pixelIndex] = byte(c*scale - offset)
+			pixels[pixelIndex] = byte(b*scale - offset)
 			pixelIndex++
 			pixelIndex++
 		}
@@ -136,13 +138,21 @@ func main() {
 	y := &OpY{}
 
 	sine := &OpSin{}
+	noise := &OpNoise{}
+	atan2 := &OpMult{}
 	plus := &OpPlus{}
 
-	sine.Child = x
-	plus.LeftChild = sine
-	plus.RightChild = y
+	atan2.LeftChild = x
+	atan2.RightChild = noise
 
-	tex := APTToTextrure(plus, 800, 600, renderer)
+	noise.LeftChild = x
+	noise.RightChild = y
+
+	sine.Child = atan2
+	plus.LeftChild = y
+	plus.RightChild = sine
+
+	tex := aptToTextrure(plus, plus, plus, 800, 600, renderer)
 
 	for {
 		frameStart := time.Now()
