@@ -198,6 +198,6 @@ func main() {
 			sdl.Delay(5 - uint32(elapsedTime))
 			elapsedTime = float32(time.Since(frameStart).Seconds())
 		}
-		sdl.Delay(16)
+		//sdl.Delay(16)
 	}
 }
