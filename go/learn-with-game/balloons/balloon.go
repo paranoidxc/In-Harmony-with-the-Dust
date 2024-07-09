@@ -138,6 +138,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
 	defer sdl.Quit()
 
 	window, err := sdl.CreateWindow("Testing SDL2", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
