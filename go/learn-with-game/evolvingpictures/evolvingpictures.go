@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/veandco/go-sdl2/sdl"
+	"golang.org/x/exp/rand"
 
 	. "learn-with-game/evolvingpictures/apt"
 	"time"
@@ -134,25 +135,77 @@ func main() {
 	//currentMouseState := getMouseState()
 	//prevMouseState := currentMouseState
 
-	x := &OpX{}
-	y := &OpY{}
+	/*
+		x := &OpX{}
+		y := &OpY{}
+		sine := &OpSin{}
+		noise := &OpNoise{}
+		atan2 := &OpMult{}
+		plus := &OpPlus{}
+		atan2.LeftChild = x
+		atan2.RightChild = noise
+		noise.LeftChild = x
+		noise.RightChild = y
+		sine.Child = atan2
+		plus.LeftChild = y
+		plus.RightChild = sine
+		fmt.Println(plus)
+	*/
 
-	sine := &OpSin{}
-	noise := &OpNoise{}
-	atan2 := &OpMult{}
-	plus := &OpPlus{}
+	rand.Seed(uint64(time.Now().UTC().UnixNano()))
+	aptR := GetRandomNode()
+	//fmt.Println(aptR)
+	num := rand.Intn(20)
+	for i := 0; i < num; i++ {
+		aptR.AddRandom(GetRandomNode())
+		//fmt.Println(aptR)
+	}
+	//fmt.Println(aptR)
+	for {
+		_, nilCount := aptR.NodeCounts()
+		if nilCount == 0 {
+			break
+		}
+		aptR.AddRandom(GetRandomLeaf())
+	}
+	//fmt.Println(aptR)
 
-	atan2.LeftChild = x
-	atan2.RightChild = noise
+	aptG := GetRandomNode()
+	aptB := GetRandomNode()
 
-	noise.LeftChild = x
-	noise.RightChild = y
+	num = rand.Intn(20)
+	for i := 0; i < num; i++ {
+		aptG.AddRandom(GetRandomNode())
+	}
 
-	sine.Child = atan2
-	plus.LeftChild = y
-	plus.RightChild = sine
+	num = rand.Intn(20)
+	for i := 0; i < num; i++ {
+		aptB.AddRandom(GetRandomNode())
+	}
 
-	tex := aptToTextrure(plus, plus, plus, 800, 600, renderer)
+	for {
+		_, nilCount := aptG.NodeCounts()
+		if nilCount == 0 {
+			break
+		}
+		aptG.AddRandom(GetRandomLeaf())
+	}
+
+	for {
+		_, nilCount := aptB.NodeCounts()
+		if nilCount == 0 {
+			break
+		}
+		aptB.AddRandom(GetRandomLeaf())
+	}
+
+	//tex := aptToTextrure(aptR, aptG, aptB, 800, 600, renderer)
+
+	fmt.Println("R:", aptR)
+	fmt.Println("G:", aptG)
+	fmt.Println("B:", aptB)
+
+	tex := aptToTextrure(aptR, aptG, aptB, 800, 600, renderer)
 
 	for {
 		frameStart := time.Now()

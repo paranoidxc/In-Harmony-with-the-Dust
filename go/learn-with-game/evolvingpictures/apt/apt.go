@@ -1,25 +1,30 @@
 package apt
 
 import (
+	"fmt"
 	"learn-with-game/noise"
 	"math"
 	"math/rand"
 	"strconv"
-
-	"golang.org/x/exp/rand"
 )
 
 type Node interface {
 	Eval(x, y float32) float32
 	String() string
 	AddRandom(node Node)
+	NodeCounts() (nodeCount, nilCount int)
 }
 
 type LeafNode struct {
 }
 
 func (leaf *LeafNode) AddRandom(node Node) {
-	panic("ERROR: You tried to add a node  to a leaf node")
+	//panic("ERROR: You tried to add a node  to a leaf node")
+	fmt.Println("ERROR: You tried to add a node  to a leaf node")
+}
+
+func (leaf *LeafNode) NodeCounts() (nodeCount, nilCount int) {
+	return 1, 0
 }
 
 type SingleNode struct {
@@ -31,6 +36,15 @@ func (single *SingleNode) AddRandom(node Node) {
 		single.Child = node
 	} else {
 		single.Child.AddRandom(node)
+	}
+}
+
+func (single *SingleNode) NodeCounts() (nodeCount, nilCount int) {
+	if single.Child == nil {
+		return 1, 1
+	} else {
+		childNodeCount, childNilCount := single.Child.NodeCounts()
+		return 1 + childNodeCount, childNilCount
 	}
 }
 
@@ -56,6 +70,25 @@ func (double *DoubleNode) AddRandom(node Node) {
 	}
 }
 
+func (double *DoubleNode) NodeCounts() (nodeCount, nilCount int) {
+	var leftCount, leftNilCount, rightCount, rightNilCount int
+
+	if double.LeftChild == nil {
+		leftNilCount = 1
+		leftCount = 0
+	} else {
+		leftCount, leftNilCount = double.LeftChild.NodeCounts()
+	}
+
+	if double.RightChild == nil {
+		rightNilCount = 1
+		rightCount = 0
+	} else {
+		rightCount, rightNilCount = double.RightChild.NodeCounts()
+	}
+	return 1 + leftCount + rightCount, leftNilCount + rightNilCount
+}
+
 type OpSin struct {
 	SingleNode
 }
@@ -65,6 +98,10 @@ func (op *OpSin) Eval(x, y float32) float32 {
 }
 
 func (op *OpSin) String() string {
+	if op.Child == nil {
+		return ""
+	}
+
 	return "( Sin " + op.Child.String() + " )"
 }
 
@@ -77,7 +114,10 @@ func (op *OpCos) Eval(x, y float32) float32 {
 }
 
 func (op *OpCos) String() string {
-	return "( Cos " + op.Child.String() + " )"
+	if op.Child != nil {
+		return "( Cos " + op.Child.String() + " )"
+	}
+	return ""
 }
 
 type OpAtan struct {
@@ -89,7 +129,10 @@ func (op *OpAtan) Eval(x, y float32) float32 {
 }
 
 func (op *OpAtan) String() string {
-	return "( Atan " + op.Child.String() + " )"
+	if op.Child != nil {
+		return "( Atan " + op.Child.String() + " )"
+	}
+	return ""
 }
 
 type OpNoise struct {
@@ -101,6 +144,9 @@ func (op *OpNoise) Eval(x, y float32) float32 {
 }
 
 func (op *OpNoise) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
 	return "( SimplexNoise " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -113,6 +159,10 @@ func (op *OpPlus) Eval(x, y float32) float32 {
 }
 
 func (op *OpPlus) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
+
 	return "( + " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -125,6 +175,10 @@ func (op *OpMinus) Eval(x, y float32) float32 {
 }
 
 func (op *OpMinus) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
+
 	return "( - " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -137,6 +191,10 @@ func (op *OpMult) Eval(x, y float32) float32 {
 }
 
 func (op *OpMult) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
+
 	return "( * " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -149,6 +207,10 @@ func (op *OpDiv) Eval(x, y float32) float32 {
 }
 
 func (op *OpDiv) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
+
 	return "( / " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -161,6 +223,10 @@ func (op *OpAtan2) Eval(x, y float32) float32 {
 }
 
 func (op *OpAtan2) String() string {
+	if op.LeftChild == nil || op.RightChild == nil {
+		return ""
+	}
+
 	return "( Atan2 " + op.LeftChild.String() + " " + op.RightChild.String() + " )"
 }
 
@@ -203,6 +269,7 @@ func (op *OpConstant) String() string {
 
 func GetRandomNode() Node {
 	r := rand.Intn(9)
+	fmt.Println("GetRandomNode rand int:", r)
 	switch r {
 	case 0:
 		return &OpPlus{}
@@ -224,10 +291,10 @@ func GetRandomNode() Node {
 		return &OpNoise{}
 	}
 
-	panic("Get Random Noise Failed")
+	panic("ERROR: Get Random Noise Failed")
 }
 
-func getRandomLeaf() Node {
+func GetRandomLeaf() Node {
 	r := rand.Intn(3)
 	switch r {
 	case 0:
@@ -237,6 +304,5 @@ func getRandomLeaf() Node {
 	case 2:
 		return &OpConstant{LeafNode{}, rand.Float32()*2 - 1}
 	}
-
-	panic("Error in  Get RandomLeaf Failed")
+	panic("ERROR: Get Random Noise Failed")
 }
