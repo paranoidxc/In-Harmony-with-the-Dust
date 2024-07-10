@@ -2,7 +2,13 @@
 
 
 
-## learn-with-game
+# go/zero-zone
+
+- api server on gozero
+- front on vue3
+- Combine auto generate curd(include api and front vue template)
+
+## go/learn-with-game
 
 golang 练习的游戏
 
