@@ -35,7 +35,7 @@ func NewSysRoleModel(conn sqlx.SqlConn, c cache.CacheConf) SysRoleModel {
 }
 
 func (m *customSysRoleModel) FindAll(ctx context.Context) ([]*SysRole, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s  WHERE id!=%d ORDER BY order_num DESC", sysRoleRows, m.table, globalkey.SysSuperRoleId)
+	query := fmt.Sprintf("SELECT %s FROM %s  WHERE id!=%d ORDER BY order_num DESC, id DESC", sysRoleRows, m.table, globalkey.SysSuperRoleId)
 	var resp []*SysRole
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query)
 	switch err {

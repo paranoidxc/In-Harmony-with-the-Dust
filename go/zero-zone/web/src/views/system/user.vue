@@ -338,7 +338,7 @@ const onSearchSubmit = async () => {
   });
 };
 
-const getTableDataList = async (cur = 1, limit = 2) => {
+const getTableDataList = async (cur = 1, limit = 10) => {
   let result = await tableDataApi.listPage({
     deptId: 0,
     page: cur,
@@ -377,16 +377,36 @@ const handleCurrentChange = (val) => {
 };
 
 // 删除一条
+const RowDel = async (id) => {
+  await tableDataApi.delete({ id: id });
+};
+
 const handleRowDel = async ({ id }) => {
   await tableDataApi.delete({ id: id });
+  ElMessage({
+    message: "删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
-const handleDelList = () => {
+const handleDelList = async () => {
+  let promises = [];
   multipleSelection.forEach((id) => {
-    handleRowDel({ id });
+    promises.push(RowDel(id));
   });
   multipleSelection = [];
+  Promise.all(promises).then((result) => {
+    ElMessage({
+      message: "批量删除成功",
+      type: "success",
+      plain: true,
+    });
+    getTableDataList();
+  });
+
+  nextTick(() => {});
 };
 
 // 选中
@@ -401,7 +421,7 @@ const handleResetPwd = async (row) => {
   let result = await tableDataApi.resetPassword(row.id);
   if (result.code == 200) {
     ElMessage({
-      message: "操作成功",
+      message: "重置密码成功",
       type: "success",
       plain: true,
     });
@@ -485,6 +505,11 @@ const dialogConfirm = async () => {
       if (dialogType === "add") {
         tableDataApi.add(tableForm).then((res) => {
           if (res.code == 200) {
+            ElMessage({
+              message: "创建成功",
+              type: "success",
+              plain: true,
+            });
             dialogFormVisible = false;
             getTableDataList(curPage, limit);
           }
@@ -492,6 +517,11 @@ const dialogConfirm = async () => {
       } else {
         tableDataApi.update(tableForm).then((res) => {
           if (res.code == 200) {
+            ElMessage({
+              message: "更新成功",
+              type: "success",
+              plain: true,
+            });
             dialogFormVisible = false;
             getTableDataList(curPage, limit);
           }

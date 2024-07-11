@@ -69,10 +69,10 @@ func (m *customSysUserModel) FindPage(ctx context.Context, page int64, limit int
 		"IFNULL(GROUP_CONCAT(r.name),'NULL') as roles,"+
 		"IFNULL(GROUP_CONCAT(r.id),0) as role_ids,u.email,u.mobile,u.remark,u.order_num,u.status,u.create_time,u.update_time "+
 		"FROM (SELECT * FROM sys_user WHERE id!=%d AND dept_id IN(%s) AND deleted_at IS NULL "+
-		"ORDER BY order_num DESC LIMIT %d,%d) u LEFT JOIN sys_profession p ON u.profession_id=p.id "+
+		"ORDER BY id DESC LIMIT %d,%d) u LEFT JOIN sys_profession p ON u.profession_id=p.id "+
 		"LEFT JOIN sys_dept d ON u.dept_id=d.id LEFT JOIN sys_job j ON u.job_id=j.id "+
 		"LEFT JOIN sys_role r ON JSON_CONTAINS(u.role_ids,JSON_ARRAY(r.id)) "+
-		"GROUP BY u.id", globalkey.SysSuperUserId, deptIds, offset, limit)
+		"GROUP BY u.id ORDER BY u.id DESC", globalkey.SysSuperUserId, deptIds, offset, limit)
 	var resp []*SysUserDetail
 	err := m.QueryRowsNoCacheCtx(ctx, &resp, query)
 	switch err {

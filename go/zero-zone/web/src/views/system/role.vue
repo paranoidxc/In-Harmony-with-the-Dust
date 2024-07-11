@@ -178,6 +178,8 @@ const { proxy } = getCurrentInstance();
 
 import tableDataApi from "@/api/system/sys_role.js";
 import tableMenuDataApi from "@/api/system/sys_menu.js";
+import { ElMessage } from "element-plus";
+import sysTableApi from "@/api/feat/hx_order.js";
 
 const defaultProps = {
   children: "children",
@@ -230,7 +232,12 @@ const RowDel = async (id) => {
 };
 
 const handleRowDel = async ({ id }) => {
-  RowDel(id);
+  await tableDataApi.delete(id);
+  ElMessage({
+    message: "删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList();
 };
 
@@ -241,6 +248,11 @@ const handleDelList = async () => {
   });
   multipleSelection = [];
   Promise.all(promises).then((result) => {
+    ElMessage({
+      message: "批量删除成功",
+      type: "success",
+      plain: true,
+    });
     getTableDataList();
   });
 
@@ -321,6 +333,11 @@ const dialogConfirm = async () => {
       if (valid) {
         tableDataApi.add(tableForm).then((res) => {
           if (res.code === 200) {
+            ElMessage({
+              message: "创建成功",
+              type: "success",
+              plain: true,
+            });
             dialogFormVisible = false;
             getTableDataList();
           }
@@ -333,6 +350,11 @@ const dialogConfirm = async () => {
       if (valid) {
         tableDataApi.update(tableForm).then((res) => {
           if (res.code === 200) {
+            ElMessage({
+              message: "更新成功",
+              type: "success",
+              plain: true,
+            });
             dialogFormVisible = false;
             getTableDataList();
           }
