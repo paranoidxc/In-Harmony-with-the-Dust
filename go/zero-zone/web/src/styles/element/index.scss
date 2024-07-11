@@ -1,0 +1,30 @@
+$--colors: (
+        "primary": (
+                "base": #7e3794,
+        ),
+        "success": (
+                "base": #529b2e,
+        ),
+        "warning": (
+                "base": #b88230,
+        ),
+        "danger": (
+                "base": #c45656,
+        ),
+        "error": (
+                "base": #c45656,
+        ),
+        "info": (
+                "base": #337ecc,
+        ),
+);
+
+@forward "element-plus/theme-chalk/src/common/var.scss" with (
+  // do not use same name, it will override.
+  $colors: $--colors,
+  //$button-padding-horizontal: ("default": 50px)
+);
+
+@use "element-plus/theme-chalk/src/index.scss" as *;
+
+

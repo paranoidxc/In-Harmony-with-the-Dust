@@ -1,0 +1,114 @@
+type DemoCurd {
+	Id        int64  `json:"firmId"`
+	FirmName  string `json:"firmName"`
+	FirmAlias string `json:"firmAlias"`
+	FirmCode  string `json:"firmCode"`
+	FirmDesc  string `json:"firmDesc"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+}
+
+type DemoCurdCreateReq {
+	FirmName  string `json:"firmName" validate:"required" label:"电影名称"`
+	FirmAlias string `json:"firmAlias"`
+	FirmCode  string `json:"firmCode" validate:"number,gte=1" label:"电影编码"`
+	FirmDesc  string `json:"firmDesc"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+}
+
+type DemoCurdDeleteReq {
+	Id int64 `json:"firmId"`
+}
+
+type DemoCurdDeletesReq {
+	Id []int64 `json:"firmId"`
+}
+
+type DemoCurdUpdateReq {
+	Id        int64  `json:"firmId"`
+	FirmName  string `json:"firmName"`
+	FirmAlias string `json:"firmAlias"`
+	FirmCode  string `json:"firmCode"`
+	FirmDesc  string `json:"firmDesc"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+}
+
+type DemoCurdDetailReq {
+	Id int64 `form:"firmId"`
+}
+
+type DemoCurdDetailResp {
+	Id        int64  `json:"firmId"`
+	FirmName  string `json:"firmName"`
+	FirmAlias string `json:"firmAlias"`
+	FirmCode  string `json:"firmCode"`
+	FirmDesc  string `json:"firmDesc"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+}
+
+type DemoCurdListReq {
+	FirmName  string `form:"firmName,optional"`
+	FirmAlias string `form:"firmAlias,optional"`
+	FirmCode  string `form:"firmCode,optional"`
+	FirmDesc  string `form:"firmDesc,optional"`
+	CreatedAt string `form:"createdAt,optional"`
+	UpdatedAt string `form:"updatedAt,optional"`
+	DeletedAt string `form:"deletedAt,optional"`
+}
+
+type DemoCurdListResp {
+	List  []DemoCurd `json:"list"`
+	Total int64      `json:"total"`
+}
+
+type DemoCurdPageReq {
+	PageReq
+	FirmName  string `form:"firmName,optional"`
+	FirmAlias string `form:"firmAlias,optional"`
+	FirmCode  string `form:"firmCode,optional"`
+	FirmDesc  string `form:"firmDesc,optional"`
+	CreatedAt string `form:"createdAt,optional"`
+	UpdatedAt string `form:"updatedAt,optional"`
+	DeletedAt string `form:"deletedAt,optional"`
+}
+
+type DemoCurdPageResp {
+	List       []DemoCurd `json:"list"`
+	Pagination Pagination `json:"pagination"`
+}
+
+@server (
+	group:  feat/demo_curd
+	prefix: /admin/feat/demoCurd
+	jwt:    JwtAuth
+)
+service core-api {
+	@handler DemoCurdList
+	get /list (DemoCurdListReq) returns (DemoCurdListResp)
+
+	@handler DemoCurdPage
+	get /page (DemoCurdPageReq) returns (DemoCurdPageResp)
+
+	@handler DemoCurdCreate
+	post /create (DemoCurdCreateReq)
+
+	@handler DemoCurdDelete
+	post /delete (DemoCurdDeleteReq)
+
+	@handler DemoCurdDeletes
+	post /deletes (DemoCurdDeletesReq)
+
+	@handler DemoCurdUpdate
+	post /update (DemoCurdUpdateReq)
+
+	@handler DemoCurdDetail
+	get /detail (DemoCurdDetailReq) returns (DemoCurdDetailResp)
+}
+

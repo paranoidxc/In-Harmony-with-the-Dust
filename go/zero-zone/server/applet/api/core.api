@@ -1,0 +1,19 @@
+syntax = "v1"
+
+info (
+	title:   "zero-zone"
+	desc:    "zero-zone"
+	author:  "Paranoid.xc"
+	email:   "paranoid.xc@gmail.com"
+	version: "v1.0.0"
+)
+
+import (
+	// 全局共用结构体
+	"desc/common.api"
+)
+
+import "desc/demo_curd.api"
+import "desc/test_gorm.api"
+import "desc/redis.api"
+import "desc/dashboard.api"

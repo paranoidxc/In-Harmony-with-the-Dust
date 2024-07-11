@@ -1,0 +1,81 @@
+type TestGorm {
+	ID        int64  `json:"id"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	DeletedAt string `json:"deleted_at"`
+	Text      string `json:"text"`
+}
+
+type TestGormCreateReq {
+	Text string `json:"text"`
+}
+
+type TestGormDeleteReq {
+	ID int64 `json:"id"`
+}
+
+type TestGormDeletesReq {
+	ID []int64 `json:"id"`
+}
+
+type TestGormUpdateReq {
+	ID   int64  `json:"id"`
+	Text string `json:"text"`
+}
+
+type TestGormDetailReq {
+	ID int64 `form:"id"`
+}
+
+type TestGormDetailResp {
+	ID   int64  `json:"id"`
+	Text string `json:"text"`
+}
+
+type TestGormListReq {
+	Text string `form:"text,optional"`
+}
+
+type TestGormListResp {
+	List  []TestGorm `json:"list"`
+	Total int64      `json:"total"`
+}
+
+type TestGormPageReq {
+	PageReq
+	Text string `form:"text,optional"`
+}
+
+type TestGormPageResp {
+	List       []TestGorm `json:"list"`
+	Pagination Pagination `json:"pagination"`
+}
+
+@server (
+	group:  feat/test_gorm
+	prefix: /admin/feat/testGorm
+	jwt:    JwtAuth
+)
+service core-api {
+	@handler TestGormList
+	get /list (TestGormListReq) returns (TestGormListResp)
+
+	@handler TestGormPage
+	get /page (TestGormPageReq) returns (TestGormPageResp)
+
+	@handler TestGormCreate
+	post /create (TestGormCreateReq)
+
+	@handler TestGormDelete
+	post /delete (TestGormDeleteReq)
+
+	@handler TestGormDeletes
+	post /deletes (TestGormDeletesReq)
+
+	@handler TestGormUpdate
+	post /update (TestGormUpdateReq)
+
+	@handler TestGormDetail
+	get /detail (TestGormDetailReq) returns (TestGormDetailResp)
+}
+

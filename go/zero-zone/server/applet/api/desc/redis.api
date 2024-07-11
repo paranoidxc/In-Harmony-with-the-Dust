@@ -1,0 +1,32 @@
+type RedisKey {
+	Key string `json:"key"`
+}
+
+type RedisKeyListResp {
+	List []RedisKey `json:"list"`
+}
+
+type RedisKeyDeleteReq {
+	Key string `json:"key,optional"  validate:"required" label:"缓存Key"`
+}
+
+type RedisKeyDeletesReq {
+	Key []string `json:"key,optional"  validate:"required" label:"缓存Key"`
+}
+
+@server (
+	group:  feat/redis
+	prefix: /admin/feat/redis
+	jwt:    JwtAuth
+)
+service core-api {
+	@handler RedisKeyList
+	get /list returns (RedisKeyListResp)
+
+	@handler RedisKeyDelete
+	post /delete (RedisKeyDeleteReq)
+
+	@handler RedisKeyDeletes
+	post /deletes (RedisKeyDeletesReq)
+}
+

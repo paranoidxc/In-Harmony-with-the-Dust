@@ -1,0 +1,31 @@
+syntax = "v1"
+
+info (
+	title:  "自动化CURD"
+	desc:   "自动化CURD"
+	author: "Paranoid.xc"
+	email:  "paranoid.xc@gmail.com"
+)
+
+type (
+	AutoCurd {
+		Id    int64  `json:"id"`
+		Uuid  string `json:"uuid"`
+		Title string `json:"title"`
+	}
+)
+
+@server (
+	group:  sys/autocurd
+	prefix: /admin/sys/autocurd
+	jwt:    JwtAuth
+//middleware: PermMenuAuth
+)
+service core-api {
+	@doc (
+		summary: "新增"
+	)
+	@handler CreateAutoCurd
+	post /create
+}
+

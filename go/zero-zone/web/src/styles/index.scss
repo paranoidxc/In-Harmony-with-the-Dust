@@ -1,0 +1,108 @@
+@import './element/index.scss';
+@import './custom.scss';
+@import './color.scss';
+@import './flex.scss';
+@import './margin-padding.scss';
+@import './other.scss';
+
+* {
+  // 清除默认的外边距和内边距
+  margin: 0;
+  padding: 0;
+  // 盒子模型：外边距（margin）+ border（边框） + 内边距（padding）+ content（内容）
+  box-sizing: border-box; // 设置之后padding和border的值就不会影响盒子大小(元素的宽高)，相当于把padding和border的值都算在content里
+}
+
+#app,
+html,
+body {
+  height: 100%; // 页面满屏
+  // overflow: hidden;
+}
+
+.dsN {
+  display: none !important;
+}
+
+.el-table th.el-table__cell .cell {
+  color: #3B4554;
+}
+
+.el-table th.el-table__cell.is-leaf,
+.el-table th.el-table__cell {
+  background: #f7fbff;
+}
+
+//.el-table td.el-table__cell .cell {
+.el-table .cell {
+  color: var(--el-text-color-primary);
+}
+
+
+.el-menu {
+  background: #f0f2f5 !important;
+  background: #212121 !important;
+  color: #fff !important;
+  box-shadow: #0d0d0da6 0 1px 1px;
+}
+
+.el-sub-menu {
+  background: #f0f2f5 !important;
+  background: #212121 !important;
+  color: #fff !important;
+}
+
+/*
+.el-sub-menu__title:hover {
+  color: red !important;
+  background-color: #409eff !important;
+}
+*/
+
+/*选中*/
+.el-menu-item-my.is-active,
+.el-menu-item.is-active {
+  background: var(--el-color-primary) !important;
+  font-weight: bold !important;
+}
+
+.el-menu-item.is-active {
+  background: var(--el-color-primary-light-9);
+  font-weight: bold;
+}
+
+
+.el-sub-menu__title {
+  background: #212121 !important;
+  color: #fff !important;
+}
+
+
+.el-menu-item,
+.el-menu-item-my,
+.el-menu-item div,
+.el-menu-item-my div {
+  background: #212121 !important;
+  color: #fff !important;
+}
+
+.el-menu-item__title:hover,
+.el-menu-item-my:hover,
+.el-menu-item:hover {
+  background: #333333 !important;
+}
+
+#nprogress .bar {
+  background: #7e3794 !important;
+}
+
+#nprogress .spinner-icon {
+  border-top-color: #7e3794 !important;
+  border-left-color: #7e3794 !important;
+}
+
+.el-input__suffix {
+  position: absolute;
+  right: 6px;
+  top: 0px;
+}

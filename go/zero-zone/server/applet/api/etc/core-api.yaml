@@ -1,0 +1,53 @@
+Name: core-api
+Host: 0.0.0.0
+Port: 8008
+Mode: dev
+Salt: K8i8mTfc5sTXO7OG
+
+# 开启监控检查
+# 请求地址 http://localhost:6060/healthz
+# 指标信息 http://localhost:6060/metrics  需要搭配 prometheus
+DevServer:
+  Enabled: true
+
+# 链路追踪配置
+#Telemetry:
+#  Name: verification.system.admin.api
+#  Endpoint: http://192.168.3.110:14268/api/traces
+#  Sampler: 1.0
+#  Batcher: jaeger
+
+Log:
+  ServiceName: admin-api #服务名称
+  Mode: file  #日志模式,console-输出到console,file-输出到当前服务器(容器)文件,volume-输出docker挂在文件内
+  Encoding: plain  #日志展示方式，开发选择plain，生产json default=json,options=[json,plain]
+  TimeFormat: 2006-01-02T15:04:05.000Z07     #时间格式
+  Path: logs   #日志存储路径，默认logs
+  Level: info     #日志写入级别 info|error|severe
+  Compress: false  #是否开启gzip压缩
+  KeepDays: 15     #日志保留天数
+  StackCooldownMillis: 100 #日志write间隔，默认100  #多少毫秒后再次写入堆栈跟踪。用来避免堆栈跟踪日志过多
+  MaxBackups: 0 #default=0
+  MaxSize: 0 #default=0
+  Rotation: daily #`json:",default=daily,options=[daily,size]"`
+  Stat: true   #是否开启stat服务，1.4.4版本新增参数`json:",default=true"`
+
+JwtAuth:
+  AccessSecret: kRZ3kA7LuB4LqOWi
+  AccessExpire: 86400000000
+
+Mysql:
+  DataSource: root:fucking@tcp(127.0.0.1:13307)/zero_zone?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+
+Cache:
+  - Host: 127.0.0.1:6379
+    Pass: ""
+    Type: node
+
+Redis:
+  Host: 127.0.0.1:6379
+  Pass: ""
+  Type: node
+
+# 部分请求限流配置, 单位秒, 防重，验证准备，核销，撤销请求
+LimitRequestSecondByVerifyOpenApi: 5

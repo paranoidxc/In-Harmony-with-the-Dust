@@ -1,0 +1,20 @@
+type DashboardIndexReq {
+	DateRangeStart string `form:"dateRangeStart,optional"`
+	DateRangeEnd   string `form:"dateRangeEnd,optional"`
+}
+
+type DashboardIndexResp {
+	HxOrderCnt  int64 `json:"hxOrderCnt"`
+	UhxOrderCnt int64 `json:"uhxOrderCnt"`
+}
+
+@server (
+	group:  feat/dashboard
+	prefix: /admin/feat/dashboard
+	jwt:    JwtAuth
+)
+service core-api {
+	@handler DashboardIndex
+	get /index (DashboardIndexReq) returns (DashboardIndexResp)
+}
+

@@ -1,0 +1,117 @@
+syntax = "v1"
+
+info (
+	title:  "定时任务"
+	desc:   "定时任务"
+	author: "Paranoid.xc"
+	email:  "paranoid.xc@gmail.com"
+)
+
+type (
+	Cronjob {
+		Id       int64  `json:"id"`
+		Uuid     string `json:"uuid"`
+		Title    string `json:"title"`
+		Ident    string `json:"ident"`
+		Crontab  string `json:"crontab"`
+		Status   int64  `json:"status"`
+		OrderNum int64  `json:"orderNum"`
+		Remark   string `json:"remark"`
+	}
+	CronjobPageReq {
+		Title string `from:"title,option"`
+		PageReq
+	}
+	CronjobPageResp {
+		List       []Cronjob  `json:"list"`
+		Pagination Pagination `json:"pagination"`
+	}
+	CronjobListReq {
+		Title string `from:"title,option"`
+	}
+	CronjobListResp {
+		List []Cronjob `json:"list"`
+	}
+)
+
+type (
+	AddCronjobReq {
+		Title    string `json:"title,option"      validate:"min=4,max=50"            label:"任务名称"`
+		Uuid     string `json:"uuid,option"       validate:"min=4,max=50"            label:"UUID"`
+		Ident    string `json:"ident"      validate:"min=2,max=50"            label:"任务标识"`
+		Crontab  string `json:"crontab"    label:"定时参数"`
+		Status   int64  `json:"status"     validate:"number,gte=0,lte=1"      label:"状态"`
+		OrderNum int64  `json:"orderNum,option"   validate:"number,gte=0,lte=9999"   label:"排序"`
+		Remark   string `json:"remark,option"     validate:"max=200"                 label:"备注"`
+	}
+)
+
+type (
+	UpdateCronjobReq {
+		Id       int64  `json:"id"  label:"任务名称ID"`
+		Title    string `json:"title,option"  validate:"min=4,max=50"            label:"任务名称"`
+		Uuid     string `json:"uuid,option"  validate:"min=4,max=50"             label:"UUID"`
+		Ident    string `json:"ident"  validate:"min=2,max=50"               label:"任务标识"`
+		Crontab  string `json:"crontab"                                             label:"定时参数"`
+		Status   int64  `json:"status" validate:"number,gte=0,lte=1"         label:"状态"`
+		OrderNum int64  `json:"orderNum,option" validate:"number,gte=0,lte=9999"   label:"排序"`
+		Remark   string `json:"remark,option" validate:"max=200"                 label:"备注"`
+	}
+)
+
+type (
+	ViewCronjobReq {
+		Id int64 `json:"id"  validate:"number,gte=1" label:"定时任务id"`
+	}
+	ViewCronjobResp {
+		Cronjob
+	}
+	DeleteCronjobReq {
+		Id int64 `json:"id"  validate:"number,gte=1" label:"定时任务id"`
+	}
+)
+
+@server (
+	group:  sys/cronjob
+	prefix: /admin/sys/cronjob
+	jwt:    JwtAuth
+//middleware: PermMenuAuth
+)
+service core-api {
+	@doc (
+		summary: "分页"
+	)
+	@handler GetCronjobPage
+	get /page (CronjobPageReq) returns (CronjobPageResp)
+
+	@doc (
+		summary: "全部不分页"
+	)
+	@handler GetCronjobList
+	get /list (CronjobListReq) returns (CronjobListResp)
+
+	@doc (
+		summary: "新增"
+	)
+	@handler AddCronjob
+	post /add (AddCronjobReq)
+
+	@doc (
+		summary: "查看"
+	)
+	@handler ViewCronjob
+	post /view (ViewCronjobReq) returns (ViewCronjobResp)
+
+	@doc (
+		summary: "更新"
+	)
+	@handler UpdateCronjob
+	post /update (UpdateCronjobReq)
+
+	@doc (
+		summary: "删除"
+	)
+	@handler DeleteCronjob
+	post /delete (DeleteCronjobReq)
+}
+

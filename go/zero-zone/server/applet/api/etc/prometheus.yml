@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s # 默认情况下每15秒抓取一次数据
+  evaluation_interval: 15s # 默认规则每15秒评估一次
+
+scrape_configs:
+  - job_name: 'verification_system'
+    static_configs:
+      - targets: ['host.docker.internal:6060']
