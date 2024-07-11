@@ -4,6 +4,7 @@ import (
 	"learn-with-game/noise"
 	"math"
 	"math/rand"
+	"reflect"
 	"strconv"
 )
 
@@ -13,6 +14,7 @@ type Node interface {
 	SetParent(parent Node)
 	GetParent() Node
 	GetChildren() []Node
+	SetChildren([]Node)
 	AddRandom(node Node)
 	AddLeaf(leaf Node) bool
 	NodeCount() int
@@ -21,6 +23,34 @@ type Node interface {
 type BaseNode struct {
 	Parent   Node
 	Children []Node
+}
+
+func CopyTree(node Node, parent Node) Node {
+
+	copy := reflect.New(reflect.ValueOf(node).Elem().Type()).Interface().(Node)
+
+	copy.SetParent(parent)
+	copyChildren := make([]Node, len(node.GetChildren()))
+	copy.SetChildren(copyChildren)
+
+	for i := range copyChildren {
+		copyChildren[i] = CopyTree(node.GetChildren()[i], copy)
+	}
+
+	return copy
+}
+
+func ReplaceNode(old Node, new Node) {
+	oldParent := old.GetParent()
+	if oldParent != nil {
+		for i, child := range oldParent.GetChildren() {
+			if child == old {
+				oldParent.GetChildren()[i] = new
+			}
+		}
+	}
+
+	new.SetParent(oldParent)
 }
 
 func GetNthNode(node Node, n, count int) (Node, int) {
@@ -77,6 +107,10 @@ func Mutate(node Node) Node {
 
 	mutatedNode.SetParent(node.GetParent())
 	return mutatedNode
+}
+
+func (node *BaseNode) SetChildren(childrend []Node) {
+	node.Children = childrend
 }
 
 func (node *BaseNode) GetParent() Node {

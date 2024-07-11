@@ -75,18 +75,79 @@ func NewPicture() *picture {
 	return p
 }
 
-func (p *picture) Mutate() {
+func (p *picture) pickRandomColor() Node {
+	r := rand.Intn(3)
+	switch r {
+	case 0:
+		return p.r
+	case 1:
+		return p.g
+	case 2:
+		return p.b
+	default:
+		panic("pickRannomColor failed")
+	}
+}
+
+func cross(a *picture, b *picture) *picture {
+	aCopy := &picture{
+		CopyTree(a.r, nil),
+		CopyTree(a.g, nil),
+		CopyTree(a.b, nil)}
+	aColor := aCopy.pickRandomColor()
+	bColor := b.pickRandomColor()
+
+	aIndex := rand.Intn(aColor.NodeCount())
+	aNode, _ := GetNthNode(aColor, aIndex, 0)
+
+	bIndex := rand.Intn(bColor.NodeCount())
+	bNode, _ := GetNthNode(bColor, bIndex, 0)
+
+	bNodeCopy := CopyTree(bNode, bNode.GetParent())
+
+	ReplaceNode(aNode, bNodeCopy)
+	return aCopy
+}
+
+func evolve(survivors []*picture) []*picture {
+	newPics := make([]*picture, numPics)
+	i := 0
+	for i < len(survivors) {
+		a := survivors[i]
+		b := survivors[rand.Intn(len(survivors))]
+		newPics[i] = cross(a, b)
+		i++
+	}
+
+	for i < len(newPics) {
+		a := survivors[rand.Intn(len(survivors))]
+		b := survivors[rand.Intn(len(survivors))]
+		newPics[i] = cross(a, b)
+		i++
+	}
+
+	for _, pic := range newPics {
+		r := rand.Intn(4)
+		for i := 0; i < r; i++ {
+			pic.mutate()
+		}
+	}
+
+	return newPics
+}
+
+func (p *picture) mutate() {
 	r := rand.Intn(3)
 	var nodeToMutate Node
 	switch r {
 	case 0:
 		nodeToMutate = p.r
-		return
 	case 1:
 		nodeToMutate = p.g
 	case 2:
 		nodeToMutate = p.b
 	}
+
 	count := nodeToMutate.NodeCount()
 	r = rand.Intn(count)
 	nodeToMutate, count = GetNthNode(nodeToMutate, r, 0)
@@ -98,6 +159,31 @@ func (p *picture) Mutate() {
 	} else if nodeToMutate == p.b {
 		p.b = mutation
 	}
+
+	/*
+		r := rand.Intn(3)
+		var nodeToMutate Node
+		switch r {
+		case 0:
+			nodeToMutate = p.r
+		case 1:
+			nodeToMutate = p.g
+		case 2:
+			nodeToMutate = p.b
+		}
+
+		count := nodeToMutate.NodeCount()
+		r = rand.Intn(count)
+		nodeToMutate, count = GetNthNode(nodeToMutate, r, 0)
+		mutation := Mutate(nodeToMutate)
+		if nodeToMutate == p.r {
+			p.r = mutation
+		} else if nodeToMutate == p.g {
+			p.g = mutation
+		} else if nodeToMutate == p.b {
+			p.b = mutation
+		}
+	*/
 }
 
 func clear(pixels []byte) {
@@ -126,8 +212,7 @@ func pixelsToTexture(renderer *sdl.Renderer, pixels []byte, w, h int) *sdl.Textu
 }
 
 // func aptToTextrure(pic *picture, w, h int, renderer *sdl.Renderer) *sdl.Texture {
-func aptToPixels(pic *picture, w, h int, renderer *sdl.Renderer) []byte {
-	// -1.0  and 1.0
+func aptToPixels(pic *picture, w, h int) []byte {
 	scale := float32(255 / 2)
 	offset := float32(-1.0 * scale)
 	pixels := make([]byte, w*h*4)
@@ -139,7 +224,7 @@ func aptToPixels(pic *picture, w, h int, renderer *sdl.Renderer) []byte {
 
 			r := pic.r.Eval(x, y)
 			g := pic.g.Eval(x, y)
-			b := pic.g.Eval(x, y)
+			b := pic.b.Eval(x, y)
 
 			pixels[pixelIndex] = byte(r*scale - offset)
 			pixelIndex++
@@ -148,11 +233,39 @@ func aptToPixels(pic *picture, w, h int, renderer *sdl.Renderer) []byte {
 			pixels[pixelIndex] = byte(b*scale - offset)
 			pixelIndex++
 			pixelIndex++
+
 		}
 	}
-
-	//return pixelsToTexture(renderer, pixels, w, h)
 	return pixels
+
+	// -1.0  and 1.0
+	/*
+		scale := float32(255 / 2)
+		offset := float32(-1.0 * scale)
+		pixels := make([]byte, w*h*4)
+		pixelIndex := 0
+		for yi := 0; yi < h; yi++ {
+			y := float32(yi)/float32(h)*2 - 1
+			for xi := 0; xi < w; xi++ {
+				x := float32(xi)/float32(w)*2 - 1
+
+				r := pic.r.Eval(x, y)
+				g := pic.g.Eval(x, y)
+				b := pic.g.Eval(x, y)
+
+				pixels[pixelIndex] = byte(r*scale - offset)
+				pixelIndex++
+				pixels[pixelIndex] = byte(g*scale - offset)
+				pixelIndex++
+				pixels[pixelIndex] = byte(b*scale - offset)
+				pixelIndex++
+				pixelIndex++
+			}
+		}
+
+		//return pixelsToTexture(renderer, pixels, w, h)
+		return pixels
+	*/
 }
 
 func main() {
@@ -191,13 +304,24 @@ func main() {
 	}
 
 	picWidth := int(float32(winWidth/cols) * float32(.9))
-	picHeight := int(float32(winHeight/rows) * float32(.9))
+	picHeight := int(float32(winHeight/rows) * float32(.8))
 
 	pixelChannel := make(chan pixelResult, numPics)
 	buttons := make([]*gui.ImageButton, numPics)
+
+	evolveButtonTex := gui.GetSinglePixelTex(renderer, sdl.Color{255, 255, 255, 0})
+	evolveRect := sdl.Rect{
+		int32(float32(winWidth)/2 - float32(picWidth)/2),
+		int32(float32(winHeight) - float32(winHeight)*.10),
+		int32(picWidth),
+		int32(float32(winHeight) * 0.08),
+	}
+
+	evolveButton := gui.NewImageButton(renderer, evolveButtonTex, evolveRect, sdl.Color{255, 255, 255, 0})
+
 	for i := range picTrees {
 		go func(i int) {
-			pixels := aptToPixels(picTrees[i], picWidth, picHeight, renderer)
+			pixels := aptToPixels(picTrees[i], picWidth, picHeight)
 			pixelChannel <- pixelResult{
 				pixels,
 				i,
@@ -263,6 +387,30 @@ func main() {
 				button.Draw(renderer)
 			}
 		}
+
+		evolveButton.Update(mouseState)
+		if evolveButton.WasLeftClicked {
+			selectPictures := make([]*picture, 0)
+			for i, button := range buttons {
+				if button.IsSelected {
+					selectPictures = append(selectPictures, picTrees[i])
+				}
+			}
+
+			if len(selectPictures) != 0 {
+				for i := range buttons {
+					buttons[i] = nil
+				}
+				picTrees = evolve(selectPictures)
+				for i := range picTrees {
+					go func(i int) {
+						pixels := aptToPixels(picTrees[i], picWidth*2, picHeight*2)
+						pixelChannel <- pixelResult{pixels, i}
+					}(i)
+				}
+			}
+		}
+		evolveButton.Draw(renderer)
 
 		renderer.Present()
 		elapsedTime = float32(time.Since(frameStart).Seconds() * 1000)

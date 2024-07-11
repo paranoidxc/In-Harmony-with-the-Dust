@@ -102,3 +102,19 @@ func (button *ImageButton) Draw(renderer *sdl.Renderer) {
 
 	renderer.Copy(button.Image, nil, &button.Rect)
 }
+
+func GetSinglePixelTex(renderer *sdl.Renderer, color sdl.Color) *sdl.Texture {
+	tex, err := renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888,
+		sdl.TEXTUREACCESS_STREAMING, 1, 1)
+	if err != nil {
+		panic(err)
+	}
+	pixels := make([]byte, 4)
+	pixels[0] = color.R
+	pixels[1] = color.G
+	pixels[2] = color.B
+	pixels[3] = color.A
+	tex.Update(nil, unsafe.Pointer(&pixels[0]), 4)
+	return tex
+
+}
