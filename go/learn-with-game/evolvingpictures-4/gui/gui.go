@@ -35,11 +35,11 @@ func (mouseState *MouseState) Update() {
 	mouseState.PrevX = mouseState.X
 	mouseState.PrevY = mouseState.Y
 	mouseState.PrevLeftButton = mouseState.LeftButton
-	mouseState.PrevRightButton = mouseState.LeftButton
+	mouseState.PrevRightButton = mouseState.RightButton
 
 	x, y, mouseButtonState := sdl.GetMouseState()
 	mouseState.X = int(x)
-	mouseState.X = int(y)
+	mouseState.Y = int(y)
 	mouseState.LeftButton = !((mouseButtonState & sdl.ButtonLMask()) == 0)
 	mouseState.RightButton = !((mouseButtonState & sdl.ButtonRMask()) == 0)
 }
