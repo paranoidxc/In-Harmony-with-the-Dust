@@ -5,7 +5,7 @@ const BASE_API = "/admin/feat";
 export default {
   all(query) {
     return request({
-      url: BASE_API + '/demoCurd/all',
+      url: BASE_API + '/demoCurd/list',
       method: "get",
       params: query,
     });
@@ -35,21 +35,21 @@ export default {
       return request({
         url: BASE_API + '/demoCurd/detail',
         method: "get",
-        params: { firmId: id },
+        params: { id: id },
       });
   },
   delete(id) {
     return request({
       url: BASE_API + '/demoCurd/delete',
       method: "post",
-      data: { firmId: id },
+      data: { id: id },
     });
   },
   deletes(ids) {
     return request({
       url: BASE_API + '/demoCurd/deletes',
       method: "post",
-      data: { firmId: ids },
+      data: { id: ids },
     });
   },
 };

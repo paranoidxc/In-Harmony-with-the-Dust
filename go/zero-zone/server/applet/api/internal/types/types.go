@@ -12,7 +12,7 @@ type DashboardIndexResp struct {
 }
 
 type DemoCurd struct {
-	Id        int64  `json:"firmId"`
+	Id        int64  `json:"id"`
 	FirmName  string `json:"firmName"`
 	FirmAlias string `json:"firmAlias"`
 	FirmCode  string `json:"firmCode"`
@@ -33,19 +33,19 @@ type DemoCurdCreateReq struct {
 }
 
 type DemoCurdDeleteReq struct {
-	Id int64 `json:"firmId"`
+	Id int64 `json:"id"`
 }
 
 type DemoCurdDeletesReq struct {
-	Id []int64 `json:"firmId"`
+	Id []int64 `json:"id"`
 }
 
 type DemoCurdDetailReq struct {
-	Id int64 `form:"firmId"`
+	Id int64 `form:"id"`
 }
 
 type DemoCurdDetailResp struct {
-	Id        int64  `json:"firmId"`
+	Id        int64  `json:"id"`
 	FirmName  string `json:"firmName"`
 	FirmAlias string `json:"firmAlias"`
 	FirmCode  string `json:"firmCode"`
@@ -87,7 +87,7 @@ type DemoCurdPageResp struct {
 }
 
 type DemoCurdUpdateReq struct {
-	Id        int64  `json:"firmId"`
+	Id        int64  `json:"id"`
 	FirmName  string `json:"firmName"`
 	FirmAlias string `json:"firmAlias"`
 	FirmCode  string `json:"firmCode"`

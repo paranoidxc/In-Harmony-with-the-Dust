@@ -26,8 +26,11 @@ type BaseNode struct {
 }
 
 func CopyTree(node Node, parent Node) Node {
-
 	copy := reflect.New(reflect.ValueOf(node).Elem().Type()).Interface().(Node)
+	switch n := node.(type) {
+	case *OpConstant:
+		copy.(*OpConstant).value = n.value
+	}
 
 	copy.SetParent(parent)
 	copyChildren := make([]Node, len(node.GetChildren()))

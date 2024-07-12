@@ -220,7 +220,7 @@ func aptToPixels(pic *picture, w, h int) []byte {
 }
 
 func main() {
-	sdl.LogSetAllPriority(sdl.LOG_PRIORITY_VERBOSE)
+	//sdl.LogSetAllPriority(sdl.LOG_PRIORITY_VERBOSE)
 	err := sdl.Init(sdl.INIT_EVERYTHING)
 	if err != nil {
 		fmt.Println(err)
@@ -339,6 +339,7 @@ func main() {
 					if button.WasLeftClicked {
 						button.IsSelected = !button.IsSelected
 					} else if button.WasRightClicked {
+						fmt.Println(picTrees[i])
 						zoomPixels := aptToPixels(picTrees[i], winWidth*2, winHeight*2)
 						zoomTex := pixelsToTexture(renderer, zoomPixels, winWidth*2, winHeight*2)
 						state.zoomImage = zoomTex

@@ -2,6 +2,8 @@ package demo_curd
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"zero-zone/applet/api/internal/svc"
 	"zero-zone/applet/api/internal/types"
@@ -29,10 +31,10 @@ func NewDemoCurdPageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Demo
 
 func (l *DemoCurdPageLogic) DemoCurdPage(req *types.DemoCurdPageReq) (resp *types.DemoCurdPageResp, err error) {
 	where := " deleted_at IS NULL "
+	if len(strings.TrimSpace(req.FirmName)) > 0 {
+		where = where + fmt.Sprintf(" AND firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%")
+	}
 	/*
-	   if len(strings.TrimSpace(req.FirmName)) > 0 {
-	       where = where + fmt.Sprintf(" AND firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%")
-	   }
 	   if len(strings.TrimSpace(req.FirmAlias)) > 0 {
 	       where = where + fmt.Sprintf(" AND firm_alias LIKE '%s'", "%"+strings.TrimSpace(req.FirmAlias)+"%")
 	   }

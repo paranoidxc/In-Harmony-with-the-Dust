@@ -122,6 +122,7 @@
 </template>
 <script setup>
 import { getCurrentInstance, proxyRefs } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 const { proxy } = getCurrentInstance();
 
@@ -165,7 +166,10 @@ const onSearchSubmit = async () => {
 
 /* 请求分页 */
 const getTableDataList = async (cur, limit) => {
-  let res = await sysTableApi.page({ page: cur, limit: limit });
+  let cpSearchForm =  tableSearchForm;
+  cpSearchForm.page = cur;
+  cpSearchForm.limit = limit;
+  let res = await sysTableApi.page(cpSearchForm);
   if (res.code == 200) {
     tableData = res.data.list;
     curPage = res.data.pagination.page;
@@ -190,6 +194,11 @@ const reqRowDel = async (id) => {
 
 const handleRowDel = async (row) => {
   await sysTableApi.delete(row.{{ .PrimaryKeyJson }});
+  ElMessage({
+    message: "删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
@@ -201,6 +210,11 @@ const handleDelList = async() => {
   */
   await sysTableApi.deletes(multipleSelection);
   multipleSelection = [];
+  ElMessage({
+    message: "批量删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
@@ -247,8 +261,13 @@ const dialogConfirm = async () => {
               .create(tableForm)
               .then((res) => {
                 if (res.code == 200) {
-                  dialogFormVisible = false;
-                  getTableDataList(curPage, limit);
+                    ElMessage({
+                      message: "创建成功",
+                      type: "success",
+                      plain: true,
+                    });
+                    dialogFormVisible = false;
+                    getTableDataList(curPage, limit);
                 }
               })
        }
@@ -259,6 +278,11 @@ const dialogConfirm = async () => {
         if (valid) {
             sysTableApi.update(tableForm).then((res) => {
                 if (res.code == 200) {
+                    ElMessage({
+                      message: "更新成功",
+                      type: "success",
+                      plain: true,
+                    });
                     dialogFormVisible = false;
                     getTableDataList(curPage, limit);
                 }

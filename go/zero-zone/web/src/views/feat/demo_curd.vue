@@ -3,32 +3,16 @@
     <div class="">
       <el-form :model="tableSearchForm" inline>
         <el-form-item label="厂商名称">
-          <el-input
-            v-model="tableSearchForm.firmName"
-            placeholder=""
-            clearable
-          />
+            <el-input v-model="tableSearchForm.firmName" placeholder="" clearable />
         </el-form-item>
         <el-form-item label="厂商别名">
-          <el-input
-            v-model="tableSearchForm.firmAlias"
-            placeholder=""
-            clearable
-          />
+            <el-input v-model="tableSearchForm.firmAlias" placeholder="" clearable />
         </el-form-item>
         <el-form-item label="电影编码">
-          <el-input
-            v-model="tableSearchForm.firmCode"
-            placeholder=""
-            clearable
-          />
+            <el-input v-model="tableSearchForm.firmCode" placeholder="" clearable />
         </el-form-item>
         <el-form-item label="厂商描述">
-          <el-input
-            v-model="tableSearchForm.firmDesc"
-            placeholder=""
-            clearable
-          />
+            <el-input v-model="tableSearchForm.firmDesc" placeholder="" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSearchSubmit">
@@ -74,7 +58,7 @@
       border
     >
       <el-table-column fixed type="selection" width="55" />
-      <el-table-column fixed prop="firmId" label="ID" width="60" />
+      <el-table-column fixed prop="id" label="ID" width="60" />
       <el-table-column prop="firmName" label="厂商名称" width="100" />
       <el-table-column prop="firmAlias" label="厂商别名" width="100" />
       <el-table-column prop="firmCode" label="电影编码" width="100" />
@@ -88,13 +72,13 @@
             编 辑
           </el-button>
           <el-popconfirm
-            title="确定要删除么?"
-            @confirm="handleRowDel(scope.row)"
+                title="确定要删除么?"
+                @confirm="handleRowDel(scope.row)"
           >
-            <template #reference>
-              <el-button size="small" type="danger"> 删 除</el-button>
-            </template>
-          </el-popconfirm>
+              <template #reference>
+                    <el-button size="small" type="danger"> 删 除</el-button>
+              </template>
+         </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -118,8 +102,7 @@
       v-model="dialogFormVisible"
       :title="dialogType === 'create' ? '新增' : '编辑'"
     >
-      <el-form
-        :model="tableForm"
+      <el-form :model="tableForm"
         ref="tableFormRef"
         :rules="rules"
         label-position="right"
@@ -128,22 +111,23 @@
           style="display: none"
           v-if="dialogType === 'edit'"
           label="编号"
-          :label-width="100"
+          label-width="auto"
         >
-          <el-input v-model="tableForm.id" autocomplete="off" />
+            <el-input v-model="tableForm.id" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="厂商名称" prop="firmName" :label-width="100">
-          <el-input v-model="tableForm.firmName" placeholder="" clearable />
+        <el-form-item label="厂商名称" prop="firmName" :label-width="100" >
+            <el-input v-model="tableForm.firmName" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="厂商别名" prop="firmAlias" :label-width="100">
-          <el-input v-model="tableForm.firmAlias" placeholder="" clearable />
+        <el-form-item label="厂商别名" prop="firmAlias" :label-width="100" >
+            <el-input v-model="tableForm.firmAlias" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="电影编码" prop="firmCode" :label-width="100">
-          <el-input v-model="tableForm.firmCode" placeholder="" clearable />
+        <el-form-item label="电影编码" prop="firmCode" :label-width="100" >
+            <el-input v-model="tableForm.firmCode" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="厂商描述" prop="firmDesc" :label-width="100">
-          <el-input v-model="tableForm.firmDesc" placeholder="" clearable />
+        <el-form-item label="厂商描述" prop="firmDesc" :label-width="100" >
+            <el-input v-model="tableForm.firmDesc" placeholder="" clearable />
         </el-form-item>
+
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -155,6 +139,7 @@
 </template>
 <script setup>
 import { getCurrentInstance, proxyRefs } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 const { proxy } = getCurrentInstance();
 
@@ -173,40 +158,21 @@ let total = $ref(0);
 let curPage = $ref(1);
 
 const rules = $ref({
-  /*
-  firmName: [
-      { required: true, message: '请输入 厂商名称', trigger: 'blur' },
-  ],
-  firmAlias: [
-      { required: true, message: '请输入 厂商别名', trigger: 'blur' },
-  ],
-  firmCode: [
-      { required: true, message: '请输入 电影编码', trigger: 'blur' },
-  ],
-  firmDesc: [
-      { required: true, message: '请输入 厂商描述', trigger: 'blur' },
-  ],
-  */
-});
-
-const statusOptions = [
-  {
-    value: 1,
-    label: "启用",
-  },
-  {
-    value: 0,
-    label: "禁用",
-  },
-];
-
-const getStatusLabel = (idx) => {
-  const index = statusOptions.findIndex((option) => option.value === idx);
-  if (index !== -1) {
-    return statusOptions[index].label;
-  } else {
-  }
-};
+    /*
+    firmName: [
+        { required: true, message: '请输入 厂商名称', trigger: 'blur' },
+    ],
+    firmAlias: [
+        { required: true, message: '请输入 厂商别名', trigger: 'blur' },
+    ],
+    firmCode: [
+        { required: true, message: '请输入 电影编码', trigger: 'blur' },
+    ],
+    firmDesc: [
+        { required: true, message: '请输入 厂商描述', trigger: 'blur' },
+    ],
+    */
+})
 
 //查询
 const onSearchSubmit = async () => {
@@ -217,14 +183,17 @@ const onSearchSubmit = async () => {
     if (res.code === 200) {
       tableData = res.data.list;
       curPage = res.data.pagination.page;
-      total = res.data.pagination.page;
+      total = res.data.pagination.total;
     }
   });
 };
 
 /* 请求分页 */
 const getTableDataList = async (cur, limit) => {
-  let res = await sysTableApi.page({ page: cur, limit: limit });
+  let cpSearchForm =  tableSearchForm;
+  cpSearchForm.page = cur;
+  cpSearchForm.limit = limit;
+  let res = await sysTableApi.page(cpSearchForm);
   if (res.code == 200) {
     tableData = res.data.list;
     curPage = res.data.pagination.page;
@@ -248,11 +217,16 @@ const reqRowDel = async (id) => {
 };
 
 const handleRowDel = async (row) => {
-  await sysTableApi.delete(row.firmId);
+  await sysTableApi.delete(row.id);
+  ElMessage({
+    message: "删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
-const handleDelList = async () => {
+const handleDelList = async() => {
   /*
   multipleSelection.forEach((id) => {
 	reqRowDel(id)
@@ -260,6 +234,11 @@ const handleDelList = async () => {
   */
   await sysTableApi.deletes(multipleSelection);
   multipleSelection = [];
+  ElMessage({
+    message: "批量删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
@@ -267,7 +246,7 @@ const handleDelList = async () => {
 const handleSelectionChange = (val) => {
   multipleSelection = [];
   val.forEach((item) => {
-    multipleSelection.push(item.firmId);
+    multipleSelection.push(item.id);
   });
 };
 
@@ -276,7 +255,7 @@ const handleEdit = async (row) => {
   dialogFormVisible = true;
   dialogType = "edit";
 
-  let result = await sysTableApi.detail(row.firmId);
+  let result = await sysTableApi.detail(row.id);
   if (result.code == 200) {
     tableForm = { ...result.data };
   }
@@ -285,43 +264,82 @@ const handleEdit = async (row) => {
 // 新增
 const handleCreate = () => {
   dialogFormVisible = true;
-  tableForm = {};
+  tableForm = {
+  };
   dialogType = "create";
 };
 
 const handleDialogOpen = () => {
-  nextTick(() => {
-    proxy.$refs.tableFormRef.clearValidate();
-  });
-};
+  nextTick( () => {
+    proxy.$refs.tableFormRef.clearValidate()
+  })
+}
 
 // 确认
 const dialogConfirm = async () => {
   if (dialogType === "create") {
     // 添加数据
     proxy.$refs.tableFormRef.validate((valid) => {
-      if (valid) {
-        sysTableApi.create(tableForm).then((res) => {
-          if (res.code == 200) {
-            dialogFormVisible = false;
-            getTableDataList(curPage, limit);
-          }
-        });
-      }
-    });
+        if (valid) {
+            sysTableApi
+              .create(tableForm)
+              .then((res) => {
+                if (res.code == 200) {
+                    ElMessage({
+                      message: "创建成功",
+                      type: "success",
+                      plain: true,
+                    });
+                    dialogFormVisible = false;
+                    getTableDataList(curPage, limit);
+                }
+              })
+       }
+   });
   } else {
     // 修改 内容
     proxy.$refs.tableFormRef.validate((valid) => {
-      if (valid) {
-        sysTableApi.update(tableForm).then((res) => {
-          if (res.code == 200) {
-            dialogFormVisible = false;
-            getTableDataList(curPage, limit);
-          }
-        });
-      }
+        if (valid) {
+            sysTableApi.update(tableForm).then((res) => {
+                if (res.code == 200) {
+                    ElMessage({
+                      message: "更新成功",
+                      type: "success",
+                      plain: true,
+                    });
+                    dialogFormVisible = false;
+                    getTableDataList(curPage, limit);
+                }
+            });
+        }
     });
   }
+};
+
+const statusOptions = [
+  {
+    value: 1,
+    label: "启用",
+  },
+  {
+    value: 0,
+    label: "禁用",
+  },
+];
+
+const getStatusLabel = (idx) => {
+  const index = statusOptions.findIndex((option) => option.value === idx);
+  if (index !== -1) {
+    return statusOptions[index].label;
+  } else {
+  }
+};
+
+const getOptLabel = (options, idx) => {
+    const index = options.findIndex((option) => option.value === idx);
+    if (index !== -1) {
+        return options[index].label;
+    }
 };
 </script>
 

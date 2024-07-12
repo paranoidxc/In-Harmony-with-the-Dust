@@ -4,7 +4,7 @@ package tmpAutoFeat
 // gorm tag 暂时只用到 column 和 comment
 
 type TmpDemoCurd struct {
-	Id int64 `json:"firmId" gorm:"column:firm_id;comment:唯一id;"`
+	Id int64 `json:"id" gorm:"column:id;comment:唯一id;"`
 
 	FirmName  string `json:"firmName" validate:"required" label:"电影名称" gorm:"column:firm_name;comment:厂商名称;"`
 	FirmAlias string `json:"firmAlias" gorm:"column:firm_alias;comment:厂商别名;"`

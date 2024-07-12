@@ -19,23 +19,19 @@ import (
 var (
 	demoCurdFieldNames          = builder.RawFieldNames(&DemoCurd{})
 	demoCurdRows                = strings.Join(demoCurdFieldNames, ",")
-	demoCurdRowsExpectAutoSet   = strings.Join(stringx.Remove(demoCurdFieldNames, "`firm_id`", "`created_at`", "`deleted_at`", "`updated_at`"), ",")
-	demoCurdRowsWithPlaceHolder = strings.Join(stringx.Remove(demoCurdFieldNames, "`firm_id`", "`created_at`", "`deleted_at`", "`updated_at`"), "=?,") + "=?"
+	demoCurdRowsExpectAutoSet   = strings.Join(stringx.Remove(demoCurdFieldNames, "`id`", "`created_at`", "`deleted_at`", "`updated_at`"), ",")
+	demoCurdRowsWithPlaceHolder = strings.Join(stringx.Remove(demoCurdFieldNames, "`id`", "`created_at`", "`deleted_at`", "`updated_at`"), "=?,") + "=?"
 
-	cacheVerificationSystemDemoCurdFirmIdPrefix = "cache:verificationSystem:demoCurd:firmId:"
+	cacheZeroZoneDemoCurdIdPrefix = "cache:zeroZone:demoCurd:id:"
 )
 
 type (
 	demoCurdModel interface {
 		Insert(ctx context.Context, data *DemoCurd) (sql.Result, error)
-		FindOne(ctx context.Context, firmId int64) (*DemoCurd, error)
+		FindOne(ctx context.Context, id int64) (*DemoCurd, error)
 		Update(ctx context.Context, data *DemoCurd) error
-		Delete(ctx context.Context, firmId int64) error
-		Deletes(ctx context.Context, firmIds []int64) error
-		FindAllByWhere(ctx context.Context, where string) ([]*DemoCurd, error)
-		FindAllByWhereCount(ctx context.Context, where string) (int64, error)
-		FindPageByWhere(ctx context.Context, where string, page int64, limit int64) ([]*DemoCurd, error)
-		FindPageByWhereCount(ctx context.Context, where string) (int64, error)
+		Delete(ctx context.Context, id int64) error
+		Deletes(ctx context.Context, ids []int64) error
 	}
 
 	defaultDemoCurdModel struct {
@@ -44,7 +40,7 @@ type (
 	}
 
 	DemoCurd struct {
-		FirmId    int64          `db:"firm_id"`
+		Id        int64          `db:"id"`
 		FirmName  sql.NullString `db:"firm_name"`
 		FirmAlias sql.NullString `db:"firm_alias"`
 		FirmCode  sql.NullString `db:"firm_code"`
@@ -62,24 +58,24 @@ func newDemoCurdModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option
 	}
 }
 
-func (m *defaultDemoCurdModel) Delete(ctx context.Context, firmId int64) error {
-	verificationSystemDemoCurdFirmIdKey := fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, firmId)
+func (m *defaultDemoCurdModel) Delete(ctx context.Context, id int64) error {
+	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		//query := fmt.Sprintf("delete from %s where `firm_id` = ?", m.table)
-		query := fmt.Sprintf("update %s set `deleted_at` = now() where `firm_id` = ?", m.table)
-		return conn.ExecCtx(ctx, query, firmId)
-	}, verificationSystemDemoCurdFirmIdKey)
+		//query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		query := fmt.Sprintf("update %s set `deleted_at` = now() where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, zeroZoneDemoCurdIdKey)
 	return err
 }
 
-func (m *defaultDemoCurdModel) Deletes(ctx context.Context, firmIds []int64) error {
-	for _, firmId := range firmIds {
-		verificationSystemDemoCurdFirmIdKey := fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, firmId)
+func (m *defaultDemoCurdModel) Deletes(ctx context.Context, ids []int64) error {
+	for _, id := range ids {
+		zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 		_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-			//query := fmt.Sprintf("delete from %s where `firm_id` = ?", m.table)
-			query := fmt.Sprintf("update %s set `deleted_at` = now() where `firm_id` = ?", m.table)
-			return conn.ExecCtx(ctx, query, firmId)
-		}, verificationSystemDemoCurdFirmIdKey)
+			//query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+			query := fmt.Sprintf("update %s set `deleted_at` = now() where `id` = ?", m.table)
+			return conn.ExecCtx(ctx, query, id)
+		}, zeroZoneDemoCurdIdKey)
 		if err != nil {
 			return err
 		}
@@ -88,12 +84,12 @@ func (m *defaultDemoCurdModel) Deletes(ctx context.Context, firmIds []int64) err
 	return nil
 }
 
-func (m *defaultDemoCurdModel) FindOne(ctx context.Context, firmId int64) (*DemoCurd, error) {
-	verificationSystemDemoCurdFirmIdKey := fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, firmId)
+func (m *defaultDemoCurdModel) FindOne(ctx context.Context, id int64) (*DemoCurd, error) {
+	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 	var resp DemoCurd
-	err := m.QueryRowCtx(ctx, &resp, verificationSystemDemoCurdFirmIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `firm_id` = ? and `deleted_at` is null  limit 1", demoCurdRows, m.table)
-		return conn.QueryRowCtx(ctx, v, query, firmId)
+	err := m.QueryRowCtx(ctx, &resp, zeroZoneDemoCurdIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? and `deleted_at` is null  limit 1", demoCurdRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
 	})
 	switch err {
 	case nil:
@@ -105,79 +101,30 @@ func (m *defaultDemoCurdModel) FindOne(ctx context.Context, firmId int64) (*Demo
 	}
 }
 
-func (m *defaultDemoCurdModel) FindAllByWhere(ctx context.Context, where string) ([]*DemoCurd, error) {
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s ORDER BY `firm_id` DESC", demoCurdRows, m.table, where)
-	var resp []*DemoCurd
-	err := m.QueryRowsNoCacheCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultDemoCurdModel) FindAllByWhereCount(ctx context.Context, where string) (int64, error) {
-	query := fmt.Sprintf("SELECT COUNT(`firm_id`) FROM %s WHERE %s", m.table, where)
-	var resp int64
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	default:
-		return 0, err
-	}
-}
-
-func (m *defaultDemoCurdModel) FindPageByWhere(ctx context.Context, where string, page int64, limit int64) ([]*DemoCurd, error) {
-	offset := (page - 1) * limit
-	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s ORDER BY `firm_id` DESC LIMIT %d,%d", demoCurdRows, m.table, where, offset, limit)
-	var resp []*DemoCurd
-	err := m.QueryRowsNoCacheCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	default:
-		return nil, err
-	}
-}
-
-func (m *defaultDemoCurdModel) FindPageByWhereCount(ctx context.Context, where string) (int64, error) {
-	query := fmt.Sprintf("SELECT COUNT(`firm_id`) FROM %s WHERE %s", m.table, where)
-	var resp int64
-	err := m.QueryRowNoCacheCtx(ctx, &resp, query)
-	switch err {
-	case nil:
-		return resp, nil
-	default:
-		return 0, err
-	}
-}
-
 func (m *defaultDemoCurdModel) Insert(ctx context.Context, data *DemoCurd) (sql.Result, error) {
-	verificationSystemDemoCurdFirmIdKey := fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, data.FirmId)
+	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, data.Id)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, demoCurdRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc)
-	}, verificationSystemDemoCurdFirmIdKey)
+	}, zeroZoneDemoCurdIdKey)
 	return ret, err
 }
 
 func (m *defaultDemoCurdModel) Update(ctx context.Context, data *DemoCurd) error {
-	verificationSystemDemoCurdFirmIdKey := fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, data.FirmId)
+	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, data.Id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("update %s set %s where `firm_id` = ?", m.table, demoCurdRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc, data.FirmId)
-	}, verificationSystemDemoCurdFirmIdKey)
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, demoCurdRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc, data.Id)
+	}, zeroZoneDemoCurdIdKey)
 	return err
 }
 
 func (m *defaultDemoCurdModel) formatPrimary(primary any) string {
-	return fmt.Sprintf("%s%v", cacheVerificationSystemDemoCurdFirmIdPrefix, primary)
+	return fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, primary)
 }
 
 func (m *defaultDemoCurdModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
-	query := fmt.Sprintf("select %s from %s where `firm_id` = ? and `deleted_at` is null limit 1", demoCurdRows, m.table)
+	query := fmt.Sprintf("select %s from %s where `id` = ? and `deleted_at` is null limit 1", demoCurdRows, m.table)
 	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 

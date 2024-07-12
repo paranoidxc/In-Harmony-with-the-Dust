@@ -66,6 +66,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	deletesContentResponse := ""
 	updateContent := ""
 	detailContentRequest := ""
+	detailContentResponse := ""
 	listContent := ""
 	pageContent := ""
 	// 前端字段kv
@@ -86,7 +87,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	for i := 1; i < m.NumField(); i++ {
 		field := m.Field(i)
 		item := fmt.Sprintf(`%v %v`, field.Name, field.Type)
-		tag := `json:"` + field.Tag.Get("json") + `"`
+		tag := `json:"` + field.Tag.Get("json") + `,optional"`
 
 		validate := ""
 		label := ""
@@ -138,8 +139,34 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	for i := 0; i < m.NumField(); i++ {
 		field := m.Field(i)
 		item := fmt.Sprintf(`%v %v`, field.Name, field.Type)
+		tag := ""
+		if i == 0 {
+			tag = `json:"` + field.Tag.Get("json") + `"`
+		} else {
+			tag = `json:"` + field.Tag.Get("json") + `,optional"`
+		}
+		validate := ""
+		label := ""
+
+		if len(field.Tag.Get("validate")) > 0 {
+			validate = ` validate:"` + field.Tag.Get("validate") + `"`
+		}
+
+		if len(field.Tag.Get("label")) > 0 {
+			label = ` label:"` + field.Tag.Get("label") + `"`
+		}
+		updateContent += (item + " `" + tag + validate + label + "`" + "\n")
+	}
+
+	for i := 0; i < m.NumField(); i++ {
+		field := m.Field(i)
+		item := fmt.Sprintf(`%v %v`, field.Name, field.Type)
 		tag := `json:"` + field.Tag.Get("json") + `"`
-		updateContent += (item + " `" + tag + "`" + "\n")
+		label := ""
+		if len(field.Tag.Get("label")) > 0 {
+			label = ` label:"` + field.Tag.Get("label") + `"`
+		}
+		detailContentResponse += (item + " `" + tag + label + "`" + "\n")
 	}
 
 	// detail及列表返回等需要的字段
@@ -186,7 +213,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	DeletesRequest := getDeletesRequest(name, deletesContentRequest)
 	UpdateRequest := getUpdateRequest(name, updateContent)
 	DetailRequest := getDetailRequest(name, detailContentRequest)
-	DetailResponse := getDetailResponse(name, updateContent)
+	DetailResponse := getDetailResponse(name, detailContentResponse)
 	ListRequest := getListRequest(name, listContent)
 	ListResponse := getListResponse(name)
 	PageRequest := getPageRequest(name, pageContent)
@@ -581,8 +608,8 @@ func goCtlGenModelFile(l *CreateAutoCurdLogic, underlineName string) error {
 	//table := "-table=\"" + underlineName + "\""
 	//cmdArgs := []string{"model", "mysql", "datasource", url, table, `-dir="../../model"`, "--style", "goZero", "--home", "../tpl"}
 	//cmdArgs := []string{"model", "mysql", "datasource", url, table, "-dir", ".", "-cache", "true", "--style", "goZero", "--home", "../tpl"}
-	cmdArgs := []string{"model", "mysql", "datasource", "-url", url, "-table", underlineName, "-dir", "../../model", "-cache", "true", "--style", "goZero", "--home", "../tpl", "-i", "created_at,updated_at,deleted_at"}
-	fmt.Println("go model:", strings.Join(cmdArgs, " "))
+	cmdArgs := []string{"model", "mysql", "datasource", "-url", url, "-table", underlineName, "-dir", "../model", "-cache", "true", "--style", "goZero", "--home", "../tpl", "-i", "created_at,updated_at,deleted_at"}
+	fmt.Println("go model:", "goctl "+strings.Join(cmdArgs, " "))
 	c := cmd.NewCmd("goctl", cmdArgs...)
 	fmt.Println("goctl生成模型文件")
 	<-c.Start()
@@ -825,7 +852,7 @@ func getPageLogic(name string, vueFields []map[string]string) (string, error) {
 func genWebApiFile(underlineName, lowerCaseName, primaryKeyJson string) error {
 	projectWd, _ := os.Getwd()
 	// ../../ cmd
-	fileDir := filepath.Join(projectWd, "../../../../web")
+	fileDir := filepath.Join(projectWd, "../../../web")
 	file := filepath.Join(projectWd, "../tpl/api.tpl")
 	fmt.Println("api tpl file", file)
 	tpl, err := template.ParseFiles(file)
@@ -853,7 +880,7 @@ func genWebApiFile(underlineName, lowerCaseName, primaryKeyJson string) error {
 
 func genWebVueFile(name, underlineName, primaryKeyJson string, vueFields interface{}, minVueFields interface{}) error {
 	projectWd, _ := os.Getwd()
-	fileDir := filepath.Join(projectWd, "../../../../web")
+	fileDir := filepath.Join(projectWd, "../../../web")
 	filePath := filepath.Join(projectWd, "../tpl/table.tpl")
 	tpl, err := template.ParseFiles(filePath)
 	if err != nil {
