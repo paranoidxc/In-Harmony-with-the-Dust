@@ -22,8 +22,8 @@ var (
 	sysDeptRowsExpectAutoSet   = strings.Join(stringx.Remove(sysDeptFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	sysDeptRowsWithPlaceHolder = strings.Join(stringx.Remove(sysDeptFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
 
-	cacheArkAdminSysDeptIdPrefix        = "cache:verificationSystem:sysDept:id:"
-	cacheArkAdminSysDeptUniqueKeyPrefix = "cache:verificationSystem:sysDept:uniqueKey:"
+	cacheZoneZoneAdminSysDeptIdPrefix        = "cache:zeroZone:sysDept:id:"
+	cacheZoneZoneAdminSysDeptUniqueKeyPrefix = "cache:zeroZone:sysDept:uniqueKey:"
 )
 
 type (
@@ -68,8 +68,8 @@ func (m *defaultSysDeptModel) Delete(ctx context.Context, id int64) error {
 		return err
 	}
 
-	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptIdPrefix, id)
-	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptIdPrefix, id)
+	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, id)
@@ -78,7 +78,7 @@ func (m *defaultSysDeptModel) Delete(ctx context.Context, id int64) error {
 }
 
 func (m *defaultSysDeptModel) FindOne(ctx context.Context, id int64) (*SysDept, error) {
-	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptIdPrefix, id)
+	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptIdPrefix, id)
 	var resp SysDept
 	err := m.QueryRowCtx(ctx, &resp, arkAdminSysDeptIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
 		query := fmt.Sprintf("select %s from %s where `id` = ? AND deleted_at IS NULL limit 1", sysDeptRows, m.table)
@@ -95,7 +95,7 @@ func (m *defaultSysDeptModel) FindOne(ctx context.Context, id int64) (*SysDept, 
 }
 
 func (m *defaultSysDeptModel) FindOneByUniqueKey(ctx context.Context, uniqueKey string) (*SysDept, error) {
-	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptUniqueKeyPrefix, uniqueKey)
+	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptUniqueKeyPrefix, uniqueKey)
 	var resp SysDept
 	err := m.QueryRowIndexCtx(ctx, &resp, arkAdminSysDeptUniqueKeyKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
 		query := fmt.Sprintf("select %s from %s where `unique_key` = ? AND deleted_at IS NULL limit 1", sysDeptRows, m.table)
@@ -115,8 +115,8 @@ func (m *defaultSysDeptModel) FindOneByUniqueKey(ctx context.Context, uniqueKey 
 }
 
 func (m *defaultSysDeptModel) Insert(ctx context.Context, data *SysDept) (sql.Result, error) {
-	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptIdPrefix, data.Id)
-	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptIdPrefix, data.Id)
+	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, sysDeptRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.ParentId, data.Name, data.FullName, data.UniqueKey, data.Type, data.Status, data.OrderNum, data.Remark)
@@ -130,8 +130,8 @@ func (m *defaultSysDeptModel) Update(ctx context.Context, newData *SysDept) erro
 		return err
 	}
 
-	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptIdPrefix, data.Id)
-	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDeptIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptIdPrefix, data.Id)
+	arkAdminSysDeptUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptUniqueKeyPrefix, data.UniqueKey)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, sysDeptRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.ParentId, newData.Name, newData.FullName, newData.UniqueKey, newData.Type, newData.Status, newData.OrderNum, newData.Remark, newData.Id)
@@ -140,7 +140,7 @@ func (m *defaultSysDeptModel) Update(ctx context.Context, newData *SysDept) erro
 }
 
 func (m *defaultSysDeptModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheArkAdminSysDeptIdPrefix, primary)
+	return fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDeptIdPrefix, primary)
 }
 
 func (m *defaultSysDeptModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {

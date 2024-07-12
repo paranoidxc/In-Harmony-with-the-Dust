@@ -26,7 +26,7 @@ func (l *RedisKeyListLogic) RedisKeyList() (resp *types.RedisKeyListResp, err er
 	cachekeys := []types.RedisKey{}
 	var cursor uint64 = 0
 	for {
-		tmpCacheKeys, a, b := l.svcCtx.Redis.ScanCtx(l.ctx, cursor, "cache:verificationSystem:*", 0)
+		tmpCacheKeys, a, b := l.svcCtx.Redis.ScanCtx(l.ctx, cursor, "cache:zeroZone:*", 0)
 		//fmt.Println("cache a", a)
 		//fmt.Println("cache b", b)
 		if b != nil {

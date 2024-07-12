@@ -22,8 +22,8 @@ var (
 	sysDictionaryRowsExpectAutoSet   = strings.Join(stringx.Remove(sysDictionaryFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	sysDictionaryRowsWithPlaceHolder = strings.Join(stringx.Remove(sysDictionaryFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
 
-	cacheArkAdminSysDictionaryIdPrefix        = "cache:verificationSystem:sysDictionary:id:"
-	cacheArkAdminSysDictionaryUniqueKeyPrefix = "cache:verificationSystem:sysDictionary:uniqueKey:"
+	cacheZoneZoneAdminSysDictionaryIdPrefix        = "cache:zeroZone:sysDictionary:id:"
+	cacheZoneZoneAdminSysDictionaryUniqueKeyPrefix = "cache:zeroZone:sysDictionary:uniqueKey:"
 )
 
 type (
@@ -68,8 +68,8 @@ func (m *defaultSysDictionaryModel) Delete(ctx context.Context, id int64) error 
 		return err
 	}
 
-	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryIdPrefix, id)
-	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryIdPrefix, id)
+	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, id)
@@ -78,7 +78,7 @@ func (m *defaultSysDictionaryModel) Delete(ctx context.Context, id int64) error 
 }
 
 func (m *defaultSysDictionaryModel) FindOne(ctx context.Context, id int64) (*SysDictionary, error) {
-	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryIdPrefix, id)
+	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryIdPrefix, id)
 	var resp SysDictionary
 	err := m.QueryRowCtx(ctx, &resp, arkAdminSysDictionaryIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
 		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", sysDictionaryRows, m.table)
@@ -95,7 +95,7 @@ func (m *defaultSysDictionaryModel) FindOne(ctx context.Context, id int64) (*Sys
 }
 
 func (m *defaultSysDictionaryModel) FindOneByUniqueKey(ctx context.Context, uniqueKey string) (*SysDictionary, error) {
-	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryUniqueKeyPrefix, uniqueKey)
+	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryUniqueKeyPrefix, uniqueKey)
 	var resp SysDictionary
 	err := m.QueryRowIndexCtx(ctx, &resp, arkAdminSysDictionaryUniqueKeyKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
 		query := fmt.Sprintf("select %s from %s where `unique_key` = ? limit 1", sysDictionaryRows, m.table)
@@ -115,8 +115,8 @@ func (m *defaultSysDictionaryModel) FindOneByUniqueKey(ctx context.Context, uniq
 }
 
 func (m *defaultSysDictionaryModel) Insert(ctx context.Context, data *SysDictionary) (sql.Result, error) {
-	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryIdPrefix, data.Id)
-	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryIdPrefix, data.Id)
+	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, sysDictionaryRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.ParentId, data.Name, data.Type, data.UniqueKey, data.Value, data.Status, data.OrderNum, data.Remark)
@@ -130,8 +130,8 @@ func (m *defaultSysDictionaryModel) Update(ctx context.Context, newData *SysDict
 		return err
 	}
 
-	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryIdPrefix, data.Id)
-	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
+	arkAdminSysDictionaryIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryIdPrefix, data.Id)
+	arkAdminSysDictionaryUniqueKeyKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryUniqueKeyPrefix, data.UniqueKey)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, sysDictionaryRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.ParentId, newData.Name, newData.Type, newData.UniqueKey, newData.Value, newData.Status, newData.OrderNum, newData.Remark, newData.Id)
@@ -140,7 +140,7 @@ func (m *defaultSysDictionaryModel) Update(ctx context.Context, newData *SysDict
 }
 
 func (m *defaultSysDictionaryModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheArkAdminSysDictionaryIdPrefix, primary)
+	return fmt.Sprintf("%s%v", cacheZoneZoneAdminSysDictionaryIdPrefix, primary)
 }
 
 func (m *defaultSysDictionaryModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {

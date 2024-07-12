@@ -22,8 +22,8 @@ var (
 	sysProfessionRowsExpectAutoSet   = strings.Join(stringx.Remove(sysProfessionFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	sysProfessionRowsWithPlaceHolder = strings.Join(stringx.Remove(sysProfessionFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
 
-	cacheArkAdminSysProfessionIdPrefix   = "cache:verificationSystem:sysProfession:id:"
-	cacheArkAdminSysProfessionNamePrefix = "cache:verificationSystem:sysProfession:name:"
+	cacheZoneZoneAdminSysProfessionIdPrefix   = "cache:zeroZone:sysProfession:id:"
+	cacheZoneZoneAdminSysProfessionNamePrefix = "cache:zeroZone:sysProfession:name:"
 )
 
 type (
@@ -63,8 +63,8 @@ func (m *defaultSysProfessionModel) Delete(ctx context.Context, id int64) error 
 		return err
 	}
 
-	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionIdPrefix, id)
-	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionNamePrefix, data.Name)
+	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionIdPrefix, id)
+	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionNamePrefix, data.Name)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, id)
@@ -73,7 +73,7 @@ func (m *defaultSysProfessionModel) Delete(ctx context.Context, id int64) error 
 }
 
 func (m *defaultSysProfessionModel) FindOne(ctx context.Context, id int64) (*SysProfession, error) {
-	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionIdPrefix, id)
+	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionIdPrefix, id)
 	var resp SysProfession
 	err := m.QueryRowCtx(ctx, &resp, arkAdminSysProfessionIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
 		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", sysProfessionRows, m.table)
@@ -90,7 +90,7 @@ func (m *defaultSysProfessionModel) FindOne(ctx context.Context, id int64) (*Sys
 }
 
 func (m *defaultSysProfessionModel) FindOneByName(ctx context.Context, name string) (*SysProfession, error) {
-	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionNamePrefix, name)
+	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionNamePrefix, name)
 	var resp SysProfession
 	err := m.QueryRowIndexCtx(ctx, &resp, arkAdminSysProfessionNameKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) (i interface{}, e error) {
 		query := fmt.Sprintf("select %s from %s where `name` = ? limit 1", sysProfessionRows, m.table)
@@ -110,8 +110,8 @@ func (m *defaultSysProfessionModel) FindOneByName(ctx context.Context, name stri
 }
 
 func (m *defaultSysProfessionModel) Insert(ctx context.Context, data *SysProfession) (sql.Result, error) {
-	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionIdPrefix, data.Id)
-	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionNamePrefix, data.Name)
+	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionIdPrefix, data.Id)
+	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionNamePrefix, data.Name)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, sysProfessionRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.Name, data.Status, data.OrderNum)
@@ -125,8 +125,8 @@ func (m *defaultSysProfessionModel) Update(ctx context.Context, newData *SysProf
 		return err
 	}
 
-	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionIdPrefix, data.Id)
-	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheArkAdminSysProfessionNamePrefix, data.Name)
+	arkAdminSysProfessionIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionIdPrefix, data.Id)
+	arkAdminSysProfessionNameKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionNamePrefix, data.Name)
 	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, sysProfessionRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, newData.Name, newData.Status, newData.OrderNum, newData.Id)
@@ -135,7 +135,7 @@ func (m *defaultSysProfessionModel) Update(ctx context.Context, newData *SysProf
 }
 
 func (m *defaultSysProfessionModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheArkAdminSysProfessionIdPrefix, primary)
+	return fmt.Sprintf("%s%v", cacheZoneZoneAdminSysProfessionIdPrefix, primary)
 }
 
 func (m *defaultSysProfessionModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {

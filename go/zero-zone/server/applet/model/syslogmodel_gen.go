@@ -22,7 +22,7 @@ var (
 	sysLogRowsExpectAutoSet   = strings.Join(stringx.Remove(sysLogFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), ",")
 	sysLogRowsWithPlaceHolder = strings.Join(stringx.Remove(sysLogFieldNames, "`id`", "`create_time`", "`update_time`", "`create_at`", "`update_at`"), "=?,") + "=?"
 
-	cacheArkAdminSysLogIdPrefix = "cache:verificationSystem:sysLog:id:"
+	cacheZoneZoneAdminSysLogIdPrefix = "cache:zeroZone:sysLog:id:"
 )
 
 type (
@@ -59,7 +59,7 @@ func newSysLogModel(conn sqlx.SqlConn, c cache.CacheConf) *defaultSysLogModel {
 }
 
 func (m *defaultSysLogModel) Delete(ctx context.Context, id int64) error {
-	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysLogIdPrefix, id)
+	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysLogIdPrefix, id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, id)
@@ -68,7 +68,7 @@ func (m *defaultSysLogModel) Delete(ctx context.Context, id int64) error {
 }
 
 func (m *defaultSysLogModel) FindOne(ctx context.Context, id int64) (*SysLog, error) {
-	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysLogIdPrefix, id)
+	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysLogIdPrefix, id)
 	var resp SysLog
 	err := m.QueryRowCtx(ctx, &resp, arkAdminSysLogIdKey, func(ctx context.Context, conn sqlx.SqlConn, v interface{}) error {
 		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", sysLogRows, m.table)
@@ -85,7 +85,7 @@ func (m *defaultSysLogModel) FindOne(ctx context.Context, id int64) (*SysLog, er
 }
 
 func (m *defaultSysLogModel) Insert(ctx context.Context, data *SysLog) (sql.Result, error) {
-	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysLogIdPrefix, data.Id)
+	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysLogIdPrefix, data.Id)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?)", m.table, sysLogRowsExpectAutoSet)
 		return conn.ExecCtx(ctx, query, data.UserId, data.Ip, data.Uri, data.Type, data.Request, data.Status)
@@ -94,7 +94,7 @@ func (m *defaultSysLogModel) Insert(ctx context.Context, data *SysLog) (sql.Resu
 }
 
 func (m *defaultSysLogModel) Update(ctx context.Context, data *SysLog) error {
-	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheArkAdminSysLogIdPrefix, data.Id)
+	arkAdminSysLogIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysLogIdPrefix, data.Id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, sysLogRowsWithPlaceHolder)
 		return conn.ExecCtx(ctx, query, data.UserId, data.Ip, data.Uri, data.Type, data.Request, data.Status, data.Id)
@@ -103,7 +103,7 @@ func (m *defaultSysLogModel) Update(ctx context.Context, data *SysLog) error {
 }
 
 func (m *defaultSysLogModel) formatPrimary(primary interface{}) string {
-	return fmt.Sprintf("%s%v", cacheArkAdminSysLogIdPrefix, primary)
+	return fmt.Sprintf("%s%v", cacheZoneZoneAdminSysLogIdPrefix, primary)
 }
 
 func (m *defaultSysLogModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary interface{}) error {

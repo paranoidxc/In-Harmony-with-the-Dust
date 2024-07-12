@@ -13,7 +13,7 @@ func InitTimer(server *rest.Server, serverCtx *svc.ServiceContext) {
 	/*
 		go func(serverCtx *svc.ServiceContext) {
 			cronName := "test"
-			cacheKey := fmt.Sprintf("cache:verificationSystem:cronjob:task:%s", cronName)
+			cacheKey := fmt.Sprintf("cache:zeroZone:cronjob:task:%s", cronName)
 			err := AddTaskByFuncWithCompensation(serverCtx,
 				cacheKey,
 				cronName,
@@ -34,7 +34,7 @@ func InitTimer(server *rest.Server, serverCtx *svc.ServiceContext) {
 	/*
 		go func(serverCtx *svc.ServiceContext) {
 			cronName := "thirdClientSync"
-			cacheKey := fmt.Sprintf("cache:verificationSystem:cronjob:task:%s", cronName)
+			cacheKey := fmt.Sprintf("cache:zeroZone:cronjob:task:%s", cronName)
 			err := AddTaskByFuncWithCompensation(serverCtx,
 				cacheKey,
 				cronName,
