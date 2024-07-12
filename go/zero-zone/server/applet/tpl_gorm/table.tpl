@@ -134,6 +134,7 @@
 </template>
 <script setup>
 import { getCurrentInstance, proxyRefs } from "vue";
+import { ElMessage } from "element-plus";
 
 const { proxy } = getCurrentInstance();
 
@@ -214,6 +215,11 @@ const reqRowDel = async (id) => {
 
 const handleRowDel = async (row) => {
   await sysTableApi.delete(row.{{ .PrimaryKeyJson }});
+  ElMessage({
+    message: "删除成功",
+    type: "success",
+    plain: true,
+  });
   await getTableDataList(curPage, limit);
 };
 
@@ -224,6 +230,11 @@ const handleDelList = async() => {
   });
   */
   await sysTableApi.deletes(multipleSelection);
+  ElMessage({
+    message: "批量删除成功",
+    type: "success",
+    plain: true,
+  });
   multipleSelection = [];
   await getTableDataList(curPage, limit);
 };
@@ -266,6 +277,11 @@ const dialogConfirm = async () => {
       .create(tableForm)
       .then((res) => {
         if (res.code == 200) {
+            ElMessage({
+                message: "创建成功",
+                type: "success",
+                plain: true,
+            });
           dialogFormVisible = false;
           getTableDataList(curPage, limit);
         }
@@ -277,6 +293,11 @@ const dialogConfirm = async () => {
     // 修改 内容
     sysTableApi.update(tableForm).then((res) => {
       if (res.code == 200) {
+        ElMessage({
+            message: "更新成功",
+            type: "success",
+            plain: true,
+        });
         dialogFormVisible = false;
         getTableDataList(curPage, limit);
       }

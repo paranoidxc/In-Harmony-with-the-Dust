@@ -108,7 +108,7 @@ func (m *customSysUserModel) FindCountByCondition(ctx context.Context, condition
 }
 
 func (m *customSysUserModel) FindCountByDeptIds(ctx context.Context, deptIds string) (int64, error) {
-	query := fmt.Sprintf("SELECT COUNT(id) FROM %s WHERE id!=%d AND dept_id IN(%s)", m.table, globalkey.SysSuperUserId, deptIds)
+	query := fmt.Sprintf("SELECT COUNT(id) FROM %s WHERE id!=%d AND dept_id IN(%s) AND deleted_at IS NULL", m.table, globalkey.SysSuperUserId, deptIds)
 	var resp int64
 	err := m.QueryRowNoCacheCtx(ctx, &resp, query)
 	switch err {
