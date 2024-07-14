@@ -189,7 +189,15 @@ function Snake() {
                 strokeWeight(scl * 0.15);
 
                 for (var i = 0; i < this.total; i++) {
-                        rect(this.tail[i].x, this.tail[i].y, scl, scl);
+                        ellipse(this.tail[i].x + scl*0.5, this.tail[i].y+scl*0.5, scl, scl);
+                        /*
+                        if (i == 0) {
+                                rect(this.tail[i].x, this.tail[i].y, scl, scl);
+                        } else {
+                                ellipse(this.tail[i].x + scl*0.5, this.tail[i].y+scl*0.5, scl, scl);
+                        }
+                        */
+                        
                 }
                 rect(this.x, this.y, scl, scl);
         }
