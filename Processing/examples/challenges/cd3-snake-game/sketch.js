@@ -1,5 +1,6 @@
 var s; //snake
-var food;
+var foodNum = 10;
+var foods = [];
 var scl = 40; //pixel size
 var score = 0;
 var Hscore = 0;
@@ -7,10 +8,14 @@ var level = 5; //level
 var boxW, boxH;
 var ox, oy, nx, ny;
 
-function setup() {
+function setup() { 
         createCanvas(scl * floor(windowWidth / scl), scl * floor(windowHeight / scl));
+        //console.log("windowWidth", windowWidth, "width", width);
+
         boxW = width - 2 * scl;
         boxH = height - 3 * scl;
+
+        //console.log(boxW,"boxW");
 
         s = new Snake();
         strokeWeight(scl * 0.15);
@@ -38,15 +43,17 @@ function draw() {
 }
 
 
-function picklocation() {
+function pickFoodLocation() {
         let cols = floor(boxW / scl);
         let rows = floor(boxH / scl);
-        food = createVector(1 + floor(random(cols)), 2 + floor(random(rows)));
-        food.mult(scl);
-        for (let i = 0; i < s.tail.length; i++) {
-                if (s.tail[i] == food) {
-                        picklocation()
-                }
+        let tmp  = createVector(1 + floor(random(cols)), 2 + floor(random(rows)));
+        tmp.mult(scl);
+        return tmp;
+}
+
+function picklocation() {       
+        for (let i =0; i < foodNum ; i++ ) {  
+                foods.push(pickFoodLocation());                              
         }
 }
 
@@ -65,9 +72,9 @@ function keyPressed() {
 function drawGrid() {
         fill(190);
         stroke(200);
-        for (let i = scl; i < width - scl; i += scl) {
-                for (let j = 2 * scl; j < height - scl; j += scl) {
-                        rect(i, j, scl, scl)
+        for (let y = 2 * scl; y < height - scl; y += scl) {
+                for (let x = scl; x < width - scl; x += scl) {
+                        rect(x, y, scl, scl)
                 }
         }
 }
@@ -87,18 +94,25 @@ function drawGame() {
 }
 
 
-function drawFood() {
-        if (s.eat(food)) {
-                level += ((level/2) / level);
-                score += floor(level);
-                if (score > Hscore) {
-                        Hscore = score;
+function drawFood() {        
+        //fill(40, 20, 255, 150);        
+        fill(40, 140, 40, 150);        
+        for(let i = 0; i < foods.length; i ++ ) {
+                let food = foods[i];
+                if (s.eat(food)) {
+                        level += ((level/2) / level);
+                        score += floor(level);
+                        if (score > Hscore) {
+                                Hscore = score;
+                        }
+                        foods[i] = pickFoodLocation();                        
+                } else {
+                        ellipse(food.x + scl * 0.5, food.y + scl * 0.5, scl, scl);                        
                 }
-                picklocation();
-        }
-        fill(255, 0, 200);
-        ellipse(food.x + scl * 0.5, food.y + scl * 0.5, scl, scl);
+        }       
 }
+
+
 
 function touchStarted() {
         ox = mouseX;
@@ -122,8 +136,9 @@ function touchEnded() {
                         s.dir(0, -1);
                 }
         }
+} 
 
-} function Snake() {
+function Snake() {
         this.x = 0;
         this.y = 0;
         this.xspeed = 1;
