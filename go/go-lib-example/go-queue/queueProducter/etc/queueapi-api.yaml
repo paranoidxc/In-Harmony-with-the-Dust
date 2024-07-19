@@ -1,0 +1,9 @@
+Name: queueapi-api
+Host: 0.0.0.0
+Port: 8888
+
+
+KqPusherConf:
+  Brokers:
+    - 127.0.0.1:9092
+  Topic: topic-demo-test
