@@ -58,19 +58,15 @@ md5('xxxxxxxx')
 
 ## 数据库表统一个格式
 
-数据库表 尽量统一维持这4字段
+数据库表 尽量统一维持这5字段
 
-id 自增主键，创建时间 更新时间 删除时间
+id 自增主键，创建时间 更新时间 删除时间 是否删除
 
 ```
-ALTER TABLE tb_name
-ADD  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间';
-
-ALTER TABLE tb_name
-ADD  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
-
-ALTER TABLE tb_name
-ADD  `deleted_at` datetime DEFAULT NULL COMMENT '删除时间';
+ALTER TABLE tb_name ADD `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间';
+ALTER TABLE tb_name ADD `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+ALTER TABLE tb_name ADD `deleted_at` varchar(20) DEFAULT '0000-00-00 00:00:00' COMMENT '删除时间';
+ALTER TABLE tb_name ADD `is_del` tinyint(1) DEFAULT NOT NULL DEFAULT 0 COMMENT '删除时间';
 ```
 
 ## CRUD 自动化

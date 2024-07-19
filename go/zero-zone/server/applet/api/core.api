@@ -13,7 +13,7 @@ import (
 	"desc/common.api"
 )
 
-import "desc/demo_curd.api"
 import "desc/test_gorm.api"
 import "desc/redis.api"
 import "desc/dashboard.api"
+import "desc/demo_curd.api"

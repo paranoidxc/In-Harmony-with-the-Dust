@@ -15,8 +15,8 @@ func DemoCurdListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.DemoCurdListReq
 		if err := httpx.Parse(r, &req); err != nil {
-			//response.Response(w, nil, err)
-			//return
+			response.Response(w, nil, err)
+			return
 		}
 
 		validateErr := myvalid.Validate(&req)

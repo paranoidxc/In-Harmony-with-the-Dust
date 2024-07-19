@@ -2,7 +2,7 @@ func (m *default{{.upperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	{{if .withCache}}{{.cacheKey}}
 	var resp {{.upperStartCamelObject}}
 	err := m.QueryRowCtx(ctx, &resp, {{.cacheKeyVariable}}, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query :=  fmt.Sprintf("select %s from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}} and `deleted_at` is null  limit 1", {{.lowerStartCamelObject}}Rows, m.table)
+		query :=  fmt.Sprintf("select %s from %s where {{.originalPrimaryKey}} = {{if .postgreSql}}$1{{else}}?{{end}} and is_del = 0  limit 1", {{.lowerStartCamelObject}}Rows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, {{.lowerStartCamelPrimaryKey}})
 	})
 	switch err {

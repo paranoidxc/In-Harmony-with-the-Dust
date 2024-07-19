@@ -1,10 +1,15 @@
 
 func (l *{{ .Name }}ListLogic) {{ .Name }}List(req *types.{{ .Name }}ListReq) (resp *types.{{ .Name }}ListResp, err error) {
-    where := " deleted_at IS NULL "
+    where := []string{}
+    if req != nil {
+        if req.IncludeDeleted == 0 {
+		    where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")
+    	}
+  	}
     /*
     {{- range $i, $v := .VueFields }}
     if len(strings.TrimSpace(req.{{ $v.Name }})) > 0 {
-        where = where + fmt.Sprintf(" AND {{ $v.Column }} LIKE '%s'", "%"+strings.TrimSpace(req.{{ $v.Name }})+"%")
+	    where = append(where, fmt.Sprintf("{{ $v.Column }} LIKE '%s'", "%"+strings.TrimSpace(req.{{ $v.Name }})+"%"))
     }
     {{- end }}
     */

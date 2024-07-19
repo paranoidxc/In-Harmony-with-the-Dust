@@ -30,10 +30,16 @@ func NewDemoCurdPageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Demo
 }
 
 func (l *DemoCurdPageLogic) DemoCurdPage(req *types.DemoCurdPageReq) (resp *types.DemoCurdPageResp, err error) {
-	where := " deleted_at IS NULL "
-	if len(strings.TrimSpace(req.FirmName)) > 0 {
-		where = where + fmt.Sprintf(" AND firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%")
+	where := []string{}
+	if req != nil {
+		if req.IncludeDeleted == 0 {
+			where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")
+		}
 	}
+	if len(strings.TrimSpace(req.FirmName)) > 0 {
+		where = append(where, fmt.Sprintf("firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%"))
+	}
+
 	/*
 	   if len(strings.TrimSpace(req.FirmAlias)) > 0 {
 	       where = where + fmt.Sprintf(" AND firm_alias LIKE '%s'", "%"+strings.TrimSpace(req.FirmAlias)+"%")
@@ -54,8 +60,8 @@ func (l *DemoCurdPageLogic) DemoCurdPage(req *types.DemoCurdPageReq) (resp *type
 	       where = where + fmt.Sprintf(" AND delete_at LIKE '%s'", "%"+strings.TrimSpace(req.DeletedAt)+"%")
 	   }
 	*/
-
-	featDemoCurdPage, err := l.svcCtx.FeatDemoCurdModel.FindPageByWhere(l.ctx, where, req.Page, req.Limit)
+	whereStr := strings.Join(where, " AND ")
+	featDemoCurdPage, err := l.svcCtx.FeatDemoCurdModel.FindPageByWhere(l.ctx, whereStr, req.Page, req.Limit)
 	if err != nil {
 		return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
@@ -72,7 +78,7 @@ func (l *DemoCurdPageLogic) DemoCurdPage(req *types.DemoCurdPageReq) (resp *type
 		DemoCurdPage = append(DemoCurdPage, item)
 	}
 
-	total, err := l.svcCtx.FeatDemoCurdModel.FindPageByWhereCount(l.ctx, where)
+	total, err := l.svcCtx.FeatDemoCurdModel.FindPageByWhereCount(l.ctx, whereStr)
 	if err != nil {
 		return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}

@@ -47,7 +47,8 @@ type (
 		FirmDesc  sql.NullString `db:"firm_desc"`
 		CreatedAt time.Time      `db:"created_at"`
 		UpdatedAt time.Time      `db:"updated_at"`
-		DeletedAt sql.NullTime   `db:"deleted_at"`
+		DeletedAt string         `db:"deleted_at"`
+		IsDel     int64          `db:"is_del"`
 	}
 )
 
@@ -62,7 +63,7 @@ func (m *defaultDemoCurdModel) Delete(ctx context.Context, id int64) error {
 	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		//query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-		query := fmt.Sprintf("update %s set `deleted_at` = now() where `id` = ?", m.table)
+		query := fmt.Sprintf("update %s set `deleted_at` = now(), is_del = 1 where `id` = ?", m.table)
 		return conn.ExecCtx(ctx, query, id)
 	}, zeroZoneDemoCurdIdKey)
 	return err
@@ -73,7 +74,7 @@ func (m *defaultDemoCurdModel) Deletes(ctx context.Context, ids []int64) error {
 		zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 		_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 			//query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-			query := fmt.Sprintf("update %s set `deleted_at` = now() where `id` = ?", m.table)
+			query := fmt.Sprintf("update %s set `deleted_at` = now(), is_del = 1 where `id` = ?", m.table)
 			return conn.ExecCtx(ctx, query, id)
 		}, zeroZoneDemoCurdIdKey)
 		if err != nil {
@@ -88,7 +89,7 @@ func (m *defaultDemoCurdModel) FindOne(ctx context.Context, id int64) (*DemoCurd
 	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, id)
 	var resp DemoCurd
 	err := m.QueryRowCtx(ctx, &resp, zeroZoneDemoCurdIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
-		query := fmt.Sprintf("select %s from %s where `id` = ? and `deleted_at` is null  limit 1", demoCurdRows, m.table)
+		query := fmt.Sprintf("select %s from %s where `id` = ? and is_del = 0  limit 1", demoCurdRows, m.table)
 		return conn.QueryRowCtx(ctx, v, query, id)
 	})
 	switch err {
@@ -104,8 +105,8 @@ func (m *defaultDemoCurdModel) FindOne(ctx context.Context, id int64) (*DemoCurd
 func (m *defaultDemoCurdModel) Insert(ctx context.Context, data *DemoCurd) (sql.Result, error) {
 	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, data.Id)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?)", m.table, demoCurdRowsExpectAutoSet)
-		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?)", m.table, demoCurdRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc, data.IsDel)
 	}, zeroZoneDemoCurdIdKey)
 	return ret, err
 }
@@ -114,7 +115,7 @@ func (m *defaultDemoCurdModel) Update(ctx context.Context, data *DemoCurd) error
 	zeroZoneDemoCurdIdKey := fmt.Sprintf("%s%v", cacheZeroZoneDemoCurdIdPrefix, data.Id)
 	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
 		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, demoCurdRowsWithPlaceHolder)
-		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc, data.Id)
+		return conn.ExecCtx(ctx, query, data.FirmName, data.FirmAlias, data.FirmCode, data.FirmDesc, data.IsDel, data.Id)
 	}, zeroZoneDemoCurdIdKey)
 	return err
 }

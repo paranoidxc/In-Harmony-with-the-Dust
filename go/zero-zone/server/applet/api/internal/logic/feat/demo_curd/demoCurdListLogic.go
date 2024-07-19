@@ -28,7 +28,12 @@ func NewDemoCurdListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Demo
 }
 
 func (l *DemoCurdListLogic) DemoCurdList(req *types.DemoCurdListReq) (resp *types.DemoCurdListResp, err error) {
-	where := " deleted_at IS NULL "
+	where := " 1 "
+	if req != nil {
+		if req.IncludeDeleted == 0 {
+			where = where + " AND t.deleted_at = '0000-00-00 00:00:00' "
+		}
+	}
 	/*
 	   if len(strings.TrimSpace(req.FirmName)) > 0 {
 	       where = where + fmt.Sprintf(" AND firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%")

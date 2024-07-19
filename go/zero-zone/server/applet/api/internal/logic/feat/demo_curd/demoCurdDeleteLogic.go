@@ -6,9 +6,11 @@ import (
 	"zero-zone/applet/api/internal/svc"
 	"zero-zone/applet/api/internal/types"
 
+	
 	"github.com/zeromicro/go-zero/core/logx"
-
+	
 	errorx2 "zero-zone/pkg/errorx"
+	
 )
 
 type DemoCurdDeleteLogic struct {
@@ -33,3 +35,4 @@ func (l *DemoCurdDeleteLogic) DemoCurdDelete(req *types.DemoCurdDeleteReq) (err 
 
 	return
 }
+

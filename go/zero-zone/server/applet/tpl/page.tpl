@@ -1,15 +1,21 @@
 
 func (l *{{ .Name }}PageLogic) {{ .Name }}Page(req *types.{{ .Name }}PageReq) (resp *types.{{ .Name }}PageResp, err error) {
-    where := " deleted_at IS NULL "
+    where := []string{}
+    if req != nil {
+        if req.IncludeDeleted == 0 {
+            where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")
+        }
+    }
     /*
     {{- range $i, $v := .VueFields }}
     if len(strings.TrimSpace(req.{{ $v.Name }})) > 0 {
-        where = where + fmt.Sprintf(" AND {{ $v.Column }} LIKE '%s'", "%"+strings.TrimSpace(req.{{ $v.Name }})+"%")
+        where = append(where, fmt.Sprintf("{{ $v.Column }} LIKE '%s'", "%"+strings.TrimSpace(req.{{ $v.Name }})+"%"))
     }
     {{- end }}
     */
 
-    feat{{ .Name }}Page, err := l.svcCtx.Feat{{ .Name }}Model.FindPageByWhere(l.ctx, where, req.Page, req.Limit)
+    whereStr := strings.Join(where, " AND ")
+    feat{{ .Name }}Page, err := l.svcCtx.Feat{{ .Name }}Model.FindPageByWhere(l.ctx, whereStr, req.Page, req.Limit)
 	if err != nil {
 		return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
@@ -26,7 +32,7 @@ func (l *{{ .Name }}PageLogic) {{ .Name }}Page(req *types.{{ .Name }}PageReq) (r
 		{{ .Name }}Page = append({{ .Name }}Page, item)
 	}
 
-	total, err := l.svcCtx.Feat{{ .Name }}Model.FindPageByWhereCount(l.ctx, where)
+	total, err := l.svcCtx.Feat{{ .Name }}Model.FindPageByWhereCount(l.ctx, whereStr)
     if err != nil {
          return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
     }

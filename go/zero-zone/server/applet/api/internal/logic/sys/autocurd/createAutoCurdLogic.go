@@ -184,6 +184,10 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 		tag := `form:"` + field.Tag.Get("json") + ",optional" + `"`
 		listContent += (item + " `" + tag + "`" + "\n")
 	}
+	listContent += fmt.Sprintf(`%v %v`, "IncludeDeleted", "int")
+	listtag := `form:"includeDeleted,optional"`
+	listContent += " `" + listtag + "`" + "\n"
+
 	// page request需要的字段
 	for i := 1; i < m.NumField(); i++ {
 		field := m.Field(i)
@@ -191,6 +195,9 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 		tag := `form:"` + field.Tag.Get("json") + ",optional" + `"`
 		pageContent += (item + " `" + tag + "`" + "\n")
 	}
+	pageContent += fmt.Sprintf(`%v %v`, "IncludeDeleted", "int")
+	pagetag := `form:"includeDeleted,optional"`
+	pageContent += " `" + pagetag + "`" + "\n"
 
 	for i := 1; i < m.NumField(); i++ {
 		field := m.Field(i)
@@ -766,22 +773,22 @@ func (l *%vDetailLogic) %vDetail(req *types.%vDetailReq) (resp *types.%vDetailRe
 		}
 		if method == "Delete" {
 			modifiedContent = strings.Replace(modifiedContent, `"github.com/jinzhu/copier"`, "", -1)
-			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/app/model"`, "", -1)
+			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/applet/model"`, "", -1)
 			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/pkg/utils"`, "", -1)
 		}
 		if method == "Deletes" {
 			modifiedContent = strings.Replace(modifiedContent, `"github.com/jinzhu/copier"`, "", -1)
-			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/app/model"`, "", -1)
+			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/applet/model"`, "", -1)
 			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/pkg/utils"`, "", -1)
 		}
 		if method == "Detail" {
 			modifiedContent = strings.Replace(modifiedContent, `errorx2 "zero-zone/pkg/errorx"`, "", -1)
 		}
 		if method == "List" {
-			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/app/model"`, "", -1)
+			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/applet/model"`, "", -1)
 		}
 		if method == "Page" {
-			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/app/model"`, "", -1)
+			modifiedContent = strings.Replace(modifiedContent, `"zero-zone/applet/model"`, "", -1)
 		}
 
 		// 将修改后的内容写回文件

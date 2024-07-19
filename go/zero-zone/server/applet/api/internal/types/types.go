@@ -23,13 +23,13 @@ type DemoCurd struct {
 }
 
 type DemoCurdCreateReq struct {
-	FirmName  string `json:"firmName" validate:"required" label:"电影名称"`
-	FirmAlias string `json:"firmAlias"`
-	FirmCode  string `json:"firmCode" validate:"number,gte=1" label:"电影编码"`
-	FirmDesc  string `json:"firmDesc"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
-	DeletedAt string `json:"deletedAt"`
+	FirmName  string `json:"firmName,optional" validate:"required" label:"电影名称"`
+	FirmAlias string `json:"firmAlias,optional"`
+	FirmCode  string `json:"firmCode,optional" validate:"number,gte=1" label:"电影编码"`
+	FirmDesc  string `json:"firmDesc,optional"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
 }
 
 type DemoCurdDeleteReq struct {
@@ -46,9 +46,9 @@ type DemoCurdDetailReq struct {
 
 type DemoCurdDetailResp struct {
 	Id        int64  `json:"id"`
-	FirmName  string `json:"firmName"`
+	FirmName  string `json:"firmName" label:"电影名称"`
 	FirmAlias string `json:"firmAlias"`
-	FirmCode  string `json:"firmCode"`
+	FirmCode  string `json:"firmCode" label:"电影编码"`
 	FirmDesc  string `json:"firmDesc"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
@@ -56,13 +56,14 @@ type DemoCurdDetailResp struct {
 }
 
 type DemoCurdListReq struct {
-	FirmName  string `form:"firmName,optional"`
-	FirmAlias string `form:"firmAlias,optional"`
-	FirmCode  string `form:"firmCode,optional"`
-	FirmDesc  string `form:"firmDesc,optional"`
-	CreatedAt string `form:"createdAt,optional"`
-	UpdatedAt string `form:"updatedAt,optional"`
-	DeletedAt string `form:"deletedAt,optional"`
+	FirmName       string `form:"firmName,optional"`
+	FirmAlias      string `form:"firmAlias,optional"`
+	FirmCode       string `form:"firmCode,optional"`
+	FirmDesc       string `form:"firmDesc,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
 }
 
 type DemoCurdListResp struct {
@@ -72,13 +73,14 @@ type DemoCurdListResp struct {
 
 type DemoCurdPageReq struct {
 	PageReq
-	FirmName  string `form:"firmName,optional"`
-	FirmAlias string `form:"firmAlias,optional"`
-	FirmCode  string `form:"firmCode,optional"`
-	FirmDesc  string `form:"firmDesc,optional"`
-	CreatedAt string `form:"createdAt,optional"`
-	UpdatedAt string `form:"updatedAt,optional"`
-	DeletedAt string `form:"deletedAt,optional"`
+	FirmName       string `form:"firmName,optional"`
+	FirmAlias      string `form:"firmAlias,optional"`
+	FirmCode       string `form:"firmCode,optional"`
+	FirmDesc       string `form:"firmDesc,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
 }
 
 type DemoCurdPageResp struct {
@@ -88,13 +90,13 @@ type DemoCurdPageResp struct {
 
 type DemoCurdUpdateReq struct {
 	Id        int64  `json:"id"`
-	FirmName  string `json:"firmName"`
-	FirmAlias string `json:"firmAlias"`
-	FirmCode  string `json:"firmCode"`
-	FirmDesc  string `json:"firmDesc"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
-	DeletedAt string `json:"deletedAt"`
+	FirmName  string `json:"firmName,optional" validate:"required" label:"电影名称"`
+	FirmAlias string `json:"firmAlias,optional"`
+	FirmCode  string `json:"firmCode,optional" validate:"number,gte=1" label:"电影编码"`
+	FirmDesc  string `json:"firmDesc,optional"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
 }
 
 type PageReq struct {

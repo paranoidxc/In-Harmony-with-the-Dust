@@ -54,13 +54,14 @@ type DemoCurdDetailResp {
 }
 
 type DemoCurdListReq {
-	FirmName  string `form:"firmName,optional"`
-	FirmAlias string `form:"firmAlias,optional"`
-	FirmCode  string `form:"firmCode,optional"`
-	FirmDesc  string `form:"firmDesc,optional"`
-	CreatedAt string `form:"createdAt,optional"`
-	UpdatedAt string `form:"updatedAt,optional"`
-	DeletedAt string `form:"deletedAt,optional"`
+	FirmName       string `form:"firmName,optional"`
+	FirmAlias      string `form:"firmAlias,optional"`
+	FirmCode       string `form:"firmCode,optional"`
+	FirmDesc       string `form:"firmDesc,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
 }
 
 type DemoCurdListResp {
@@ -70,13 +71,14 @@ type DemoCurdListResp {
 
 type DemoCurdPageReq {
 	PageReq
-	FirmName  string `form:"firmName,optional"`
-	FirmAlias string `form:"firmAlias,optional"`
-	FirmCode  string `form:"firmCode,optional"`
-	FirmDesc  string `form:"firmDesc,optional"`
-	CreatedAt string `form:"createdAt,optional"`
-	UpdatedAt string `form:"updatedAt,optional"`
-	DeletedAt string `form:"deletedAt,optional"`
+	FirmName       string `form:"firmName,optional"`
+	FirmAlias      string `form:"firmAlias,optional"`
+	FirmCode       string `form:"firmCode,optional"`
+	FirmDesc       string `form:"firmDesc,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
 }
 
 type DemoCurdPageResp {
