@@ -268,16 +268,6 @@
         <el-form-item class="dsN" label="备注" :label-width="140">
           <el-input v-model="tableForm.remark" autocomplete="off" />
         </el-form-item>
-
-        <el-form-item class="dsN" label="professionId" :label-width="140">
-          <el-input v-model.number="tableForm.profession.id" />
-        </el-form-item>
-        <el-form-item class="dsN" label="jobId" :label-width="140">
-          <el-input v-model.number="tableForm.job.id" autocomplete="off" />
-        </el-form-item>
-        <el-form-item class="dsN" label="deptId" :label-width="140">
-          <el-input v-model.number="tableForm.dept.id" autocomplete="off" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -462,9 +452,6 @@ const handleAdd = () => {
     status: 1,
     orderNum: 0,
     gender: 0,
-    profession: {
-      id: 1,
-    },
     job: {
       id: 1,
     },
@@ -488,15 +475,15 @@ const dialogConfirm = async () => {
     // 添加数据
     tableForm.avatar = "";
     tableForm.email = "";
-    tableForm.professionId = tableForm.profession.id;
-    tableForm.jobId = tableForm.job.id;
-    tableForm.deptId = tableForm.dept.id;
+    //tableForm.professionId = tableForm.profession.id;
+    //tableForm.jobId = tableForm.job.id;
+    //tableForm.deptId = tableForm.dept.id;
     tableForm.roleIds = tableForm.roles;
   } else {
     // 修改 内容
-    tableForm.professionId = 1;
-    tableForm.jobId = 1;
-    tableForm.deptId = 1;
+    //tableForm.professionId = 1;
+    //tableForm.jobId = 1;
+    //tableForm.deptId = 1;
     tableForm.roleIds = tableForm.roles;
   }
 

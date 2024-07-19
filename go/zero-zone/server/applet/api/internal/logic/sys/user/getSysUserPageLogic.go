@@ -37,9 +37,9 @@ func (l *GetSysUserPageLogic) GetSysUserPage(req *types.SysUserPageReq) (resp *t
 	}
 
 	var user types.User
-	var userProfession types.UserProfession
-	var userJob types.UserJob
-	var userDept types.UserDept
+	//var userProfession types.UserProfession
+	//var userJob types.UserJob
+	//var userDept types.UserDept
 	userList := make([]types.User, 0)
 	for _, v := range users {
 		err := copier.Copy(&user, &v)
@@ -47,14 +47,14 @@ func (l *GetSysUserPageLogic) GetSysUserPage(req *types.SysUserPageReq) (resp *t
 			return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 		}
 
-		userProfession.Id = v.ProfessionId
-		userProfession.Name = v.Profession
+		//userProfession.Id = v.ProfessionId
+		//userProfession.Name = v.Profession
 
-		userJob.Id = v.JobId
-		userJob.Name = v.Job
+		//userJob.Id = v.JobId
+		//userJob.Name = v.Job
 
-		userDept.Id = v.DeptId
-		userDept.Name = v.Dept
+		//userDept.Id = v.DeptId
+		//userDept.Name = v.Dept
 
 		var userRole types.UserRole
 		var roles []types.UserRole
@@ -68,9 +68,9 @@ func (l *GetSysUserPageLogic) GetSysUserPage(req *types.SysUserPageReq) (resp *t
 			roles = append(roles, userRole)
 		}
 
-		user.Profession = userProfession
-		user.Job = userJob
-		user.Dept = userDept
+		//user.Profession = userProfession
+		//user.Job = userJob
+		//user.Dept = userDept
 		user.Roles = roles
 
 		userList = append(userList, user)

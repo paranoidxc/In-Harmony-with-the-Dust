@@ -334,20 +334,20 @@ type UserRole struct {
 }
 
 type User struct {
-	Id         int64          `json:"id"`
-	Account    string         `json:"account"`
-	Username   string         `json:"username"`
-	Nickname   string         `json:"nickname"`
-	Gender     int64          `json:"gender"`
-	Email      string         `json:"email"`
-	Mobile     string         `json:"mobile"`
-	Profession UserProfession `json:"profession"`
-	Job        UserJob        `json:"job"`
-	Dept       UserDept       `json:"dept"`
-	Roles      []UserRole     `json:"roles"`
-	Status     int64          `json:"status"`
-	OrderNum   int64          `json:"orderNum"`
-	Remark     string         `json:"remark"`
+	Id       int64  `json:"id"`
+	Account  string `json:"account"`
+	Username string `json:"username"`
+	Nickname string `json:"nickname"`
+	Gender   int64  `json:"gender"`
+	Email    string `json:"email"`
+	Mobile   string `json:"mobile"`
+	//Profession UserProfession `json:"profession"`
+	//Job        UserJob        `json:"job"`
+	//Dept       UserDept       `json:"dept"`
+	Roles    []UserRole `json:"roles"`
+	Status   int64      `json:"status"`
+	OrderNum int64      `json:"orderNum"`
+	Remark   string     `json:"remark"`
 }
 
 type SysUserPageReq struct {
@@ -375,9 +375,9 @@ type AddSysUserReq struct {
 	Gender       int64   `json:"gender,optional"        validate:"number,gte=0,lte=2"      label:"性别"`
 	Email        string  `json:"email,optional"         validate:"omitempty,email"         label:"邮箱"`
 	Mobile       string  `json:"mobile,optional"        validate:"omitempty,min=11"        label:"手机号"`
-	ProfessionId int64   `json:"professionId,optional"  validate:"number,gte=1"            label:"职称id"`
-	JobId        int64   `json:"jobId,optional"         validate:"number,gte=1"            label:"岗位id"`
-	DeptId       int64   `json:"deptId,optional"        validate:"number,gte=1"            label:"部门id"`
+	ProfessionId int64   `json:"professionId,optional"              label:"职称id"`
+	JobId        int64   `json:"jobId,optional"                    label:"岗位id"`
+	DeptId       int64   `json:"deptId,optional"                    label:"部门id"`
 	RoleIds      []int64 `json:"roleIds,optional"       validate:"unique"                  label:"角色ids"`
 	Status       int64   `json:"status"        validate:"number,gte=0,lte=1"      label:"状态"`
 	OrderNum     int64   `json:"orderNum,optional"      validate:"number,gte=0,lte=9999"   label:"排序"`
@@ -395,13 +395,13 @@ type UpdateSysUserReq struct {
 	Gender       int64   `json:"gender"        validate:"number,gte=0,lte=2"      label:"性别"`
 	Email        string  `json:"email"         validate:"omitempty,email"         label:"邮箱"`
 	Mobile       string  `json:"mobile"        validate:"omitempty,min=11"        label:"手机号"`
-	ProfessionId int64   `json:"professionId"  validate:"number,gte=1"            label:"职称id"`
-	JobId        int64   `json:"jobId"         validate:"number,gte=1"            label:"岗位id"`
-	DeptId       int64   `json:"deptId"        validate:"number,gte=1"            label:"部门id"`
+	ProfessionId int64   `json:"professionId,optional"             label:"职称id"`
+	JobId        int64   `json:"jobId,optional"                    label:"岗位id"`
+	DeptId       int64   `json:"deptId,optional"                   label:"部门id"`
 	RoleIds      []int64 `json:"roleIds"       validate:"unique"                  label:"角色ids"`
-	Status       int64   `json:"status"        validate:"number,gte=0,lte=1"      label:"状态"`
-	OrderNum     int64   `json:"orderNum"      validate:"number,gte=0,lte=9999"   label:"排序"`
-	Remark       string  `json:"remark"        validate:"max=200"                 label:"备注"`
+	Status       int64   `json:"status,optional"        validate:"number,gte=0,lte=1"      label:"状态"`
+	OrderNum     int64   `json:"orderNum,optional"      validate:"number,gte=0,lte=9999"   label:"排序"`
+	Remark       string  `json:"remark,optional"        validate:"max=200"                 label:"备注"`
 }
 
 type UpdateSysUserPasswordReq struct {
