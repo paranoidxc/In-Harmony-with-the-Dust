@@ -99,7 +99,7 @@ func (c *GameClient) Start() {
 				return
 			}
 
-			log.Println("stream client get recv", resp)
+			log.Println("client stream get recv", resp)
 
 			c.Game.Mu.Lock()
 			switch resp.GetAction().(type) {
