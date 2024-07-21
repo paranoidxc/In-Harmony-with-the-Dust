@@ -45,3 +45,24 @@
 2024/07/21 11:01:39 frontend.go:240: direction 3
 2024/07/21 11:01:39 frontend.go:240: direction 3
 2024/07/21 11:01:40 frontend.go:240: direction 3
+2024/07/21 11:23:40 client.go:45: grpc resp token:"774063ab-1f7b-4c98-b33e-c10ec906847e" entities:<player:<id:"486c588b-4797-4949-805d-099cdd5c67f2" name:"aa" position:<x:-17 y:12 > icon:"A" > > 
+2024/07/21 11:23:58 frontend.go:240: direction 0
+2024/07/21 11:23:59 frontend.go:240: direction 3
+2024/07/21 11:28:16 client.go:97: can not connect with server failed to exit idle mode: passthrough: received empty target in Build()
+2024/07/21 11:28:24 client.go:45: grpc resp token:"b0a3e69a-d207-4a09-8d9b-d5ae2d4a0dcd" entities:<player:<id:"486c588b-4797-4949-805d-099cdd5c67f2" name:"aa" position:<x:-17 y:12 > icon:"A" > > entities:<player:<id:"61aefb17-bb1c-4dac-9040-7a0e35ce32f0" name:"m" position:<y:15 > icon:"M" > > 
+2024/07/21 11:28:26 frontend.go:240: direction 3
+2024/07/21 11:28:26 backend.go:75: watchCollisions {3 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:28:26.046985 +0800 CST m=+7.447719926}
+2024/07/21 11:30:54 frontend.go:240: direction 0
+2024/07/21 11:30:54 backend.go:75: watchCollisions {0 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:30:54.382568 +0800 CST m=+155.839556798}
+2024/07/21 11:30:54 frontend.go:240: direction 2
+2024/07/21 11:30:54 backend.go:75: watchCollisions {2 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:30:54.842411 +0800 CST m=+156.299416074}
+2024/07/21 11:30:55 frontend.go:240: direction 3
+2024/07/21 11:30:55 backend.go:75: watchCollisions {3 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:30:55.214017 +0800 CST m=+156.671035193}
+2024/07/21 11:30:55 frontend.go:240: direction 1
+2024/07/21 11:30:55 backend.go:75: watchCollisions {1 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:30:55.679071 +0800 CST m=+157.136105339}
+2024/07/21 11:30:55 frontend.go:240: direction 2
+2024/07/21 11:30:55 backend.go:75: watchCollisions {2 61aefb17-bb1c-4dac-9040-7a0e35ce32f0 2024-07-21 11:30:55.978533 +0800 CST m=+157.435577360}
+2024/07/21 11:30:56 frontend.go:260: laserDirection 2
+2024/07/21 11:30:56 frontend.go:260: laserDirection 0
+2024/07/21 11:30:57 frontend.go:260: laserDirection 1
+2024/07/21 11:30:57 frontend.go:260: laserDirection 3

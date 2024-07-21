@@ -97,7 +97,7 @@ func (c *GameClient) Start() {
 				return
 			}
 
-			log.Println(resp)
+			log.Println("stream resp", resp)
 		}
 	}()
 }

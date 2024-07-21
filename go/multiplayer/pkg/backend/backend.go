@@ -1,7 +1,7 @@
 package backend
 
 import (
-	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -29,7 +29,7 @@ type MoveAction struct {
 
 // Perform contains backend logic required to move an entity.
 func (action MoveAction) Perform(game *Game) {
-	fmt.Println("action", action)
+	log.Println("action", action)
 }
 
 type Change interface{}
@@ -72,7 +72,7 @@ func (game *Game) Start() {
 func (game *Game) watchActions() {
 	for {
 		action := <-game.ActionChannel
-		fmt.Println("watchCollisions", action)
+		log.Println("watchActions", action)
 	}
 }
 
