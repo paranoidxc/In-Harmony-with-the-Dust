@@ -44,6 +44,8 @@ func NewGameServer(game *backend.Game, password string) *GameServer {
 		clients:  make(map[uuid.UUID]*client),
 		password: password,
 	}
+
+	server.watchChanges()
 	return server
 }
 
@@ -89,15 +91,16 @@ func (s *GameServer) Stream(srv proto.Game_StreamServer) error {
 				currentClient.done <- errors.New("failed to receive request")
 				return
 			}
-			log.Printf("got message %+v", req)
+			log.Printf("got message\n")
+			log.Println(req)
 			currentClient.lastMessage = time.Now()
 
 			switch req.GetAction().(type) {
 			case *proto.Request_Move:
-				fmt.Println("Request_Move")
-				//s.handleMoveRequest(req, currentClient)
+				log.Println("Request_Move")
+				s.handleMoveRequest(req, currentClient)
 			case *proto.Request_Laser:
-				fmt.Println("Request_Laser")
+				log.Println("Request_Laser")
 				//s.handleLaserRequest(req, currentClient)
 			}
 		}
@@ -118,7 +121,7 @@ func (s *GameServer) Stream(srv proto.Game_StreamServer) error {
 }
 
 func (s *GameServer) Connect(ctx context.Context, req *proto.ConnectRequest) (*proto.ConnectResponse, error) {
-	fmt.Println("connect")
+	log.Println("connect")
 
 	playerID, err := uuid.Parse(req.Id)
 	if err != nil {
@@ -130,7 +133,7 @@ func (s *GameServer) Connect(ctx context.Context, req *proto.ConnectRequest) (*p
 	if req.Password != s.password {
 		return nil, errors.New("invalid password provided")
 	}
-	fmt.Println("req", req)
+	log.Println("req", req)
 
 	s.game.Mu.RLock()
 	if s.game.GetEntity(playerID) != nil {
@@ -171,6 +174,16 @@ func (s *GameServer) Connect(ctx context.Context, req *proto.ConnectRequest) (*p
 	}
 	s.game.Mu.RUnlock()
 
+	// Inform all other clients of the new player.
+	resp := proto.Response{
+		Action: &proto.Response_AddEntity{
+			AddEntity: &proto.AddEntity{
+				Entity: proto.GetProtoEntity(player),
+			},
+		},
+	}
+	s.broadcast(&resp)
+
 	// Add the new client.
 	s.mu.Lock()
 	token := uuid.New()
@@ -186,4 +199,58 @@ func (s *GameServer) Connect(ctx context.Context, req *proto.ConnectRequest) (*p
 		Token:    token.String(),
 		Entities: entities,
 	}, nil
+}
+
+func (s *GameServer) watchChanges() {
+	go func() {
+		for {
+			change := <-s.game.ChangeChannel
+			log.Printf("ChangeChannel %+v", change)
+			switch change.(type) {
+			case backend.MoveChange:
+				change := change.(backend.MoveChange)
+				s.handleMoveChange(change)
+			default:
+				panic("FFFFFFF")
+			}
+		}
+	}()
+}
+
+// handleMoveRequest makes a request to the game engine to move a player.
+func (s *GameServer) handleMoveRequest(req *proto.Request, currentClient *client) {
+	move := req.GetMove()
+	s.game.ActionChannel <- backend.MoveAction{
+		ID:        currentClient.playerID,
+		Direction: proto.GetBackendDirection(move.Direction),
+		Created:   time.Now(),
+	}
+}
+
+func (s *GameServer) handleMoveChange(change backend.MoveChange) {
+	resp := proto.Response{
+		Action: &proto.Response_UpdateEntity{
+			UpdateEntity: &proto.UpdateEntity{
+				Entity: proto.GetProtoEntity(change.Entity),
+			},
+		},
+	}
+	s.broadcast(&resp)
+}
+
+// broadcast sends a response to all clients.
+func (s *GameServer) broadcast(resp *proto.Response) {
+	s.mu.Lock()
+	for id, currentClient := range s.clients {
+		if currentClient.streamServer == nil {
+			continue
+		}
+		if err := currentClient.streamServer.Send(resp); err != nil {
+			log.Printf("%s - broadcast error %v", id, err)
+			currentClient.done <- errors.New("failed to broadcast message")
+			continue
+		}
+		log.Printf("%s - broadcasted %+v", resp, id)
+	}
+	s.mu.Unlock()
 }

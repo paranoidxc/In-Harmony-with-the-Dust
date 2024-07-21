@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 )
 
-/*
 func GetBackendDirection(protoDirection Direction) backend.Direction {
 	direction := backend.DirectionStop
 	switch protoDirection {
@@ -24,9 +23,7 @@ func GetBackendDirection(protoDirection Direction) backend.Direction {
 	}
 	return direction
 }
-*/
 
-/*
 func GetProtoDirection(direction backend.Direction) Direction {
 	protoDirection := Direction_STOP
 	switch direction {
@@ -41,7 +38,6 @@ func GetProtoDirection(direction backend.Direction) Direction {
 	}
 	return protoDirection
 }
-*/
 
 func GetBackendCoordinate(protoCoordinate *Coordinate) backend.Coordinate {
 	return backend.Coordinate{

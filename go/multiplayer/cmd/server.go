@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 	port := 8888
 
 	log.Printf("listening on port %d", port)
