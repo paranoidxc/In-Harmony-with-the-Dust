@@ -2,5 +2,17 @@ package backend
 
 type Player struct {
 	IdentifierBase
-	Name string
+	Positioner
+	Mover
+	CurrentPosition Coordinate
+	Name            string
+	Icon            rune
+}
+
+func (p *Player) Position() Coordinate {
+	return p.CurrentPosition
+}
+
+func (p *Player) Move(c Coordinate) {
+	p.CurrentPosition = c
 }

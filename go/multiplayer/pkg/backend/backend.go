@@ -21,6 +21,27 @@ type Action interface {
 	Perform(game *Game)
 }
 
+type MoveAction struct {
+	Direction Direction
+	ID        uuid.UUID
+	Created   time.Time
+}
+
+// Perform contains backend logic required to move an entity.
+func (action MoveAction) Perform(game *Game) {
+	fmt.Println("action", action)
+}
+
+type Change interface{}
+
+// MoveChange is sent when the game engine moves an entity.
+type MoveChange struct {
+	Change
+	Entity Identifier
+	//Direction Direction
+	Position Coordinate
+}
+
 // Identifier is an entity that provides an ID method.
 type Identifier interface {
 	ID() uuid.UUID
@@ -28,14 +49,18 @@ type Identifier interface {
 
 type Game struct {
 	Entities      map[uuid.UUID]Identifier
+	gameMap       [][]rune
 	Mu            sync.RWMutex
 	ActionChannel chan Action
+	ChangeChannel chan Change
 }
 
 func NewGame() *Game {
 	return &Game{
 		Entities:      make(map[uuid.UUID]Identifier),
 		ActionChannel: make(chan Action, 1),
+		ChangeChannel: make(chan Change, 1),
+		gameMap:       MapDefault,
 	}
 }
 
@@ -74,4 +99,32 @@ type IdentifierBase struct {
 // ID returns the UUID of an entity.
 func (e IdentifierBase) ID() uuid.UUID {
 	return e.UUID
+}
+
+// Coordinate is used for all position-related variables.
+type Coordinate struct {
+	X int
+	Y int
+}
+
+// Direction is used to represent Direction constants.
+type Direction int
+
+// Contains direction constants - DirectionStop will take no effect.
+const (
+	DirectionUp Direction = iota
+	DirectionDown
+	DirectionLeft
+	DirectionRight
+	DirectionStop
+)
+
+// Positioner is an entity that has a position.
+type Positioner interface {
+	Position() Coordinate
+}
+
+// Mover is an entity that can be moved.
+type Mover interface {
+	Move(Coordinate)
 }

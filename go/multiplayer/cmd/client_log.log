@@ -1,0 +1,47 @@
+2024/07/21 10:45:27 client.go:86: test log
+2024/07/21 10:47:32 client.go:45: grpc resp token:"79c4a7d6-6f1a-44ac-9d29-f786c9c93694" entities:<player:<id:"1f6abfef-3582-495b-9537-1eb51b1f1c47" name:"aa" position:<x:-17 y:12 > icon:"A" > > entities:<player:<id:"2fee3554-d0de-4c00-aee9-3478731d19ea" name:"aaa" position:<y:15 > icon:"A" > > entities:<player:<id:"124eceb1-fbcf-4f5f-b6bf-0045d6fb3034" name:"aaa" position:<x:16 y:12 > icon:"A" > > 
+2024/07/21 10:57:17 client.go:45: grpc resp token:"b0d07a2d-55c6-4a77-87d9-268e83c84ff6" entities:<player:<id:"4f3152ae-da94-4a6f-80c4-d2aeddabb1a5" name:"aa" position:<x:-17 y:12 > icon:"A" > > 
+2024/07/21 10:57:48 frontend.go:259: laserDirection 0
+2024/07/21 10:57:48 frontend.go:259: laserDirection 0
+2024/07/21 10:57:48 frontend.go:259: laserDirection 0
+2024/07/21 10:57:48 frontend.go:259: laserDirection 2
+2024/07/21 10:57:49 frontend.go:259: laserDirection 1
+2024/07/21 10:57:49 frontend.go:259: laserDirection 3
+2024/07/21 10:57:49 frontend.go:259: laserDirection 0
+2024/07/21 10:57:49 frontend.go:259: laserDirection 2
+2024/07/21 10:57:49 frontend.go:259: laserDirection 1
+2024/07/21 10:57:50 frontend.go:259: laserDirection 3
+2024/07/21 10:57:50 frontend.go:259: laserDirection 0
+2024/07/21 10:57:50 frontend.go:259: laserDirection 2
+2024/07/21 10:57:50 frontend.go:259: laserDirection 1
+2024/07/21 10:57:50 frontend.go:259: laserDirection 3
+2024/07/21 10:57:50 frontend.go:259: laserDirection 0
+2024/07/21 10:57:51 frontend.go:259: laserDirection 2
+2024/07/21 10:57:51 frontend.go:259: laserDirection 1
+2024/07/21 10:57:51 frontend.go:259: laserDirection 3
+2024/07/21 11:00:06 client.go:45: grpc resp token:"4c8a5e38-9f25-4476-bb4c-0a1418113696" entities:<player:<id:"4f3152ae-da94-4a6f-80c4-d2aeddabb1a5" name:"aa" position:<x:-17 y:12 > icon:"A" > > entities:<player:<id:"1d35b13b-7569-4b40-a28f-7ec005eb92cd" name:"v" position:<y:15 > icon:"V" > > 
+2024/07/21 11:00:33 frontend.go:259: laserDirection 2
+2024/07/21 11:00:36 frontend.go:259: laserDirection 1
+2024/07/21 11:00:37 frontend.go:259: laserDirection 3
+2024/07/21 11:00:37 frontend.go:259: laserDirection 0
+2024/07/21 11:01:25 client.go:45: grpc resp token:"10970013-8e67-44b5-8b81-6599d652aee2" entities:<player:<id:"4f3152ae-da94-4a6f-80c4-d2aeddabb1a5" name:"aa" position:<x:-17 y:12 > icon:"A" > > entities:<player:<id:"1d35b13b-7569-4b40-a28f-7ec005eb92cd" name:"v" position:<y:15 > icon:"V" > > entities:<player:<id:"283e79f1-dafe-4936-9f01-3c7fbbe052ad" name:"nn" position:<x:16 y:12 > icon:"N" > > 
+2024/07/21 11:01:27 frontend.go:260: laserDirection 1
+2024/07/21 11:01:28 frontend.go:240: direction 0
+2024/07/21 11:01:28 frontend.go:240: direction 0
+2024/07/21 11:01:28 frontend.go:240: direction 0
+2024/07/21 11:01:28 frontend.go:240: direction 0
+2024/07/21 11:01:28 frontend.go:240: direction 0
+2024/07/21 11:01:29 frontend.go:240: direction 0
+2024/07/21 11:01:29 frontend.go:240: direction 0
+2024/07/21 11:01:29 frontend.go:240: direction 0
+2024/07/21 11:01:29 frontend.go:240: direction 0
+2024/07/21 11:01:29 frontend.go:240: direction 0
+2024/07/21 11:01:34 frontend.go:240: direction 1
+2024/07/21 11:01:34 frontend.go:240: direction 1
+2024/07/21 11:01:34 frontend.go:240: direction 1
+2024/07/21 11:01:36 frontend.go:240: direction 2
+2024/07/21 11:01:37 frontend.go:240: direction 2
+2024/07/21 11:01:37 frontend.go:240: direction 2
+2024/07/21 11:01:39 frontend.go:240: direction 3
+2024/07/21 11:01:39 frontend.go:240: direction 3
+2024/07/21 11:01:40 frontend.go:240: direction 3

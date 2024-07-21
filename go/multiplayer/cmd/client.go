@@ -5,6 +5,7 @@ import (
 	"multiplayer-game-with-go/pkg/backend"
 	"multiplayer-game-with-go/pkg/client"
 	"multiplayer-game-with-go/proto"
+	"os"
 	"regexp"
 
 	"github.com/gdamore/tcell/v2"
@@ -73,6 +74,16 @@ func connectApp(info *connectInfo) *tview.Application {
 }
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	f, err := os.OpenFile("client_log.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+	if err != nil {
+
+	}
+	defer func() {
+		f.Close()
+	}()
+	log.SetOutput(f)
+
 	game := backend.NewGame()
 	view := frontend.NewView(game)
 	game.Start()
@@ -94,6 +105,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("connect request failed %v", err)
 	}
+	client.Start()
+	view.Start()
 
 	select {}
 }

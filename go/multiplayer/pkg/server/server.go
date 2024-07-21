@@ -4,12 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"multiplayer-game-with-go/pkg/backend"
 	"multiplayer-game-with-go/proto"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
+	"golang.org/x/exp/rand"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -27,6 +33,7 @@ type client struct {
 
 type GameServer struct {
 	game     *backend.Game
+	clients  map[uuid.UUID]*client
 	mu       sync.RWMutex
 	password string
 }
@@ -34,13 +41,79 @@ type GameServer struct {
 func NewGameServer(game *backend.Game, password string) *GameServer {
 	server := &GameServer{
 		game:     game,
+		clients:  make(map[uuid.UUID]*client),
 		password: password,
 	}
 	return server
 }
 
+func (s *GameServer) getClientFromContext(ctx context.Context) (*client, error) {
+	headers, ok := metadata.FromIncomingContext(ctx)
+	tokenRaw := headers["authorization"]
+	if len(tokenRaw) == 0 {
+		return nil, errors.New("no token provided")
+	}
+	token, err := uuid.Parse(tokenRaw[0])
+	if err != nil {
+		return nil, errors.New("cannot parse token")
+	}
+	s.mu.RLock()
+	currentClient, ok := s.clients[token]
+	s.mu.RUnlock()
+	if !ok {
+		return nil, errors.New("token not recognized")
+	}
+	return currentClient, nil
+}
+
 func (s *GameServer) Stream(srv proto.Game_StreamServer) error {
-	fmt.Println("stream")
+	//fmt.Println("stream")
+	ctx := srv.Context()
+	currentClient, err := s.getClientFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	if currentClient.streamServer != nil {
+		return errors.New("stream already active")
+	}
+	currentClient.streamServer = srv
+
+	log.Println("start new server")
+
+	// Wait for stream requests.
+	go func() {
+		for {
+			req, err := srv.Recv()
+			if err != nil {
+				log.Printf("receive error %v", err)
+				currentClient.done <- errors.New("failed to receive request")
+				return
+			}
+			log.Printf("got message %+v", req)
+			currentClient.lastMessage = time.Now()
+
+			switch req.GetAction().(type) {
+			case *proto.Request_Move:
+				fmt.Println("Request_Move")
+				//s.handleMoveRequest(req, currentClient)
+			case *proto.Request_Laser:
+				fmt.Println("Request_Laser")
+				//s.handleLaserRequest(req, currentClient)
+			}
+		}
+	}()
+
+	var doneError error
+	select {
+	case <-ctx.Done():
+		doneError = ctx.Err()
+	case doneError = <-currentClient.done:
+		fmt.Println("currentClient.done")
+	}
+
+	log.Printf(`stream done with error "%v"`, doneError)
+	log.Printf("%s - removing client", currentClient.id)
+
 	return nil
 }
 
@@ -65,22 +138,52 @@ func (s *GameServer) Connect(ctx context.Context, req *proto.ConnectRequest) (*p
 	}
 	s.game.Mu.RUnlock()
 
-	player := &backend.Player{}
+	re := regexp.MustCompile("^[a-zA-Z0-9]+$")
+	if !re.MatchString(req.Name) {
+		return nil, errors.New("invalid name provided")
+	}
+	icon, _ := utf8.DecodeRuneInString(strings.ToUpper(req.Name))
+
+	// Choose a random spawn point.
+	spawnPoints := s.game.GetMapByType()[backend.MapTypeSpawn]
+	i := rand.Int() % len(spawnPoints)
+	startCoordinate := spawnPoints[i]
+
+	player := &backend.Player{
+		Name:            req.Name,
+		Icon:            icon,
+		IdentifierBase:  backend.IdentifierBase{UUID: playerID},
+		CurrentPosition: startCoordinate,
+	}
 
 	s.game.Mu.Lock()
 	s.game.AddEntity(player)
 	s.game.Mu.Unlock()
 
 	// Inform all other clients of the new player.
-	//s.game.Mu.RLock()
-	//entities := make([]*proto.Entity, 0)
+	s.game.Mu.RLock()
+	entities := make([]*proto.Entity, 0)
+	for _, entity := range s.game.Entities {
+		protoEntity := proto.GetProtoEntity(entity)
+		if protoEntity != nil {
+			entities = append(entities, protoEntity)
+		}
+	}
+	s.game.Mu.RUnlock()
 
 	// Add the new client.
 	s.mu.Lock()
 	token := uuid.New()
+	s.clients[token] = &client{
+		id:          token,
+		playerID:    playerID,
+		done:        make(chan error),
+		lastMessage: time.Now(),
+	}
 	s.mu.Unlock()
 
 	return &proto.ConnectResponse{
-		Token: token.String(),
+		Token:    token.String(),
+		Entities: entities,
 	}, nil
 }

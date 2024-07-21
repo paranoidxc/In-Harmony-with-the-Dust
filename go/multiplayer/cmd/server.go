@@ -23,6 +23,7 @@ func main() {
 	fmt.Println(listener)
 
 	game := backend.NewGame()
+	game.Start()
 
 	s := grpc.NewServer()
 	server := server.NewGameServer(game, "")

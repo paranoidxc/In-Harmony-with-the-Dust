@@ -1,6 +1,8 @@
 package frontend
 
 import (
+	"log"
+	"math"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -135,134 +137,136 @@ func setupViewPort(view *View) {
 		SetBorder(true).
 		SetTitle("tshooter").
 		SetBackgroundColor(backgroundColor)
-	//cameraX := 0
-	//cameraY := 0
+	cameraX := 0
+	cameraY := 0
 	box.SetDrawFunc(func(screen tcell.Screen, x int, y int, width int, height int) (int, int, int, int) {
-		/*
-			view.Game.Mu.RLock()
-			defer view.Game.Mu.RUnlock()
-			style := tcell.StyleDefault.Background(backgroundColor)
-			// Move camera
-			currentEntity := view.Game.GetEntity(view.CurrentPlayer)
-			if currentEntity == nil {
-				return 0, 0, 0, 0
+		view.Game.Mu.RLock()
+		defer view.Game.Mu.RUnlock()
+		style := tcell.StyleDefault.Background(backgroundColor)
+		// Move camera
+		currentEntity := view.Game.GetEntity(view.CurrentPlayer)
+		if currentEntity == nil {
+			return 0, 0, 0, 0
+		}
+		currentPlayerPosition := currentEntity.(*backend.Player).Position()
+		cameraDiffX := float64(cameraX - currentPlayerPosition.X)
+		cameraDiffY := float64(cameraY - currentPlayerPosition.Y)
+		cameraDiffXMax := float64(width / 6)
+		cameraDiffYMax := float64(height / 6)
+		if math.Abs(cameraDiffX) > cameraDiffXMax {
+			if cameraDiffX <= 0 {
+				cameraX++
+			} else {
+				cameraX--
 			}
-			currentPlayerPosition := currentEntity.(*backend.Player).Position()
-			cameraDiffX := float64(cameraX - currentPlayerPosition.X)
-			cameraDiffY := float64(cameraY - currentPlayerPosition.Y)
-			cameraDiffXMax := float64(width / 6)
-			cameraDiffYMax := float64(height / 6)
-			if math.Abs(cameraDiffX) > cameraDiffXMax {
-				if cameraDiffX <= 0 {
-					cameraX++
-				} else {
-					cameraX--
-				}
+		}
+		if math.Abs(cameraDiffY) > cameraDiffYMax {
+			if cameraDiffY <= 0 {
+				cameraY++
+			} else {
+				cameraY--
 			}
-			if math.Abs(cameraDiffY) > cameraDiffYMax {
-				if cameraDiffY <= 0 {
-					cameraY++
-				} else {
-					cameraY--
-				}
+		}
+		width = width - 1
+		height = height - 1
+		mapWidth, mapHeight := view.Game.GetMapDimensions()
+		if width > mapWidth {
+			cameraX = -1
+		}
+		if height > mapHeight {
+			cameraY = -1
+		}
+		centerY := (y + height/2) - cameraY
+		centerX := (x + width/2) - cameraX
+		// Draw center point - useful for debugging
+		// if withinDrawBounds(centerX, centerY, width, height) {
+		// 	screen.SetContent(centerX, centerY, 'C', nil, style.Foreground(tcell.ColorWhite))
+		// }
+		// Draw entities
+		for _, entity := range view.Game.Entities {
+			positioner, ok := entity.(backend.Positioner)
+			if !ok {
+				continue
 			}
-			width = width - 1
-			height = height - 1
-			mapWidth, mapHeight := view.Game.GetMapDimensions()
-			if width > mapWidth {
-				cameraX = -1
+			position := positioner.Position()
+			drawX := centerX + position.X
+			drawY := centerY + position.Y
+			if !withinDrawBounds(drawX, drawY, width, height) {
+				continue
 			}
-			if height > mapHeight {
-				cameraY = -1
-			}
-			centerY := (y + height/2) - cameraY
-			centerX := (x + width/2) - cameraX
-			// Draw center point - useful for debugging
-			// if withinDrawBounds(centerX, centerY, width, height) {
-			// 	screen.SetContent(centerX, centerY, 'C', nil, style.Foreground(tcell.ColorWhite))
-			// }
-			// Draw entities
-			for _, entity := range view.Game.Entities {
-				positioner, ok := entity.(backend.Positioner)
-				if !ok {
-					continue
-				}
-				position := positioner.Position()
-				drawX := centerX + position.X
-				drawY := centerY + position.Y
-				if !withinDrawBounds(drawX, drawY, width, height) {
-					continue
-				}
-				var icon rune
-				var color tcell.Color
-				switch entity.(type) {
-				case *backend.Player:
-					icon = entity.(*backend.Player).Icon
-					color = playerColor
+			var icon rune
+			var color tcell.Color
+			switch entity.(type) {
+			case *backend.Player:
+				icon = entity.(*backend.Player).Icon
+				color = playerColor
+			/*
 				case *backend.Laser:
 					icon = 'x'
 					color = laserColor
-				default:
-					continue
-				}
-				// See if player is far from center of viewport.
-				screen.SetContent(drawX, drawY, icon, nil, style.Foreground(color))
+			*/
+			default:
+				continue
 			}
-			// Draw map
-			for _, wall := range view.Game.GetMapByType()[backend.MapTypeWall] {
-				x := centerX + wall.X
-				y := centerY + wall.Y
-				if !withinDrawBounds(x, y, width, height) {
-					continue
-				}
-				screen.SetContent(x, y, '█', nil, style.Foreground(wallColor))
+			// See if player is far from center of viewport.
+			screen.SetContent(drawX, drawY, icon, nil, style.Foreground(color))
+		}
+		// Draw map
+		for _, wall := range view.Game.GetMapByType()[backend.MapTypeWall] {
+			x := centerX + wall.X
+			y := centerY + wall.Y
+			if !withinDrawBounds(x, y, width, height) {
+				continue
 			}
-		*/
+			screen.SetContent(x, y, '█', nil, style.Foreground(wallColor))
+		}
 		return 0, 0, 0, 0
 	})
 	// Handle player movement input.
 	box.SetInputCapture(func(e *tcell.EventKey) *tcell.EventKey {
-		/*
-			// Movement
-			direction := backend.DirectionStop
-			switch e.Key() {
-			case tcell.KeyUp:
-				direction = backend.DirectionUp
-			case tcell.KeyDown:
-				direction = backend.DirectionDown
-			case tcell.KeyLeft:
-				direction = backend.DirectionLeft
-			case tcell.KeyRight:
-				direction = backend.DirectionRight
+		// Movement
+		direction := backend.DirectionStop
+		switch e.Key() {
+		case tcell.KeyUp:
+			direction = backend.DirectionUp
+		case tcell.KeyDown:
+			direction = backend.DirectionDown
+		case tcell.KeyLeft:
+			direction = backend.DirectionLeft
+		case tcell.KeyRight:
+			direction = backend.DirectionRight
+		}
+		if direction != backend.DirectionStop {
+			log.Println("direction", direction)
+			view.Game.ActionChannel <- backend.MoveAction{
+				ID:        view.CurrentPlayer,
+				Direction: direction,
+				Created:   time.Now(),
 			}
-			if direction != backend.DirectionStop {
-				view.Game.ActionChannel <- backend.MoveAction{
-					ID:        view.CurrentPlayer,
-					Direction: direction,
-					Created:   time.Now(),
-				}
-			}
-			// Lasers
-			laserDirection := backend.DirectionStop
-			switch e.Rune() {
-			case 'w':
-				laserDirection = backend.DirectionUp
-			case 's':
-				laserDirection = backend.DirectionDown
-			case 'a':
-				laserDirection = backend.DirectionLeft
-			case 'd':
-				laserDirection = backend.DirectionRight
-			}
-			if laserDirection != backend.DirectionStop {
+		}
+		// Lasers
+		laserDirection := backend.DirectionStop
+		switch e.Rune() {
+		case 'w':
+			laserDirection = backend.DirectionUp
+		case 's':
+			laserDirection = backend.DirectionDown
+		case 'a':
+			laserDirection = backend.DirectionLeft
+		case 'd':
+			laserDirection = backend.DirectionRight
+		}
+		if laserDirection != backend.DirectionStop {
+			log.Println("laserDirection", laserDirection)
+			/*
 				view.Game.ActionChannel <- backend.LaserAction{
 					OwnerID:   view.CurrentPlayer,
 					ID:        uuid.New(),
 					Direction: laserDirection,
 					Created:   time.Now(),
 				}
-			}
-		*/
+			*/
+		}
 		return e
 	})
 	helpText := tview.NewTextView().
