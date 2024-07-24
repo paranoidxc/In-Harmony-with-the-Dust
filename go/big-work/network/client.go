@@ -42,11 +42,13 @@ func (c *Client) Write(conn net.Conn) {
 	for {
 		select {
 		case <-tick.C:
-			log.Println("tick msg")
-			c.ChMsg <- &Message{
-				ID:   111,
-				Data: []byte("Hello Fucking World"),
-			}
+			//log.Println("tick msg")
+			/*
+				c.ChMsg <- &Message{
+					ID:   111,
+					Data: []byte("Hello Fucking World"),
+				}
+			*/
 		case msg := <-c.ChMsg:
 			log.Println("send msg")
 			c.send(conn, msg)

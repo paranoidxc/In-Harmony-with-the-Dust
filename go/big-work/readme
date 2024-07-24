@@ -1,0 +1,6 @@
+go/pkg/mod/golang.org/toolchain@v0.0.1-go1.22.2.darwin-amd64/pkg/tool/darwin_amd64/link: running clang failed: exit status 1
+ld: unsupported tapi file type '!tapi-tbd' in YAML file '/Library/Developer/CommandLineTools/SDKs/MacOSX12.sdk/usr/lib/libresolv.tbd' for architecture x86_64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+输入如下命令：
+conda deactivate

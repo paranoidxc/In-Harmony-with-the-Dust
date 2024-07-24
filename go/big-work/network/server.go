@@ -11,11 +11,11 @@ type Server struct {
 }
 
 func NewServer(address, network string) *Server {
-	resolveTCPAddr, err := net.ResolveTCPAddr("tcp6", address)
+	resolveTCPAddr, err := net.ResolveTCPAddr(network, address)
 	if err != nil {
 		panic(err)
 	}
-	tcpListener, err := net.ListenTCP("tcp6", resolveTCPAddr)
+	tcpListener, err := net.ListenTCP(network, resolveTCPAddr)
 	if err != nil {
 		panic(err)
 	}
