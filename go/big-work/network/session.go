@@ -58,7 +58,7 @@ func (s *Session) Read() {
 			})
 		*/
 		s.WriteCh <- &Message{
-			Id:   555,
+			ID:   555,
 			Data: []byte("Hi"),
 		}
 	}

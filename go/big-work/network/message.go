@@ -1,6 +1,6 @@
 package network
 
 type Message struct {
-	Id   uint64
+	ID   uint64
 	Data []byte
 }

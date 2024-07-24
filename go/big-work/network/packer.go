@@ -21,7 +21,7 @@ func (p *NormalPacker) Pack(message *Message) ([]byte, error) {
 	// 大小端 CPU小端 网络大端
 
 	p.ByteOrder.PutUint64(buffer[:8], uint64(len(buffer)))
-	p.ByteOrder.PutUint64(buffer[8:16], message.Id)
+	p.ByteOrder.PutUint64(buffer[8:16], message.ID)
 	copy(buffer[16:], message.Data)
 
 	return buffer, nil
@@ -53,7 +53,7 @@ func (p *NormalPacker) Unpack(reader io.Reader) (*Message, error) {
 	}
 
 	msg := &Message{
-		Id:   id,
+		ID:   id,
 		Data: data,
 	}
 

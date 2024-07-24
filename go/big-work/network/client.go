@@ -44,7 +44,7 @@ func (c *Client) Write(conn net.Conn) {
 		case <-tick.C:
 			log.Println("tick msg")
 			c.ChMsg <- &Message{
-				Id:   111,
+				ID:   111,
 				Data: []byte("Hello Fucking World"),
 			}
 		case msg := <-c.ChMsg:
