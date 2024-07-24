@@ -1,20 +1,23 @@
 package player
 
-import "bigwork/network"
+import (
+	"bigwork/network"
+	"bigwork/network/protocol/gen/messageId"
+)
 
 type Player struct {
-	UId           uint64
-	FriendList    []uint64
-	HandleParamCh chan *network.Message
-	handles       map[uint64]Handler
-	session       *network.Session
+	UId            uint64
+	FriendList     []uint64
+	HandlerParamCh chan *network.Message
+	handles        map[messageId.MessageId]Handler
+	Session        *network.Session
 }
 
 func NewPlayer() *Player {
 	p := &Player{
 		UId:        0,
 		FriendList: make([]uint64, 100),
-		handles:    make(map[uint64]Handler),
+		handles:    make(map[messageId.MessageId]Handler),
 	}
 
 	p.HandlerRegister()
@@ -24,9 +27,9 @@ func NewPlayer() *Player {
 func (p *Player) Run() {
 	for {
 		select {
-		case HandleParam := <-p.HandleParamCh:
-			if fn, ok := p.handles[HandleParam.ID]; ok {
-				fn(HandleParam.Data)
+		case HandlerParam := <-p.HandlerParamCh:
+			if fn, ok := p.handles[messageId.MessageId(HandlerParam.ID)]; ok {
+				fn(HandlerParam)
 			}
 		}
 	}

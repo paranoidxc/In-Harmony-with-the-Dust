@@ -65,6 +65,7 @@ func (c *Client) send(conn net.Conn, message *Message) {
 		}
 	*/
 
+	fmt.Println("client before send", message.ID, string(message.Data))
 	bytes, err := c.packer.Pack(message)
 	if err != nil {
 		fmt.Println(err)

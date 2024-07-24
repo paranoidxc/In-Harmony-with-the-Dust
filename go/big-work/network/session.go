@@ -3,12 +3,11 @@ package network
 import (
 	"encoding/binary"
 	"fmt"
-	"log"
 	"net"
 )
 
 type Session struct {
-	UId            int64
+	UId            uint64
 	conn           net.Conn
 	IsClose        bool
 	packer         IPacker
@@ -19,10 +18,10 @@ type Session struct {
 
 func NewSession(conn net.Conn) *Session {
 	return &Session{
-		conn:           conn,
-		packer:         &NormalPacker{ByteOrder: binary.BigEndian},
-		WriteCh:        make(chan *Message, 1),
-		MessageHandler: serverHandleMsg,
+		conn:    conn,
+		packer:  &NormalPacker{ByteOrder: binary.BigEndian},
+		WriteCh: make(chan *Message, 1),
+		//MessageHandler: serverHandleMsg,
 	}
 }
 
@@ -57,10 +56,16 @@ func (s *Session) Read() {
 				Sess: s,
 			})
 		*/
-		s.WriteCh <- &Message{
-			ID:   111,
-			Data: []byte("Hi"),
-		}
+		/*
+			s.WriteCh <- &Message{
+				ID:   111,
+				Data: []byte("Hi"),
+			}
+		*/
+		s.MessageHandler(&SessionPacket{
+			Msg:  message,
+			Sess: s,
+		})
 	}
 }
 
@@ -102,7 +107,13 @@ func (s *Session) send(message *Message) {
 	fmt.Println("server write message ok:", message)
 }
 
+/*
 func serverHandleMsg(packet *SessionPacket) {
 	log.Printf("serverHandleMsg: %+v\n", packet)
 	log.Println(packet)
+}
+*/
+
+func (s *Session) SendMsg(msg *Message) {
+	s.WriteCh <- msg
 }

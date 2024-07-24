@@ -7,7 +7,7 @@ import (
 
 type Server struct {
 	tcpListener     net.Listener
-	OnSessionPacker func(packet *SessionPacket)
+	OnSessionPacket func(packet *SessionPacket)
 }
 
 func NewServer(address, network string) *Server {
@@ -36,6 +36,7 @@ func (s *Server) Run() {
 
 		go func() {
 			newSession := NewSession(conn)
+			newSession.MessageHandler = s.OnSessionPacket
 			SessionMgrInstance.AddSession(newSession)
 			newSession.Run()
 			SessionMgrInstance.DelSession(newSession.UId)

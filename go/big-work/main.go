@@ -1,15 +1,13 @@
 package main
 
 import (
-	"bigwork/client/test"
+	"bigwork/world"
 	"log"
 )
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Lmicroseconds)
-	c := test.NewClient()
-	c.InputHandlerRegister()
-	c.MessageHandlerRegister()
-	c.Run()
+	world.MM = world.NewMgrMgr()
+	go world.MM.Run()
 	select {}
 }

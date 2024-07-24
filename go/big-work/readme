@@ -4,3 +4,11 @@ clang: error: linker command failed with exit code 1 (use -v to see invocation)
 
 输入如下命令：
 conda deactivate
+
+
+
+
+CSCreatePlayer paranoid pwd
+CSLogin paranoid pwd
+CSSendChatMsg 1 HelloWorld 32
+CSSendChatMsg 1 HelloWorld 33 有问题

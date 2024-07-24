@@ -1,7 +1,9 @@
 package player
 
+import "bigwork/network/protocol/gen/messageId"
+
 func (p *Player) HandlerRegister() {
-	p.handles[111] = p.AddFriend
-	p.handles[222] = p.DelFriend
-	p.handles[333] = p.ResolveChatMsg
+	p.handles[messageId.MessageId_CSAddFriend] = p.AddFriend
+	p.handles[messageId.MessageId_CSDelFriend] = p.DelFriend
+	p.handles[messageId.MessageId_CSSendChatMsg] = p.ResolveChatMsg
 }

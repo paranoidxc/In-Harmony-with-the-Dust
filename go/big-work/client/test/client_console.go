@@ -28,6 +28,7 @@ func (c *ClientConsole) Run() {
 			fmt.Println("input err ,check your input and  try again !!!")
 			continue
 		}
+		readString = strings.ReplaceAll(readString, "\n", "")
 		split := strings.Split(readString, " ")
 		if len(split) == 0 {
 			fmt.Println("input err, check your input and  try again !!! ")
