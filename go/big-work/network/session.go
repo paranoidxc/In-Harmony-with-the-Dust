@@ -3,20 +3,26 @@ package network
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
 )
 
 type Session struct {
-	conn    net.Conn
-	packer  *NormalPacker
-	chWrite chan *Message
+	UId            int64
+	conn           net.Conn
+	IsClose        bool
+	packer         IPacker
+	WriteCh        chan *Message
+	IsPlayerOnline bool
+	MessageHandler func(packet *SessionPacket)
 }
 
 func NewSession(conn net.Conn) *Session {
 	return &Session{
-		conn:    conn,
-		packer:  NewNormalPacker(binary.BigEndian),
-		chWrite: make(chan *Message, 1),
+		conn:           conn,
+		packer:         &NormalPacker{ByteOrder: binary.BigEndian},
+		WriteCh:        make(chan *Message, 1),
+		MessageHandler: serverHandleMsg,
 	}
 }
 
@@ -27,23 +33,33 @@ func (s *Session) Run() {
 
 func (s *Session) Read() {
 	//fmt.Println("session read")
-	/*8
-	err := s.conn.SetReadDeadline(time.Now().Add(time.Second))
-	if err != nil {
-		fmt.Println("SetReadDeadline", err)
-	}
+	/*
+		err := s.conn.SetReadDeadline(time.Now().Add(time.Second))
+		if err != nil {
+			fmt.Println("SetReadDeadline", err)
+		}
 	*/
 	for {
 		//fmt.Println("server before read")
 		message, err := s.packer.Unpack(s.conn)
-		if err != nil {
+		if _, ok := err.(net.Error); ok {
 			fmt.Println(err)
+			continue
+		}
+		if message == nil {
+			continue
 		}
 		//fmt.Printf("server receive message: %+v", message)
 		fmt.Println("server receive message:", string(message.Data))
-		s.chWrite <- &Message{
-			Id:   999,
-			Data: []byte("Hi" + string(message.Data)),
+		/*
+			s.MessageHandler(&SessionPacket{
+				Msg:  message,
+				Sess: s,
+			})
+		*/
+		s.WriteCh <- &Message{
+			Id:   555,
+			Data: []byte("Hi"),
 		}
 	}
 }
@@ -59,7 +75,7 @@ func (s *Session) Write() {
 
 	for {
 		select {
-		case msg := <-s.chWrite:
+		case msg := <-s.WriteCh:
 			//fmt.Println("channel", *msg)
 			s.send(msg)
 		}
@@ -67,14 +83,26 @@ func (s *Session) Write() {
 }
 
 func (s *Session) send(message *Message) {
+	/*
+		err := s.Conn.SetWriteDeadline(time.Now().Add(time.Second))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	*/
+
 	bytes, err := s.packer.Pack(message)
 	if err != nil {
 		return
 	}
-
 	_, err = s.conn.Write(bytes)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("server write mesage ok:", message)
+	fmt.Println("server write message ok:", message)
+}
+
+func serverHandleMsg(packet *SessionPacket) {
+	log.Printf("serverHandleMsg: %+v\n", packet)
+	log.Println(packet)
 }

@@ -1,0 +1,7 @@
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go protoc-gen-validateget -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+go get -u github.com/envoyproxy/protoc-gen-validate
+go install github.com/envoyproxy/protoc-gen-validate
+
+cd protocol
+protoc --validate_out="lang=go:./gen" --go_out=./gen  proto/*.proto

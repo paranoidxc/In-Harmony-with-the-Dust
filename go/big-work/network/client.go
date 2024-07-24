@@ -3,20 +3,24 @@ package network
 import (
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net"
 	"time"
 )
 
 type Client struct {
-	Address string
-	packer  *NormalPacker
-	//Conn    net.Conn
+	Address   string
+	packer    IPacker
+	ChMsg     chan *Message
+	OnMessage func(message *ClientPacket)
 }
 
 func NewClient(address string) *Client {
 	return &Client{
-		Address: address,
-		packer:  NewNormalPacker(binary.BigEndian),
+		Address:   address,
+		packer:    &NormalPacker{ByteOrder: binary.BigEndian},
+		ChMsg:     make(chan *Message, 1),
+		OnMessage: clientHandleMsg,
 	}
 }
 
@@ -29,8 +33,8 @@ func (c *Client) Run() {
 
 	//c.Conn = conn
 
-	go c.Write(conn)
 	go c.Read(conn)
+	go c.Write(conn)
 }
 
 func (c *Client) Write(conn net.Conn) {
@@ -38,10 +42,14 @@ func (c *Client) Write(conn net.Conn) {
 	for {
 		select {
 		case <-tick.C:
-			c.send(conn, &Message{
+			log.Println("tick msg")
+			c.ChMsg <- &Message{
 				Id:   111,
 				Data: []byte("Hello Fucking World"),
-			})
+			}
+		case msg := <-c.ChMsg:
+			log.Println("send msg")
+			c.send(conn, msg)
 		}
 	}
 }
@@ -76,7 +84,15 @@ func (c *Client) Read(conn net.Conn) {
 			fmt.Println(err)
 			continue
 		}
-
-		fmt.Println("client receive message:", string(message.Data))
+		c.OnMessage(&ClientPacket{
+			Msg:  message,
+			Conn: conn,
+		})
+		fmt.Println("client read msg:", string(message.Data))
 	}
+}
+
+func clientHandleMsg(packet *ClientPacket) {
+	log.Printf("clientHandleMsg: %+v\n", packet)
+	log.Println(packet)
 }

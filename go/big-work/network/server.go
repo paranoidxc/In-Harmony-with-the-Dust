@@ -1,47 +1,44 @@
 package network
 
 import (
-	"fmt"
+	"log"
 	"net"
 )
 
 type Server struct {
-	listener net.Listener
-	address  string
-	network  string
+	tcpListener     net.Listener
+	OnSessionPacker func(packet *SessionPacket)
 }
 
 func NewServer(address, network string) *Server {
-	return &Server{
-		listener: nil,
-		address:  address,
-		network:  network,
+	resolveTCPAddr, err := net.ResolveTCPAddr("tcp6", address)
+	if err != nil {
+		panic(err)
 	}
+	tcpListener, err := net.ListenTCP("tcp6", resolveTCPAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	s := &Server{}
+	s.tcpListener = tcpListener
+
+	return s
 }
 
 func (s *Server) Run() {
-	resolveTCPAddr, err := net.ResolveTCPAddr("tcp6", s.address)
-	if err != nil {
-		return
-	}
-
-	tcpListener, err := net.ListenTCP("tcp6", resolveTCPAddr)
-	if err != nil {
-		return
-	}
-
-	s.listener = tcpListener
-
 	for {
-		conn, err := s.listener.Accept()
-		fmt.Println("server acction client")
+		conn, err := s.tcpListener.Accept()
+		log.Println("server accepting new client")
 		if err != nil {
 			continue
 		}
 
 		go func() {
 			newSession := NewSession(conn)
+			SessionMgrInstance.AddSession(newSession)
 			newSession.Run()
+			SessionMgrInstance.DelSession(newSession.UId)
 		}()
 	}
 }
