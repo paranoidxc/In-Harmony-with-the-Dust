@@ -65,18 +65,93 @@ type Pos struct {
 
 type Entity struct {
 	Pos
+	Rune rune
+	Name string
+}
+
+type Character struct {
+	Entity
+	Hitpoints    int
+	Strength     int
+	Speed        float64
+	ActionPoints float64
 }
 
 type Player struct {
-	Entity
+	Character
 }
 
 type Level struct {
 	Map      [][]Tile
-	Player   Player
+	Player   *Player
 	Monsters map[Pos]*Monster
 	Debug    map[Pos]bool
 }
+
+type Attackable interface {
+	GetActionPoint() float64
+	SetActionPoint(float64)
+	GetHitpoints() int
+	SetHitpoints(int)
+	GetAttackPower() int
+}
+
+func (c *Character) GetActionPoint() float64 {
+	return c.ActionPoints
+}
+func (c *Character) SetActionPoint(ap float64) {
+	c.ActionPoints = ap
+}
+func (c *Character) GetHitpoints() int {
+	return c.Hitpoints
+}
+func (c *Character) SetHitpoints(h int) {
+	c.Hitpoints = h
+}
+func (c *Character) GetAttackPower() int {
+	return c.Strength
+}
+
+func Attack(a1 Attackable, a2 Attackable) {
+	a1.SetActionPoint(a1.GetActionPoint() - 1)
+	a2.SetHitpoints(a2.GetHitpoints() - a1.GetAttackPower())
+
+	if a2.GetHitpoints() > 0 {
+		a2.SetActionPoint(a2.GetActionPoint() - 1)
+		a1.SetHitpoints(a1.GetHitpoints() - a2.GetAttackPower())
+	}
+}
+
+func PlayerAttackMonster(p *Player, m *Monster) {
+	p.ActionPoints -= 1
+	m.Hitpoints -= p.Strength
+
+	if m.Hitpoints > 0 {
+		m.ActionPoints -= 1
+		p.Hitpoints -= m.Strength
+	}
+}
+func MonsterAttackPlayer(m *Monster, p *Player) {
+	m.ActionPoints -= 1
+	p.Hitpoints -= m.Strength
+
+	if p.Hitpoints > 0 {
+		p.ActionPoints -= 1
+		m.Hitpoints -= p.Strength
+	}
+}
+
+/*
+func Attack(c1 Character, c2 Character) {
+	c1.ActionPoints -= 1
+	c2.Hitpoints -= c1.Strength
+
+	if c2.Hitpoints > 0 {
+		c1.Hitpoints -= c2.Strength
+		c2.ActionPoints -= 1
+	}
+}
+*/
 
 /*
 old
@@ -112,6 +187,14 @@ func LoadLevelFromFile(filename string) *Level {
 	}
 
 	level := &Level{}
+	level.Player = &Player{}
+	level.Player.Strength = 5
+	level.Player.Hitpoints = 120
+	level.Player.Name = "GoMan"
+	level.Player.Rune = '@'
+	level.Player.Speed = 1.0
+	level.Player.ActionPoints = 0
+
 	level.Map = make([][]Tile, len(levelLines))
 	level.Monsters = make(map[Pos]*Monster)
 
@@ -201,9 +284,20 @@ func checkDoor(level *Level, pos Pos) {
 }
 
 func (player *Player) Move(to Pos, level *Level) {
-	_, exists := level.Monsters[to]
+	monster, exists := level.Monsters[to]
 	if !exists {
 		player.Pos = to
+	} else {
+		Attack(level.Player, monster)
+
+		if monster.Hitpoints <= 0 {
+			delete(level.Monsters, monster.Pos)
+		}
+
+		if level.Player.Hitpoints <= 0 {
+			fmt.Println("YOU DIED")
+			panic("YOU DIED")
+		}
 	}
 }
 

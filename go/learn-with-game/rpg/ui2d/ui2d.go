@@ -265,19 +265,19 @@ func (ui *ui) Run() {
 
 		if sdl.GetKeyboardFocus() == ui.window && sdl.GetMouseFocus() == ui.window {
 			var input game.Input
-			if keyboardState[sdl.SCANCODE_UP] == 0 && prevKeyboardState[sdl.SCANCODE_UP] != 0 {
+			if keyboardState[sdl.SCANCODE_UP] == 1 && prevKeyboardState[sdl.SCANCODE_UP] == 0 {
 				input.Typ = game.Up
 			}
-			if keyboardState[sdl.SCANCODE_DOWN] == 0 && prevKeyboardState[sdl.SCANCODE_DOWN] != 0 {
+			if keyboardState[sdl.SCANCODE_DOWN] == 1 && prevKeyboardState[sdl.SCANCODE_DOWN] == 0 {
 				input.Typ = game.Down
 			}
-			if keyboardState[sdl.SCANCODE_LEFT] == 0 && prevKeyboardState[sdl.SCANCODE_LEFT] != 0 {
+			if keyboardState[sdl.SCANCODE_LEFT] == 1 && prevKeyboardState[sdl.SCANCODE_LEFT] == 0 {
 				input.Typ = game.Left
 			}
-			if keyboardState[sdl.SCANCODE_RIGHT] == 0 && prevKeyboardState[sdl.SCANCODE_RIGHT] != 0 {
+			if keyboardState[sdl.SCANCODE_RIGHT] == 1 && prevKeyboardState[sdl.SCANCODE_RIGHT] == 0 {
 				input.Typ = game.Right
 			}
-			if keyboardState[sdl.SCANCODE_S] == 0 && prevKeyboardState[sdl.SCANCODE_S] != 0 {
+			if keyboardState[sdl.SCANCODE_S] == 1 && prevKeyboardState[sdl.SCANCODE_S] == 0 {
 				input.Typ = game.Search
 			}
 
