@@ -6,8 +6,8 @@ import (
 )
 
 func main() {
-	num := 1
 	//level := LoadLevelFromFile("game/maps/level1.map")
+	num := 1
 	game := game.NewGame(num, "game/maps/level1.map")
 	go func() {
 		game.Run()
@@ -24,8 +24,11 @@ func main() {
 		}
 	*/
 
+	//go func() {
+	//runtime.LockOSThread()
 	ui := ui2d.NewUI(game.InputChan, game.LevelChans[0])
 	ui.Run()
+	//}()
 
 	select {}
 	/*
