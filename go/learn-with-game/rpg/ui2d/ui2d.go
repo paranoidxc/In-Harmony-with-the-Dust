@@ -21,7 +21,7 @@ type ui struct {
 	window            *sdl.Window
 	renderer          *sdl.Renderer
 	textureAtlas      *sdl.Texture
-	textureIndex      map[game.Tile][]sdl.Rect
+	textureIndex      map[rune][]sdl.Rect
 	prevKeyboardState []uint8
 	keyboardState     []uint8
 	centerX           int
@@ -82,7 +82,7 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 	ui.centerX = -1
 	ui.centerY = -1
 
-	ui.fontSmall, err = ttf.OpenFont("ui2d/assets/gothic.ttf", 18)
+	ui.fontSmall, err = ttf.OpenFont("ui2d/assets/gothic.ttf", int(float64(ui.winWidth)*0.015))
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +155,7 @@ func (ui *ui) stringToTexture(s string, color sdl.Color, size FontSize) *sdl.Tex
 }
 
 func (ui *ui) loadTextureIndex() {
-	ui.textureIndex = make(map[game.Tile][]sdl.Rect)
+	ui.textureIndex = make(map[rune][]sdl.Rect)
 	infile, err := os.Open("ui2d/assets/atlas-index.txt")
 	if err != nil {
 		fmt.Println(err)
@@ -167,7 +167,7 @@ func (ui *ui) loadTextureIndex() {
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
-		tileRune := game.Tile(line[0])
+		tileRune := rune(line[0])
 		xy := line[1:]
 		splitXYC := strings.Split(xy, ",")
 		x, err := strconv.ParseInt(strings.TrimSpace(splitXYC[0]), 10, 64)
@@ -288,8 +288,8 @@ func (ui *ui) Draw(level *game.Level) {
 	rand.Seed(1)
 	for y, row := range level.Map {
 		for x, tile := range row {
-			if tile != game.Blank {
-				srcRects := ui.textureIndex[tile]
+			if tile.Rune != game.Blank && tile.Visible {
+				srcRects := ui.textureIndex[tile.Rune]
 				srcRect := srcRects[rand.Intn(len(srcRects))]
 				dstRect := sdl.Rect{int32(x*32) + offsetX, int32(y*32) + offsetY, 32, 32}
 
@@ -306,11 +306,13 @@ func (ui *ui) Draw(level *game.Level) {
 	}
 
 	for pos, monster := range level.Monsters {
-		monsterSrcRect := ui.textureIndex[game.Tile(monster.Rune)][0]
-		ui.renderer.Copy(ui.textureAtlas,
-			&monsterSrcRect,
-			&sdl.Rect{int32(pos.X)*32 + offsetX, int32(pos.Y)*32 + offsetY, 32, 32},
-		)
+		if level.Map[pos.Y][pos.X].Visible {
+			monsterSrcRect := ui.textureIndex[monster.Rune][0]
+			ui.renderer.Copy(ui.textureAtlas,
+				&monsterSrcRect,
+				&sdl.Rect{int32(pos.X)*32 + offsetX, int32(pos.Y)*32 + offsetY, 32, 32},
+			)
+		}
 	}
 
 	//fmt.Println(level.Player.X, level.Player.Y)
@@ -321,11 +323,14 @@ func (ui *ui) Draw(level *game.Level) {
 		&sdl.Rect{int32(level.Player.X)*32 + offsetX, int32(level.Player.Y)*32 + offsetY, 32, 32},
 	)
 
-	textStart := int32(float64(ui.winHeight) * 0.75)
+	textStart := int32(float64(ui.winHeight) * 0.68)
 	textWidth := int32(float64(ui.winWidth) * 0.25)
 	ui.renderer.Copy(ui.eventBackground, nil,
 		&sdl.Rect{0, textStart, textWidth, int32(ui.winHeight) - textStart})
+
 	i := level.EventPos
+	count := 0
+	_, fontSizeY, _ := ui.fontSmall.SizeUTF8("A")
 	for {
 		if i == len(level.Events) {
 			i = 0
@@ -337,9 +342,10 @@ func (ui *ui) Draw(level *game.Level) {
 			if err != nil {
 				panic(err)
 			}
-			ui.renderer.Copy(tex, nil, &sdl.Rect{0, int32(i*18) + textStart, w, h})
+			ui.renderer.Copy(tex, nil, &sdl.Rect{0, int32(count*fontSizeY) + textStart, w, h})
 		}
 		i = (i + 1) % (len(level.Events))
+		count++
 		if i == level.EventPos {
 			break
 		}
