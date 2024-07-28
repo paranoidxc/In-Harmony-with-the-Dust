@@ -7,36 +7,25 @@ type Monster struct {
 }
 
 func NewRat(p Pos) *Monster {
-	//return &Monster{X: pos.X, Y: pos.Y, Rune: 'R', Name: "Rat", Hitpoints: 5, Strength: 5, Speed: 2.0, ActionPoints: 0.0}
+	//return &Monster{Character: Character{}}
 	monster := &Monster{}
 	monster.Pos = p
 	monster.Rune = 'R'
 	monster.Name = "Rat"
-	monster.Hitpoints = 5
-	monster.Strength = 5
+	monster.Hitpoints = 20
+	monster.Strength = 1
 	monster.Speed = 1.5
 	monster.ActionPoints = 0.0
 	return monster
 }
 
 func NewSpider(p Pos) *Monster {
-	/*
-		return &Monster{
-			Pos:          pos,
-			Rune:         'S',
-			Name:         "Spider",
-			Hitpoints:    10,
-			Strength:     10,
-			Speed:        1.0,
-			ActionPoints: 0.0,
-		}
-	*/
 	monster := &Monster{}
 	monster.Pos = p
 	monster.Rune = 'S'
 	monster.Name = "Rat"
-	monster.Hitpoints = 10
-	monster.Strength = 10
+	monster.Hitpoints = 40
+	monster.Strength = 1
 	monster.Speed = 1.0
 	monster.ActionPoints = 0.0
 	return monster
@@ -48,6 +37,12 @@ func (m *Monster) Update(level *Level) {
 
 	apInt := int(m.ActionPoints)
 	positions := level.astar(m.Pos, playerPos)
+
+	// no path to player
+	if len(positions) == 0 {
+		m.Pass()
+		return
+	}
 	moveIndex := 1
 	for i := 0; i < apInt; i++ {
 		if moveIndex < len(positions) {
@@ -58,13 +53,21 @@ func (m *Monster) Update(level *Level) {
 	}
 }
 
+func (m *Monster) Pass() {
+	m.ActionPoints -= m.Speed
+}
+
 func (m *Monster) move(to Pos, level *Level) {
 	_, exists := level.Monsters[to]
 	if !exists && to != level.Player.Pos {
 		delete(level.Monsters, m.Pos)
 		level.Monsters[to] = m
 		m.Pos = to
-	} else {
+		return
+	}
+
+	if to == level.Player.Pos {
+		level.AddEvent(m.Name + " Attack Player")
 		Attack(m, level.Player)
 		if m.Hitpoints <= 0 {
 			delete(level.Monsters, m.Pos)

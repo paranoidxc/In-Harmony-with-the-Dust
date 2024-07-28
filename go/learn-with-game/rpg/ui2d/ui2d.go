@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 	"image/png"
 	"learn-with-game/rpg/game"
 	"math/rand"
@@ -28,18 +29,34 @@ type ui struct {
 	r                 *rand.Rand
 	levelChan         chan *game.Level
 	inputChan         chan *game.Input
+	helloworld        *sdl.Texture
+	fontSmall         *ttf.Font
+	fontMedium        *ttf.Font
+	fontLarge         *ttf.Font
+
+	eventBackground *sdl.Texture
+
+	str2TexSmall  map[string]*sdl.Texture
+	str2TexMedium map[string]*sdl.Texture
+	str2TexLarge  map[string]*sdl.Texture
 }
 
 func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
-	err := sdl.Init(sdl.INIT_EVERYTHING)
-	if err != nil {
-		panic(err)
-	}
-
+	/*
+		err := sdl.Init(sdl.INIT_EVERYTHING)
+		if err != nil {
+			panic(err)
+		}
+	*/
 	ui := &ui{
 		winWidth:  1280,
 		winHeight: 720,
 	}
+
+	ui.str2TexSmall = make(map[string]*sdl.Texture)
+	ui.str2TexMedium = make(map[string]*sdl.Texture)
+	ui.str2TexLarge = make(map[string]*sdl.Texture)
+
 	ui.r = rand.New(rand.NewSource(1))
 	ui.inputChan = inputChan
 	ui.levelChan = levelChan
@@ -65,7 +82,76 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 	ui.centerX = -1
 	ui.centerY = -1
 
+	ui.fontSmall, err = ttf.OpenFont("ui2d/assets/gothic.ttf", 18)
+	if err != nil {
+		panic(err)
+	}
+	ui.fontMedium, err = ttf.OpenFont("ui2d/assets/gothic.ttf", 32)
+	if err != nil {
+		panic(err)
+	}
+	ui.fontLarge, err = ttf.OpenFont("ui2d/assets/gothic.ttf", 64)
+	if err != nil {
+		panic(err)
+	}
+
+	ui.eventBackground = ui.GetSinglePixelTex(sdl.Color{0, 0, 0, 128})
+	ui.eventBackground.SetBlendMode(sdl.BLENDMODE_BLEND)
+
 	return ui
+}
+
+type FontSize int
+
+const (
+	FontSmall FontSize = iota
+	FontMedium
+	FontLarge
+)
+
+func (ui *ui) stringToTexture(s string, color sdl.Color, size FontSize) *sdl.Texture {
+	var font *ttf.Font
+	switch size {
+	case FontSmall:
+		font = ui.fontSmall
+		tex, exists := ui.str2TexSmall[s]
+		if exists {
+			return tex
+		}
+	case FontMedium:
+		font = ui.fontMedium
+		tex, exists := ui.str2TexMedium[s]
+		if exists {
+			return tex
+		}
+	case FontLarge:
+		font = ui.fontLarge
+		tex, exists := ui.str2TexLarge[s]
+		if exists {
+			return tex
+		}
+	}
+
+	fontSurface, err := font.RenderUTF8Blended(s, color)
+	if err != nil {
+
+	}
+
+	tex, err := ui.renderer.CreateTextureFromSurface(fontSurface)
+	if err != nil {
+
+	}
+
+	switch size {
+	case FontSmall:
+		ui.str2TexSmall[s] = tex
+	case FontMedium:
+		ui.str2TexMedium[s] = tex
+	case FontLarge:
+		ui.str2TexLarge[s] = tex
+	}
+
+	return tex
 }
 
 func (ui *ui) loadTextureIndex() {
@@ -159,8 +245,12 @@ func init() {
 	//sdl.LogSetAllPriority(sdl.LOG_PRIORITY_VERBOSE)
 	err := sdl.Init(sdl.INIT_EVERYTHING)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
+	}
+
+	err = ttf.Init()
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -195,7 +285,6 @@ func (ui *ui) Draw(level *game.Level) {
 	offsetY := int32((ui.winHeight / 2) - ui.centerY*32)
 
 	ui.renderer.Clear()
-	//renderer.Copy(textureAtlas, nil, nil)
 	rand.Seed(1)
 	for y, row := range level.Map {
 		for x, tile := range row {
@@ -232,24 +321,74 @@ func (ui *ui) Draw(level *game.Level) {
 		&sdl.Rect{int32(level.Player.X)*32 + offsetX, int32(level.Player.Y)*32 + offsetY, 32, 32},
 	)
 
+	textStart := int32(float64(ui.winHeight) * 0.75)
+	textWidth := int32(float64(ui.winWidth) * 0.25)
+	ui.renderer.Copy(ui.eventBackground, nil,
+		&sdl.Rect{0, textStart, textWidth, int32(ui.winHeight) - textStart})
+	i := level.EventPos
+	for {
+		if i == len(level.Events) {
+			i = 0
+		}
+		event := level.Events[i]
+		if event != "" {
+			tex := ui.stringToTexture(event, sdl.Color{255, 0, 0, 0}, FontSmall)
+			_, _, w, h, err := tex.Query()
+			if err != nil {
+				panic(err)
+			}
+			ui.renderer.Copy(tex, nil, &sdl.Rect{0, int32(i*18) + textStart, w, h})
+		}
+		i = (i + 1) % (len(level.Events))
+		if i == level.EventPos {
+			break
+		}
+	}
 	ui.renderer.Present()
 	//sdl.Delay(10)
 }
 
+func (ui *ui) keyDownOnce(key uint8) bool {
+	return ui.keyboardState[key] == 1 && ui.prevKeyboardState[key] == 0
+}
+
+func (ui *ui) GetSinglePixelTex(color sdl.Color) *sdl.Texture {
+	tex, err := ui.renderer.CreateTexture(sdl.PIXELFORMAT_ABGR8888, sdl.TEXTUREACCESS_STATIC, 1, 1)
+	if err != nil {
+		panic(err)
+	}
+
+	pixels := make([]byte, 4)
+	pixels[0] = color.R
+	pixels[1] = color.G
+	pixels[2] = color.B
+	pixels[3] = color.A
+
+	tex.Update(nil, unsafe.Pointer(&pixels[0]), 4)
+	return tex
+}
+
+// check for key pressed then released
+func (ui *ui) keyPressed(key uint8) bool {
+	return ui.keyboardState[key] == 0 && ui.prevKeyboardState[key] == 1
+}
+
 func (ui *ui) Run() {
-	keyboardState := sdl.GetKeyboardState()
-	prevKeyboardState := make([]uint8, len(keyboardState))
-	for i, v := range keyboardState {
-		prevKeyboardState[i] = v
+	ui.keyboardState = sdl.GetKeyboardState()
+	ui.prevKeyboardState = make([]uint8, len(ui.keyboardState))
+	for i, v := range ui.keyboardState {
+		ui.prevKeyboardState[i] = v
 	}
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch e := event.(type) {
 			case *sdl.QuitEvent:
-				ui.inputChan <- &game.Input{Typ: game.QuitGame}
+				fmt.Println("QUIT")
+				//ui.inputChan <- &game.Input{Typ: game.QuitGame}
 			case *sdl.WindowEvent:
 				if e.Event == sdl.WINDOWEVENT_CLOSE {
+					fmt.Println("CLOSE")
 					ui.inputChan <- &game.Input{Typ: game.CloseWindow, LevelChannel: ui.levelChan}
 				}
 			}
@@ -265,24 +404,24 @@ func (ui *ui) Run() {
 
 		if sdl.GetKeyboardFocus() == ui.window && sdl.GetMouseFocus() == ui.window {
 			var input game.Input
-			if keyboardState[sdl.SCANCODE_UP] == 1 && prevKeyboardState[sdl.SCANCODE_UP] == 0 {
+			if ui.keyDownOnce(sdl.SCANCODE_UP) {
 				input.Typ = game.Up
 			}
-			if keyboardState[sdl.SCANCODE_DOWN] == 1 && prevKeyboardState[sdl.SCANCODE_DOWN] == 0 {
+			if ui.keyDownOnce(sdl.SCANCODE_DOWN) {
 				input.Typ = game.Down
 			}
-			if keyboardState[sdl.SCANCODE_LEFT] == 1 && prevKeyboardState[sdl.SCANCODE_LEFT] == 0 {
+			if ui.keyDownOnce(sdl.SCANCODE_LEFT) {
 				input.Typ = game.Left
 			}
-			if keyboardState[sdl.SCANCODE_RIGHT] == 1 && prevKeyboardState[sdl.SCANCODE_RIGHT] == 0 {
+			if ui.keyDownOnce(sdl.SCANCODE_RIGHT) {
 				input.Typ = game.Right
 			}
-			if keyboardState[sdl.SCANCODE_S] == 1 && prevKeyboardState[sdl.SCANCODE_S] == 0 {
+			if ui.keyDownOnce(sdl.SCANCODE_S) {
 				input.Typ = game.Search
 			}
 
-			for i, v := range keyboardState {
-				prevKeyboardState[i] = v
+			for i, v := range ui.keyboardState {
+				ui.prevKeyboardState[i] = v
 			}
 
 			if input.Typ != game.None {
@@ -290,6 +429,6 @@ func (ui *ui) Run() {
 			}
 		}
 
-		sdl.Delay(10)
+		//sdl.Delay(10)
 	}
 }

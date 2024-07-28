@@ -12,26 +12,10 @@ func main() {
 	go func() {
 		game.Run()
 	}()
-
-	/*
-		time.Sleep(2 * time.Second)
-		for i := 0; i < num; i++ {
-			go func(i int) {
-				//runtime.LockOSThread()
-				ui := ui2d.NewUI(game.InputChan, game.LevelChans[i])
-				ui.Run()
-			}(i)
-		}
-	*/
-
-	//go func() {
-	//runtime.LockOSThread()
 	ui := ui2d.NewUI(game.InputChan, game.LevelChans[0])
 	ui.Run()
-	//}()
-
-	select {}
 	/*
+		time.Sleep(2 * time.Second)
 		for i := 0; i < num; i++ {
 			go func(i int) {
 				//runtime.LockOSThread()

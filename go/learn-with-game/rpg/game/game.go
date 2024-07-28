@@ -85,7 +85,9 @@ type Level struct {
 	Map      [][]Tile
 	Player   *Player
 	Monsters map[Pos]*Monster
+	Events   []string
 	Debug    map[Pos]bool
+	EventPos int
 }
 
 type Attackable interface {
@@ -116,10 +118,12 @@ func Attack(a1 Attackable, a2 Attackable) {
 	a1.SetActionPoint(a1.GetActionPoint() - 1)
 	a2.SetHitpoints(a2.GetHitpoints() - a1.GetAttackPower())
 
-	if a2.GetHitpoints() > 0 {
-		a2.SetActionPoint(a2.GetActionPoint() - 1)
-		a1.SetHitpoints(a1.GetHitpoints() - a2.GetAttackPower())
-	}
+	/*
+		if a2.GetHitpoints() > 0 {
+			a2.SetActionPoint(a2.GetActionPoint() - 1)
+			a1.SetHitpoints(a1.GetHitpoints() - a2.GetAttackPower())
+		}
+	*/
 }
 
 func PlayerAttackMonster(p *Player, m *Monster) {
@@ -155,10 +159,11 @@ func Attack(c1 Character, c2 Character) {
 
 /*
 old
-type priorityPos struct {
-	Pos
-	priority int
-}
+
+	type priorityPos struct {
+		Pos
+		priority int
+	}
 
 type priorityArray []priorityPos
 
@@ -166,6 +171,14 @@ func (p priorityArray) Len() int           { return len(p) }
 func (p priorityArray) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p priorityArray) Less(i, j int) bool { return p[i].priority < p[j].priority }
 */
+func (level *Level) AddEvent(event string) {
+	level.Events[level.EventPos] = event
+
+	level.EventPos++
+	if level.EventPos == len(level.Events) {
+		level.EventPos = 0
+	}
+}
 
 func LoadLevelFromFile(filename string) *Level {
 	file, err := os.Open(filename)
@@ -187,6 +200,7 @@ func LoadLevelFromFile(filename string) *Level {
 	}
 
 	level := &Level{}
+	level.Events = make([]string, 10)
 	level.Player = &Player{}
 	level.Player.Strength = 5
 	level.Player.Hitpoints = 120
@@ -289,8 +303,10 @@ func (player *Player) Move(to Pos, level *Level) {
 		player.Pos = to
 	} else {
 		Attack(level.Player, monster)
-
+		level.AddEvent("Player Attacked Monster")
+		fmt.Println(level.Player.Hitpoints, monster.Hitpoints)
 		if monster.Hitpoints <= 0 {
+			level.AddEvent("Player Kills " + monster.Name)
 			delete(level.Monsters, monster.Pos)
 		}
 
@@ -482,6 +498,7 @@ func (game *Game) Run() {
 
 	for input := range game.InputChan {
 		if input != nil && input.Typ == QuitGame {
+			fmt.Println("QUIT")
 			return
 		}
 		game.handleInput(input)
@@ -489,9 +506,11 @@ func (game *Game) Run() {
 			monster.Update(game.Level)
 		}
 
-		if len(game.LevelChans) == 0 {
-			return
-		}
+		/*
+			if len(game.LevelChans) == 0 {
+				return
+			}
+		*/
 
 		for _, lchan := range game.LevelChans {
 			lchan <- game.Level
