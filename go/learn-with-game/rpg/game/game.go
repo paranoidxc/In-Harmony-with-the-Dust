@@ -50,8 +50,10 @@ type Input struct {
 }
 
 type Tile struct {
-	Rune    rune
-	Visible bool
+	Rune        rune
+	OverlayRune rune
+	Visible     bool
+	Seen        bool
 }
 
 const (
@@ -59,6 +61,8 @@ const (
 	DirtFloor rune = '.'
 	CloseDoor rune = '|'
 	OpenDoor  rune = '/'
+	UpStair   rune = 'u'
+	DownStair rune = 'd'
 	Blank     rune = 0
 	Pending   rune = -1
 )
@@ -220,7 +224,7 @@ func LoadLevelFromFile(filename string) *Level {
 	level.Player.Rune = '@'
 	level.Player.Speed = 1.0
 	level.Player.ActionPoints = 0
-	level.Player.SigntRange = 10
+	level.Player.SigntRange = 5
 
 	level.Map = make([][]Tile, len(levelLines))
 	level.Monsters = make(map[Pos]*Monster)
@@ -233,15 +237,24 @@ func LoadLevelFromFile(filename string) *Level {
 		line := levelLines[y]
 		for x, c := range line {
 			var t Tile
+			t.OverlayRune = Blank
 			switch c {
 			case ' ', '\t', '\n', '\r':
 				t.Rune = Blank
 			case '#':
 				t.Rune = StoreWall
 			case '|':
-				t.Rune = CloseDoor
+				t.OverlayRune = CloseDoor
+				t.Rune = Pending
 			case '/':
-				t.Rune = OpenDoor
+				t.OverlayRune = OpenDoor
+				t.Rune = Pending
+			case 'u':
+				t.OverlayRune = UpStair
+				t.Rune = Pending
+			case 'd':
+				t.OverlayRune = DownStair
+				t.Rune = Pending
 			case '.':
 				t.Rune = DirtFloor
 			case '@':
@@ -264,7 +277,7 @@ func LoadLevelFromFile(filename string) *Level {
 	for y, row := range level.Map {
 		for x, tile := range row {
 			if tile.Rune == Pending {
-				level.Map[y][x] = level.bfsFloor(Pos{x, y})
+				level.Map[y][x].Rune = level.bfsFloor(Pos{x, y})
 				/*
 					SearchLoop:
 						for searchX := x - 1; searchX <= x+1; searchX++ {
@@ -282,6 +295,7 @@ func LoadLevelFromFile(filename string) *Level {
 		}
 	}
 
+	level.lineOfSignt()
 	return level
 }
 
@@ -289,23 +303,38 @@ func inRange(level *Level, pos Pos) bool {
 	return pos.X < len(level.Map[0]) && pos.Y < len(level.Map) && pos.X >= 0 && pos.Y >= 0
 }
 
-func canSee(level *Level, pos Pos) bool {
-	t := level.Map[pos.Y][pos.X]
-	switch t.Rune {
-	case StoreWall, CloseDoor, Blank:
-		return false
-	default:
-		return true
+func canSeeThrough(level *Level, pos Pos) bool {
+	if inRange(level, pos) {
+		t := level.Map[pos.Y][pos.X]
+		switch t.Rune {
+		case StoreWall, Blank:
+			return false
+		default:
+			return true
+		}
+
+		switch t.OverlayRune {
+		case CloseDoor:
+			return false
+		default:
+			return true
+		}
 	}
+	return false
 }
 
 func canWalk(level *Level, pos Pos) bool {
 	if inRange(level, pos) {
 		t := level.Map[pos.Y][pos.X]
 		switch t.Rune {
-		case StoreWall, CloseDoor, Blank:
+		case StoreWall, Blank:
 			return false
 		}
+		switch t.OverlayRune {
+		case CloseDoor:
+			return false
+		}
+
 		_, exists := level.Monsters[pos]
 		if exists {
 			return false
@@ -319,28 +348,22 @@ func canWalk(level *Level, pos Pos) bool {
 
 func checkDoor(level *Level, pos Pos) {
 	t := level.Map[pos.Y][pos.X]
-	if t.Rune == CloseDoor {
-		level.Map[pos.Y][pos.X].Rune = OpenDoor
+	if t.OverlayRune == CloseDoor {
+		level.Map[pos.Y][pos.X].OverlayRune = OpenDoor
+		level.lineOfSignt()
 	}
 }
 
 func (player *Player) Move(to Pos, level *Level) {
 	player.Pos = to
-	for _, row := range level.Map {
-		for _, tile := range row {
-			tile.Visible = false
+	for y, row := range level.Map {
+		for x, _ := range row {
+			level.Map[y][x].Visible = false
 		}
 	}
-
-	pPos := player.Pos
-	line := bresenham(pPos, Pos{pPos.X, pPos.Y - player.SigntRange})
-	for _, pos := range line {
-		if canSee(level, pos) {
-			level.Map[pos.Y][pos.X].Visible = true
-		} else {
-			break
-		}
-	}
+	//pPos := player.Pos
+	//level.bresenham(pPos, Pos{pPos.X, pPos.Y - player.SigntRange})
+	level.lineOfSignt()
 }
 
 func (level *Level) resolveMovement(pos Pos) {
@@ -417,7 +440,7 @@ func getNeighbors(level *Level, pos Pos) []Pos {
 	return neighbors
 }
 
-func (level *Level) bfsFloor(start Pos) Tile {
+func (level *Level) bfsFloor(start Pos) rune {
 	frontier := make([]Pos, 0, 8)
 	frontier = append(frontier, start)
 	visited := make(map[Pos]bool)
@@ -430,7 +453,8 @@ func (level *Level) bfsFloor(start Pos) Tile {
 		currentTile := level.Map[current.Y][current.X]
 		switch currentTile.Rune {
 		case DirtFloor:
-			return Tile{DirtFloor, false}
+			return DirtFloor
+			//return Tile{DirtFloor, Blank, false, false}
 		default:
 		}
 
@@ -443,7 +467,7 @@ func (level *Level) bfsFloor(start Pos) Tile {
 		}
 	}
 
-	return Tile{DirtFloor, false}
+	return DirtFloor
 }
 
 func (level *Level) bfs(start Pos) {
@@ -529,11 +553,8 @@ func (game *Game) Run() {
 			fmt.Println("QUIT")
 			return
 		}
-		p := game.Level.Player.Pos
-		line := bresenham(p, Pos{p.X + 5, p.Y + 5})
-		for _, pos := range line {
-			game.Level.Debug[pos] = true
-		}
+		//p := game.Level.Player.Pos
+		//level.bresenham(p, Pos{p.X + 5, p.Y + 5})
 
 		game.handleInput(input)
 		for _, monster := range game.Level.Monsters {
