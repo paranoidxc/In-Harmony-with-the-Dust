@@ -3,6 +3,7 @@ package ui2d
 import (
 	"bufio"
 	"fmt"
+	"github.com/veandco/go-sdl2/mix"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 	"image/png"
@@ -16,6 +17,7 @@ import (
 
 // const winWidth, winHeight int = 1280, 720
 type ui struct {
+	sounds            sounds
 	winWidth          int
 	winHeight         int
 	window            *sdl.Window
@@ -42,12 +44,6 @@ type ui struct {
 }
 
 func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
-	/*
-		err := sdl.Init(sdl.INIT_EVERYTHING)
-		if err != nil {
-			panic(err)
-		}
-	*/
 	ui := &ui{
 		winWidth:  1280,
 		winHeight: 720,
@@ -97,6 +93,39 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 
 	ui.eventBackground = ui.GetSinglePixelTex(sdl.Color{0, 0, 0, 128})
 	ui.eventBackground.SetBlendMode(sdl.BLENDMODE_BLEND)
+
+	err = mix.OpenAudio(22050, mix.DEFAULT_FORMAT, 2, 4096)
+	if err != nil {
+		panic(err)
+	}
+
+	mus, err := mix.LoadMUS("ui2d/assets/ambient.ogg")
+	if err != nil {
+		panic(err)
+	}
+	mus.Play(-1)
+
+	footstepBase := "ui2d/assets/footstep0"
+	for i := 0; i < 10; i++ {
+		footstepFile := footstepBase + strconv.Itoa(i) + ".ogg"
+		footstepSound, err := mix.LoadWAV(footstepFile)
+		if err != nil {
+			panic(err)
+		}
+		ui.sounds.footsteps = append(ui.sounds.footsteps, footstepSound)
+	}
+
+	doorOpen1, err := mix.LoadWAV("ui2d/assets/doorOpen_1.ogg")
+	if err != nil {
+		panic(err)
+	}
+	ui.sounds.openingDoors = append(ui.sounds.openingDoors, doorOpen1)
+
+	doorOpen2, err := mix.LoadWAV("ui2d/assets/doorOpen_2.ogg")
+	if err != nil {
+		panic(err)
+	}
+	ui.sounds.openingDoors = append(ui.sounds.openingDoors, doorOpen2)
 
 	return ui
 }
@@ -252,6 +281,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = mix.Init(mix.INIT_OGG)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ui *ui) Draw(level *game.Level) {
@@ -262,13 +296,17 @@ func (ui *ui) Draw(level *game.Level) {
 
 	limit := 5
 	if level.Player.X > ui.centerX+limit {
-		ui.centerX++
+		diff := level.Player.X - (ui.centerX + limit)
+		ui.centerX += diff
 	} else if level.Player.X < ui.centerX-limit {
-		ui.centerX--
+		diff := (ui.centerX - limit) - level.Player.X
+		ui.centerX -= diff
 	} else if level.Player.Y > ui.centerY+limit {
-		ui.centerY++
+		diff := level.Player.Y - (ui.centerY + limit)
+		ui.centerY += diff
 	} else if level.Player.Y < ui.centerY-limit {
-		ui.centerY--
+		diff := (ui.centerY - limit) - level.Player.Y
+		ui.centerY -= diff
 	}
 
 	/*
@@ -413,6 +451,14 @@ func (ui *ui) Run() {
 		case newLevel, ok := <-ui.levelChan:
 			if ok {
 				ui.Draw(newLevel)
+				switch newLevel.LastEvent {
+				case game.Move:
+					playRandomSound(ui.sounds.footsteps, 10)
+				case game.DoorOpen:
+					playRandomSound(ui.sounds.openingDoors, 30)
+				default:
+					// add more sounds
+				}
 			}
 		default:
 		}
