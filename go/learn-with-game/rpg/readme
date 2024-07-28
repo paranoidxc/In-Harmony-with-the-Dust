@@ -1,1 +1,9 @@
 nethack
+
+brew install sdl_ttf
+brew install sdl2_mixer
+brew install sdl_image
+
+go get -v github.com/veandco/go-sdl2/ttf
+go get -v github.com/veandco/go-sdl2/img
+go get -v github.com/veandco/go-sdl2/mix

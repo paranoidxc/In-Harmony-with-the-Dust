@@ -8,7 +8,7 @@ import (
 func main() {
 	//level := LoadLevelFromFile("game/maps/level1.map")
 	num := 1
-	game := game.NewGame(num, "game/maps/level1.map")
+	game := game.NewGame(num)
 	go func() {
 		game.Run()
 	}()

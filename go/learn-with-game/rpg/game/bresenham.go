@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func (level *Level) lineOfSignt() {
+func (level *Level) lineOfSight() {
 	pos := level.Player.Pos
 	dist := level.Player.SigntRange
 
