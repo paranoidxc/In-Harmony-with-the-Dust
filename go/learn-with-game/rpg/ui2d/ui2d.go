@@ -70,7 +70,7 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 		return nil
 	}
 
-	ui.renderer.SetDrawColor(129, 129, 129, 0)
+	//ui.renderer.SetDrawColor(129, 129, 129, 0)
 
 	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
 	ui.textureAtlas = ui.imgFileToTexture("ui2d/assets/tiles.png")
@@ -309,16 +309,6 @@ func (ui *ui) Draw(level *game.Level) {
 		ui.centerY -= diff
 	}
 
-	/*
-		dx := level.Player.X - centerX
-		dy := level.Player.Y - centerY
-		distFromCenter := math.Sqrt(float64(dx*dx + dy*dy))
-		if distFromCenter > 5 {
-			centerX = level.Player.X
-			centerY = level.Player.Y
-		}
-	*/
-
 	offsetX := int32((ui.winWidth / 2) - ui.centerX*32)
 	offsetY := int32((ui.winHeight / 2) - ui.centerY*32)
 
@@ -362,14 +352,26 @@ func (ui *ui) Draw(level *game.Level) {
 		}
 	}
 
+	for pos, items := range level.Items {
+		if level.Map[pos.Y][pos.X].Visible {
+			for _, item := range items {
+				itemSrcRect := ui.textureIndex[item.Rune][0]
+				ui.renderer.Copy(ui.textureAtlas,
+					&itemSrcRect,
+					&sdl.Rect{int32(pos.X)*32 + offsetX, int32(pos.Y)*32 + offsetY, 32, 32},
+				)
+			}
+		}
+	}
+
 	//fmt.Println(level.Player.X, level.Player.Y)
 	playerSrcRect := ui.textureIndex['@'][0]
 	ui.renderer.Copy(ui.textureAtlas,
 		&playerSrcRect,
-		//&sdl.Rect{21 * 32, 59 * 32, 32, 32},
 		&sdl.Rect{int32(level.Player.X)*32 + offsetX, int32(level.Player.Y)*32 + offsetY, 32, 32},
 	)
 
+	// Event UI start
 	textStart := int32(float64(ui.winHeight) * 0.68)
 	textWidth := int32(float64(ui.winWidth) * 0.25)
 	ui.renderer.Copy(ui.eventBackground, nil,
@@ -397,6 +399,18 @@ func (ui *ui) Draw(level *game.Level) {
 			break
 		}
 	}
+	// Event UI END
+
+	// Inventory UI
+	items := level.Items[level.Player.Pos]
+	for _, item := range items {
+		itemSrcRect := ui.textureIndex[item.Rune][0]
+		ui.renderer.Copy(ui.textureAtlas,
+			&itemSrcRect,
+			&sdl.Rect{int32(ui.winWidth - 32 - i*32), int32(ui.winHeight) - 32, 32, 32},
+		)
+	}
+
 	ui.renderer.Present()
 	//sdl.Delay(10)
 }
@@ -479,6 +493,10 @@ func (ui *ui) Run() {
 			}
 			if ui.keyDownOnce(sdl.SCANCODE_S) {
 				input.Typ = game.Search
+			}
+
+			if ui.keyDownOnce(sdl.SCANCODE_T) {
+				input.Typ = game.TakeAll
 			}
 
 			for i, v := range ui.keyboardState {

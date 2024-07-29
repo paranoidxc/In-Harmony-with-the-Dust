@@ -15,6 +15,7 @@ func NewRat(p Pos) *Monster {
 	monster.Speed = 1.5
 	monster.ActionPoints = 0.0
 	monster.SigntRange = 10
+	//monster.Items = append(monster.Items, NewSword(Pos{}))
 	return monster
 }
 
@@ -29,6 +30,16 @@ func NewSpider(p Pos) *Monster {
 	monster.ActionPoints = 0.0
 	monster.SigntRange = 10
 	return monster
+}
+
+func (m *Monster) Kill(level *Level) {
+	delete(level.Monsters, m.Pos)
+	groundItems := level.Items[m.Pos]
+	for _, item := range m.Items {
+		item.Pos = m.Pos
+		groundItems = append(groundItems, item)
+	}
+	level.Items[m.Pos] = groundItems
 }
 
 func (m *Monster) Update(level *Level) {
