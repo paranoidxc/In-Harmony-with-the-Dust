@@ -46,6 +46,7 @@ const (
 	Down
 	Left
 	Right
+	TakeItem
 	QuitGame
 	CloseWindow
 	Search
@@ -54,6 +55,7 @@ const (
 
 type Input struct {
 	Typ          InputType
+	Item         *Item
 	LevelChannel chan *Level
 }
 
@@ -112,6 +114,7 @@ const (
 	Attack
 	Hit
 	Portal
+	PickUp
 )
 
 type Attackable interface {
@@ -428,6 +431,10 @@ func (game *Game) handleInput(input *Input) {
 		for _, item := range level.Items[p.Pos] {
 			level.MoveItem(item, &level.Player.Character)
 		}
+		level.LastEvent = PickUp
+	case TakeItem:
+		level.MoveItem(input.Item, &level.Player.Character)
+		level.LastEvent = PickUp
 	case Search:
 		//bfs(ui, Level, p.Pos)
 		level.astar(level.Player.Pos, Pos{level.Player.X + 2, level.Player.Y + 1})
