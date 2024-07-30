@@ -78,7 +78,7 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 
 	//ui.renderer.SetDrawColor(129, 129, 129, 0)
 
-	sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
+	//sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "1")
 	ui.textureAtlas = ui.imgFileToTexture("ui2d/assets/tiles.png")
 	ui.loadTextureIndex()
 	ui.centerX = -1
@@ -100,7 +100,7 @@ func NewUI(inputChan chan *game.Input, levelChan chan *game.Level) *ui {
 	ui.eventBackground = ui.GetSinglePixelTex(sdl.Color{0, 0, 0, 128})
 	ui.eventBackground.SetBlendMode(sdl.BLENDMODE_BLEND)
 
-	ui.groundInventoryBackground = ui.GetSinglePixelTex(sdl.Color{255, 0, 0, 128})
+	ui.groundInventoryBackground = ui.GetSinglePixelTex(sdl.Color{149, 84, 19, 200})
 	ui.groundInventoryBackground.SetBlendMode(sdl.BLENDMODE_BLEND)
 
 	err = mix.OpenAudio(22050, mix.DEFAULT_FORMAT, 2, 4096)
@@ -298,9 +298,26 @@ func init() {
 }
 
 func (ui *ui) DrawInventory(level *game.Level) {
-	ui.renderer.Copy(ui.groundInventoryBackground,
-		nil,
-		&sdl.Rect{100, 100, 500, 500})
+	invWidth := int32(float32(ui.winWidth) * 0.40)
+	invHeight := int32(float32(ui.winHeight) * 0.75)
+	offsetX := (int32(ui.winWidth) - invWidth) / 2
+	offsetY := (int32(ui.winHeight) - invHeight) / 2
+
+	playerSrcRect := ui.textureIndex[level.Player.Rune][0]
+
+	ui.renderer.Copy(ui.groundInventoryBackground, nil,
+		&sdl.Rect{offsetX, offsetY, invWidth, invHeight})
+
+	ui.renderer.Copy(ui.textureAtlas, &playerSrcRect,
+		&sdl.Rect{offsetX + offsetX/4, offsetY,
+			invWidth / 2,
+			invHeight / 2})
+
+	for i, item := range level.Player.Items {
+		itemSrcRect := ui.textureIndex[item.Rune][0]
+		ui.renderer.Copy(ui.textureAtlas, &itemSrcRect,
+			&sdl.Rect{offsetX + int32(i)*32, offsetY + invHeight - 32, 32, 32})
+	}
 }
 
 func (ui *ui) Draw(level *game.Level) {
@@ -380,7 +397,7 @@ func (ui *ui) Draw(level *game.Level) {
 	}
 
 	//fmt.Println(level.Player.X, level.Player.Y)
-	playerSrcRect := ui.textureIndex['@'][0]
+	playerSrcRect := ui.textureIndex[level.Player.Rune][0]
 	ui.renderer.Copy(ui.textureAtlas,
 		&playerSrcRect,
 		&sdl.Rect{int32(level.Player.X)*32 + offsetX, int32(level.Player.Y)*32 + offsetY, 32, 32},
