@@ -46,11 +46,12 @@ const (
 	Down
 	Left
 	Right
+	TakeAll
 	TakeItem
+	DropItem
 	QuitGame
 	CloseWindow
 	Search
-	TakeAll
 )
 
 type Input struct {
@@ -115,6 +116,7 @@ const (
 	Hit
 	Portal
 	PickUp
+	Drop
 )
 
 type Attackable interface {
@@ -435,6 +437,9 @@ func (game *Game) handleInput(input *Input) {
 	case TakeItem:
 		level.MoveItem(input.Item, &level.Player.Character)
 		level.LastEvent = PickUp
+	case DropItem:
+		level.DropItem(input.Item, &level.Player.Character)
+		level.LastEvent = Drop
 	case Search:
 		//bfs(ui, Level, p.Pos)
 		level.astar(level.Player.Pos, Pos{level.Player.X + 2, level.Player.Y + 1})

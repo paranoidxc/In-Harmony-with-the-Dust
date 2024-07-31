@@ -18,6 +18,19 @@ type Level struct {
 	LastEvent GameEvent
 }
 
+func (level *Level) DropItem(itemToDrop *Item, character *Character) {
+	pos := character.Pos
+	items := character.Items
+	for i, item := range items {
+		if item == itemToDrop {
+			character.Items = append(character.Items[:i], character.Items[i+1:]...)
+			level.Items[pos] = append(level.Items[pos], item)
+			level.AddEvent(character.Name + " dropped:" + item.Name)
+			return
+		}
+	}
+}
+
 func (level *Level) MoveItem(itemToMove *Item, character *Character) {
 	pos := character.Pos
 	items := level.Items[pos]

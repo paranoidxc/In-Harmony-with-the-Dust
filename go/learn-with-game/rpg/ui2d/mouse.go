@@ -11,7 +11,7 @@ type mouseState struct {
 	pos         game.Pos
 }
 
-func getMouseState() mouseState {
+func getMouseState() *mouseState {
 	mouseX, mouseY, mouseButtonState := sdl.GetMouseState()
 	leftButton := mouseButtonState & sdl.ButtonLMask()
 	rightButton := mouseButtonState & sdl.ButtonRMask()
@@ -20,5 +20,5 @@ func getMouseState() mouseState {
 	result.pos.Y = int(mouseY)
 	result.leftButton = !(leftButton == 0)
 	result.rightButton = !(rightButton == 0)
-	return result
+	return &result
 }
