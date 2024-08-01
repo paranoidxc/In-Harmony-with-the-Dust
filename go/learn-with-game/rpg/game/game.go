@@ -49,6 +49,7 @@ const (
 	TakeAll
 	TakeItem
 	DropItem
+	EquipItem
 	QuitGame
 	CloseWindow
 	Search
@@ -101,6 +102,8 @@ type Character struct {
 	ActionPoints float64
 	SigntRange   int
 	Items        []*Item
+	Helmet       *Item
+	Weapon       *Item
 }
 
 type Player struct {
@@ -412,6 +415,21 @@ func (game *Game) resolveMovement(pos Pos) {
 	}
 }
 
+func equip(c *Character, itemtoEquip *Item) {
+	for i, item := range c.Items {
+		if item == itemtoEquip {
+			c.Items = append(c.Items[:i], c.Items[i+1:]...)
+			if itemtoEquip.Typ == Helmet {
+				c.Helmet = itemtoEquip
+			} else if itemtoEquip.Typ == Weapon {
+				c.Weapon = itemtoEquip
+			}
+			return
+		}
+	}
+	panic("equip")
+}
+
 func (game *Game) handleInput(input *Input) {
 	level := game.CurrentLevel
 	p := level.Player
@@ -437,6 +455,8 @@ func (game *Game) handleInput(input *Input) {
 	case TakeItem:
 		level.MoveItem(input.Item, &level.Player.Character)
 		level.LastEvent = PickUp
+	case EquipItem:
+		equip(&level.Player.Character, input.Item)
 	case DropItem:
 		level.DropItem(input.Item, &level.Player.Character)
 		level.LastEvent = Drop
