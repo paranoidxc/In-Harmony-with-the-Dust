@@ -202,15 +202,19 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	for i := 1; i < m.NumField(); i++ {
 		field := m.Field(i)
 		key := field.Tag.Get("json")
-		item := field.Tag.Get("gorm")
-		label := getCommentFromGormTag(item)
+		item := field.Tag.Get("db")
+		label := field.Tag.Get("label")
+		comment := getCommentFromGormTag(item)
+		if comment == "label" || comment == "" {
+			comment = label
+		}
 		column := getColumnFromGormTag(item)
-		fmt.Println("label", label)
+		fmt.Println("comment", comment)
 		fmt.Println("key", key)
-		vueFields = append(vueFields, map[string]string{"Key": key, "Label": label, "Name": field.Name, "Column": column})
+		vueFields = append(vueFields, map[string]string{"Key": key, "Label": comment, "Name": field.Name, "Column": column})
 
 		if !(strings.ToLower(key) == "createdat" || strings.ToLower(key) == "updatedat" || strings.ToLower(key) == "deletedat") {
-			minVueFields = append(minVueFields, map[string]string{"Key": key, "Label": label, "Name": field.Name, "Column": column})
+			minVueFields = append(minVueFields, map[string]string{"Key": key, "Label": comment, "Name": field.Name, "Column": column})
 		}
 	}
 
@@ -913,10 +917,10 @@ func genWebVueFile(name, underlineName, primaryKeyJson string, vueFields interfa
 func getCommentFromGormTag(tag string) string {
 	parts := strings.Split(tag, ";") // 根据分号分割tag
 	for _, part := range parts {
-		fmt.Println(1, part)
+		//fmt.Println(1, part)
 		if strings.Contains(part, "comment:") {
 			column := strings.TrimPrefix(part, "comment:")
-			fmt.Println(2, column)
+			//fmt.Println(2, column)
 			return column
 		}
 	}
