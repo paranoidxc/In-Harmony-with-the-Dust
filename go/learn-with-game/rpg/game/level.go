@@ -57,10 +57,18 @@ func (level *Level) AddEvent(event string) {
 func (level *Level) Attack(c1 *Character, c2 *Character) {
 	c1.ActionPoints--
 	c1AttackPower := c1.Strength
-	c2.Hitpoints -= c1AttackPower
+
+	if c1.Weapon != nil {
+		c1AttackPower = int(float64(c1AttackPower) * c1.Weapon.Power)
+	}
+	damage := c1AttackPower
+	if c2.Helmet != nil {
+		damage = int(float64(damage) * (1.0 - c2.Helmet.Power))
+	}
+	c2.Hitpoints -= damage
 
 	if c2.Hitpoints > 0 {
-		level.AddEvent(c1.Name + " Attacked " + c2.Name + " for " + strconv.Itoa(c1AttackPower))
+		level.AddEvent(c1.Name + " Attacked " + c2.Name + " for " + strconv.Itoa(damage))
 	}
 }
 
