@@ -6,7 +6,7 @@ import (
 	"github.com/paranoidxc/In-Harmony-with-the-Dust/go/stl/utils/iterator"
 )
 
-type ring struct {
+type Ring struct {
 	current *node
 	size    uint64
 
@@ -26,22 +26,22 @@ type ringer interface {
 	Pre()                             //持有上一结点
 }
 
-func New() (r *ring) {
-	return &ring{
+func New() (r *Ring) {
+	return &Ring{
 		current: nil,
 		size:    0,
 		mutex:   sync.Mutex{},
 	}
 }
 
-func check(r *ring) *ring {
+func check(r *Ring) *Ring {
 	if r == nil {
 		return New()
 	}
 	return r
 }
 
-func (r *ring) Iterator() (i *iterator.Iterator) {
+func (r *Ring) Iterator() (i *iterator.Iterator) {
 	if r == nil {
 		r = New()
 	}
@@ -57,7 +57,7 @@ func (r *ring) Iterator() (i *iterator.Iterator) {
 	return i
 }
 
-func (r *ring) Size() (size uint64) {
+func (r *Ring) Size() (size uint64) {
 	if r == nil {
 		r = New()
 	}
@@ -65,7 +65,7 @@ func (r *ring) Size() (size uint64) {
 	return r.size
 }
 
-func (r *ring) Clear() {
+func (r *Ring) Clear() {
 	if r == nil {
 		r = New()
 	}
@@ -76,14 +76,14 @@ func (r *ring) Clear() {
 	r.size = 0
 }
 
-func (r *ring) Empty() (b bool) {
+func (r *Ring) Empty() (b bool) {
 	if r == nil {
 		r = New()
 	}
 	return r.size == 0
 }
 
-func (r *ring) Insert(e interface{}) {
+func (r *Ring) Insert(e interface{}) {
 	r = check(r)
 
 	r.mutex.Lock()
@@ -99,7 +99,7 @@ func (r *ring) Insert(e interface{}) {
 	r.size += 1
 }
 
-func (r *ring) Erase() {
+func (r *Ring) Erase() {
 	r = check(r)
 	if r.size == 0 {
 		return
@@ -123,7 +123,7 @@ func (r *ring) Erase() {
 	r.size -= 1
 }
 
-func (r *ring) Value() (e interface{}) {
+func (r *Ring) Value() (e interface{}) {
 	r = check(r)
 	if r.current == nil {
 		return nil
@@ -131,7 +131,7 @@ func (r *ring) Value() (e interface{}) {
 	return r.current.value()
 }
 
-func (r *ring) Set(e interface{}) {
+func (r *Ring) Set(e interface{}) {
 	r = check(r)
 	if r.current == nil {
 		return
@@ -143,7 +143,7 @@ func (r *ring) Set(e interface{}) {
 	r.current.setValue(e)
 }
 
-func (r *ring) Next() {
+func (r *Ring) Next() {
 	r = check(r)
 	if r.current == nil {
 		return
@@ -154,7 +154,7 @@ func (r *ring) Next() {
 	r.current = r.current.nextNode()
 }
 
-func (r *ring) Pre() {
+func (r *Ring) Pre() {
 	r = check(r)
 	if r.current == nil {
 		return
