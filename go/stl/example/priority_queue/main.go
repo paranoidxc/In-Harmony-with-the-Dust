@@ -13,7 +13,8 @@ func main() {
 	fmt.Println("遍历所有元素同时弹出：")
 	size := pq.Size()
 	for i := uint64(0); i < size; i++ {
-		fmt.Println(pq.Top())
+		fmt.Printf("%+v ", pq.Top())
 		pq.Pop()
 	}
+	fmt.Println()
 }
