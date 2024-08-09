@@ -148,7 +148,7 @@ func (avl *AvlTree) Insert(e interface{}) {
 	}
 }
 
-func (avl *AvlTree) Erase(e interface{}) {
+func (avl *AvlTree) Erase(e interface{}) (b bool) {
 	if avl == nil {
 		return
 	}
@@ -165,11 +165,12 @@ func (avl *AvlTree) Erase(e interface{}) {
 		return
 	}
 	//从根节点进行插入,并返回节点,同时返回是否删除成功
-	var b bool
 	avl.root, b = avl.root.erase(e, avl.cmp)
 	if b {
 		avl.size--
 	}
+
+	return b
 }
 
 func (avl *AvlTree) Count(e interface{}) (num int) {
