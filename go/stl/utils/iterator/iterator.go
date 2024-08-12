@@ -1,5 +1,7 @@
 package iterator
 
+import "fmt"
+
 type Iterator struct {
 	data  *[]interface{} //该迭代器中存放的元素集合的指针
 	index int            //该迭代器当前指向的元素下标，-1即不存在元素
@@ -189,4 +191,16 @@ func (i *Iterator) Pre() (b bool) {
 	//不满足后移条件时将下标设为尾元素下标并返回false
 	i.index = 0
 	return false
+}
+
+func (i *Iterator) Display() {
+	if i == nil {
+		return
+	}
+
+	fmt.Println("Iterator Start...")
+	for i := i.Begin(); i.HasNext(); i.Next() {
+		fmt.Printf("idx:[%+v]\t value:[%+v]\n", i.index, i.Value())
+	}
+	fmt.Println()
 }
