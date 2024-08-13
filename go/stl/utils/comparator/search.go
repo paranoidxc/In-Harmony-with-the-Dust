@@ -32,7 +32,7 @@ func search(arr *[]interface{}, e interface{}, cmp Comparator) (idx int) {
 		}
 	}
 	//查找结束
-	if (*arr)[l] == e {
+	if l < len(*arr) && (*arr)[l] == e {
 		//该元素存在,返回下标
 		return l
 	}
