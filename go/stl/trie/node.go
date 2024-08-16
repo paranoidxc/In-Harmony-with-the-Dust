@@ -1,9 +1,9 @@
 package trie
 
 type node struct {
-	num   int         //以当前结点为前缀的string的数量
-	son   [64]*node   //分叉
-	value interface{} //当前结点承载的元素
+	num      int         //以当前结点为前缀的string的数量
+	children [64]*node   //分叉
+	value    interface{} //当前结点承载的元素
 }
 
 func newNode(e interface{}) (n *node) {
@@ -21,17 +21,17 @@ func (n *node) inOrder(s string) (es []interface{}) {
 		es = append(es, s)
 	}
 	for i, p := 0, 0; i < 64 && p < n.num; i++ {
-		if n.son[i] != nil {
+		if n.children[i] != nil {
 			if i < 26 {
-				es = append(es, n.son[i].inOrder(s+string(i+'a'))...)
+				es = append(es, n.children[i].inOrder(s+string(i+'a'))...)
 			} else if i < 52 {
-				es = append(es, n.son[i].inOrder(s+string(i-26+'A'))...)
+				es = append(es, n.children[i].inOrder(s+string(i-26+'A'))...)
 			} else if i == 62 {
-				es = append(es, n.son[i].inOrder(s+string('+'))...)
+				es = append(es, n.children[i].inOrder(s+string('+'))...)
 			} else if i == 63 {
-				es = append(es, n.son[i].inOrder(s+string('/'))...)
+				es = append(es, n.children[i].inOrder(s+string('/'))...)
 			} else {
-				es = append(es, n.son[i].inOrder(s+string(i-52+'0'))...)
+				es = append(es, n.children[i].inOrder(s+string(i-52+'0'))...)
 			}
 			p++
 		}
@@ -69,10 +69,10 @@ func (n *node) insert(s string, p int, e interface{}) (b bool) {
 	if idx == -1 {
 		return false
 	}
-	if n.son[idx] == nil {
-		n.son[idx] = newNode(nil)
+	if n.children[idx] == nil {
+		n.children[idx] = newNode(nil)
 	}
-	b = n.son[idx].insert(s, p+1, e)
+	b = n.children[idx].insert(s, p+1, e)
 	if b {
 		n.num++
 	}
@@ -92,14 +92,14 @@ func (n *node) erase(s string, p int) (b bool) {
 	if idx == -1 {
 		return false
 	}
-	if n.son[idx] == nil {
+	if n.children[idx] == nil {
 		return false
 	}
-	b = n.son[idx].erase(s, p+1)
+	b = n.children[idx].erase(s, p+1)
 	if b {
 		n.num--
-		if n.son[idx].num == 0 {
-			n.son[idx] = nil
+		if n.children[idx].num == 0 {
+			n.children[idx] = nil
 		}
 	}
 	return b
@@ -113,14 +113,14 @@ func (n *node) delete(s string, p int) (num int) {
 	if idx == -1 {
 		return 0
 	}
-	if n.son[idx] == nil {
+	if n.children[idx] == nil {
 		return 0
 	}
-	num = n.son[idx].delete(s, p+1)
+	num = n.children[idx].delete(s, p+1)
 	if num > 0 {
 		n.num -= num
-		if n.son[idx].num <= 0 {
-			n.son[idx] = nil
+		if n.children[idx].num <= 0 {
+			n.children[idx] = nil
 		}
 	}
 	return num
@@ -134,10 +134,10 @@ func (n *node) count(s string, p int) (num int) {
 	if idx == -1 {
 		return 0
 	}
-	if n.son[idx] == nil {
+	if n.children[idx] == nil {
 		return 0
 	}
-	return n.son[idx].count(s, p+1)
+	return n.children[idx].count(s, p+1)
 }
 
 func (n *node) find(s string, p int) (e interface{}) {
@@ -148,8 +148,8 @@ func (n *node) find(s string, p int) (e interface{}) {
 	if idx == -1 {
 		return nil
 	}
-	if n.son[idx] == nil {
+	if n.children[idx] == nil {
 		return nil
 	}
-	return n.son[idx].find(s, p+1)
+	return n.children[idx].find(s, p+1)
 }
