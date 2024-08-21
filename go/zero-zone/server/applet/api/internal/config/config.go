@@ -22,4 +22,5 @@ type Config struct {
 		Type string
 	}
 	LimitRequestSecondByVerifyOpenApi int `json:",default=5"`
+	ThirdPartAllowLoginTokenExpire    int `json:",default=300"`
 }

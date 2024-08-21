@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"math/rand"
+	"net/http"
 	"reflect"
 
 	"encoding/json"
@@ -169,4 +170,13 @@ func ToMap(in interface{}, tagName string) (map[string]interface{}, error) {
 		}
 	}
 	return out, nil
+}
+
+func Host(r *http.Request) string {
+	scheme := "http://"
+	if r.TLS != nil {
+		scheme = "https://"
+	}
+
+	return scheme + r.Host
 }

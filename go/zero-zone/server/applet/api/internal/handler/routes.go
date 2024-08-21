@@ -8,6 +8,7 @@ import (
 	featdemo_curd "zero-zone/applet/api/internal/handler/feat/demo_curd"
 	featredis "zero-zone/applet/api/internal/handler/feat/redis"
 	feattest_gorm "zero-zone/applet/api/internal/handler/feat/test_gorm"
+	wechat "zero-zone/applet/api/internal/handler/wechat"
 	"zero-zone/applet/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -130,5 +131,31 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithJwt(serverCtx.Config.JwtAuth.AccessSecret),
 		rest.WithPrefix("/admin/feat/testGorm"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/loginBind",
+				Handler: wechat.LoginBindHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/loginCheck",
+				Handler: wechat.LoginCheckHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/loginQRCode",
+				Handler: wechat.LoginQRCodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/scanReturn",
+				Handler: wechat.ScanReturnHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/wechat"),
 	)
 }

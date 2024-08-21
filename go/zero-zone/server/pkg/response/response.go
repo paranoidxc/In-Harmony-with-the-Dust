@@ -30,6 +30,18 @@ func SendFile(ctx context.Context, w http.ResponseWriter, downloadName string, b
 	w.Write(b)
 }
 
+func ResponseHtml(ctx context.Context, w http.ResponseWriter, str string, err error) {
+	if err != nil {
+		str = err.Error()
+	}
+	htmlContent := "<html><body>" +
+		"<h1 style='text-align: center;margin-top: 20px'>ZeroZone管理服务平台</h1>" +
+		"<h1 style='text-align: center;margin-top: 10px; color:#777;'>" + str + "</h1>" +
+		"</body></html>"
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(htmlContent))
+}
+
 func ResponseWithCtx(ctx context.Context, w http.ResponseWriter, resp interface{}, err error) {
 	tracer := otel.GetTracerProvider().Tracer(trace.TraceName)
 	_, span := tracer.Start(ctx, "ResponseWithCtx")

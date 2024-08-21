@@ -51,3 +51,4 @@ Redis:
 
 # 部分请求限流配置, 单位秒, 防重，验证准备，核销，撤销请求
 LimitRequestSecondByVerifyOpenApi: 5
+ThirdPartAllowLoginTokenExpire: 3600 # 第三方登录 临时token的有效期，单位秒

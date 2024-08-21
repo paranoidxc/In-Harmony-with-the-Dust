@@ -178,3 +178,43 @@ type TestGormUpdateReq struct {
 	ID   int64  `json:"id"`
 	Text string `json:"text"`
 }
+
+type WechatLoginBindReq struct {
+	Token    string `json:"token,optional" label:"登录凭证" validate:"required" `
+	Username string `json:"username,optional" label:"账号" validate:"required" `
+	Password string `json:"password,optional" label:"密码" validate:"required" `
+}
+
+type WechatLoginBindResp struct {
+}
+
+type WechatLoginCheckReq struct {
+	Token string `form:"token,optional" label:"登录凭证" validate:"required" `
+}
+
+type WechatLoginCheckResp struct {
+	Status     int    `json:"status" `
+	Token      string `json:"token" `
+	TokenName  string `json:"tokenName" `
+	TokenValue string `json:"token" `
+}
+
+type WechatLoginQRCodeReq struct {
+	Host string `json:"-" label:"" `
+}
+
+type WechatLoginQRCodeResp struct {
+	Token         string `json:"token"`
+	QRCodeContent string `json:"qrCodeContent"`
+}
+
+type WechatScanReturnReq struct {
+	Token    string `form:"token,optional" label:"登录凭证" validate:"required" `
+	Device   string `form:"device,optional" label:"登录设备信息" validate:"required"`
+	Nickname string `form:"nickname,optional" label:"微信昵称" validate:"required"`
+	OpenID   string `form:"openid,optional" label:"微信OpenID" validate:"required"`
+}
+
+type WechatScanReturnResp struct {
+	Msg string `json:"-" label:"" `
+}

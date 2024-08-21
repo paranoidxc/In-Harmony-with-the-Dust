@@ -3,7 +3,7 @@ package {{.pkgName}}
 import (
 	{{.imports}}
    	"github.com/jinzhu/copier"
-   	"zero-zone/app/model"
+   	"zero-zone/applet/model"
    	"zero-zone/pkg/utils"
    	errorx2 "zero-zone/pkg/errorx"
    	"github.com/zeromicro/go-zero/core/logx"
