@@ -15,11 +15,11 @@ class Bird {
 
     this.x = 50;
     this.y = 120;
+
     this.w = 16;
     this.h = 16;
 
     this.r = sqrt((this.w / 2) * (this.w / 2) + (this.h / 2) * (this.h / 2));
-    console.log("bird r:", this.r);
 
     this.velocity = 0;
     this.gravity = 0.5;
@@ -35,17 +35,17 @@ class Bird {
   think(pipes) {
     let nextPipe = null;
     for (let pipe of pipes) {
-      if (pipe.x + pipe.w > this.x - 8) {
+      if (pipe.x + pipe.w > this.x) {
         nextPipe = pipe;
         break;
       }
     }
 
     let inputs = [
-      (this.y - this.r) / height,
+      this.y / height,
       this.velocity / height,
       nextPipe.top / height,
-      (nextPipe.x - this.x - this.r) / width,
+      (nextPipe.x - this.x) / width,
     ];
 
     let results = this.brain.classifySync(inputs);
@@ -81,19 +81,14 @@ class Bird {
   show() {
     push();
     angleMode(DEGREES);
-    strokeWeight(2);
+    strokeWeight(1);
     stroke(0);
+    translate(this.x, this.y);
+    //fill(255);
+    //circle(0, 0, this.r * 2);
     fill(127, 200);
-    // works
-    //rect(this.x - this.w / 2, this.y - this.h / 2, this.w, this.h);
-
-    translate(this.x - this.w / 2, this.y - this.h / 2);
     rotate(this.angle);
     rect(-this.w / 2, -this.h / 2, this.w, this.h);
-
-    stroke("red");
-    circle(0, 0, this.r * 2);
-
     pop();
   }
 }

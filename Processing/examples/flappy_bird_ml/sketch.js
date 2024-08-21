@@ -15,6 +15,17 @@ function setup() {
   frameRate(60);
 }
 
+function keyPressed() {
+  if (key == "s") {
+    for (let bird of birds) {
+      if (bird.alive) {
+        bird.brain.save();
+        return;
+      }
+    }
+  }
+}
+
 function draw() {
   background(255);
 
@@ -62,12 +73,12 @@ function draw() {
   let timePassSec = floor(timePass / 60);
 
   push();
-  fill(255);
-  stroke(0);
-  textSize(10);
+  fill(111);
+  noStroke();
+  textSize(16);
   text(
-    `rep: ${reproductionCnt} max: ${maxTimePassSec} time: ${timePassSec}`,
-    width - 160,
+    `Round: ${reproductionCnt} MaxAlive: ${maxTimePassSec} Time: ${timePassSec}`,
+    width - 240,
     20
   );
   pop();

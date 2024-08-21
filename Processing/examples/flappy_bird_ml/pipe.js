@@ -6,83 +6,65 @@ class Pipe {
     this.x = width;
     this.w = 20;
     this.velocity = 2;
-  }
 
-  collidesBottom(bird) {
-    //圆的半径
-    var radius = bird.r;
-    //圆形中心与矩形中心的相对坐标
-    var x = bird.x - this.x;
-    var y = bird.y - this.top;
-
-    var minX = Math.min(x, this.w / 2);
-    var maxX = Math.max(minX, -this.w / 2);
-    var minY = Math.min(y, this.top / 2);
-    var maxY = Math.max(minY, -this.top / 2);
-
-    if ((maxX - x) * (maxX - x) + (maxY - y) * (maxY - y) <= radius * radius) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  collidesTop(bird) {
-    //圆的半径
-    var radius = bird.r;
-    //圆形中心与矩形中心的相对坐标
-    var x = bird.x - this.x;
-    var y = bird.y - this.bottom;
-
-    var minX = Math.min(x, this.w / 2);
-    var maxX = Math.max(minX, -this.w / 2);
-    var minY = Math.min(y, (height - this.bottom) / 2);
-    var maxY = Math.max(minY, -(height - this.bottom) / 2);
-
-    if ((maxX - x) * (maxX - x) + (maxY - y) * (maxY - y) <= radius * radius) {
-      return true;
-    } else {
-      return false;
-    }
+    this.horizontalDivs = 5;
+    this.windowSize = this.w / this.horizontalDivs;
+    this.topMax = floor((this.top - this.windowSize) / (this.windowSize * 3));
+    this.bottomMax = floor(
+      (this.bottom - this.windowSize) / (this.windowSize * 3)
+    );
   }
 
   collides(bird) {
-    /*
-    if (this.collidesBottom(bird) || this.collidesTop(bird)) {
-      return true;
-    }
-    return false;
-    */
-    return this.collidesOld(bird);
-  }
-
-  collidesOld(bird) {
-    let birdCenterY = bird.y - bird.r;
-    let birdCenterX = bird.x - bird.r;
-
-    let verticalCollision = birdCenterY < this.top || birdCenterY > this.bottom;
-    let horizontalCollision =
-      birdCenterX > this.x && birdCenterX < this.x + this.w;
-    if (verticalCollision && horizontalCollision) {
-      console.log(
-        "ver birdCenterY < this.top || birdCenterY > this.bottom",
-        `ver ${birdCenterY} < ${this.top} || ${birdCenterY} > ${this.bottom}`
-      );
-
-      console.log(
-        "hor  = birdCenterX > this.x && birdCenterX< this.x + this.w ",
-        `hor  = ${birdCenterX} > ${this.x} && ${birdCenterX} < ${this.x} + ${this.w} `
-      );
-      return true;
-    }
-    return false;
+    let verticalCollision =
+      bird.y - bird.r < this.top || bird.y + bird.r > this.bottom;
+    let horizontalCollision = bird.x > this.x && bird.x < this.x + this.w;
+    return verticalCollision && horizontalCollision;
   }
 
   show() {
-    fill(0);
-    noStroke();
-    rect(this.x, 0, this.w, this.top);
-    rect(this.x, this.bottom, this.w, height - this.bottom);
+    noFill();
+    stroke(0);
+    //top
+    rect(this.x, -1, this.w, this.top + 1);
+
+    for (let i = this.topMax; i > 0; i--) {
+      fill(111);
+      rect(
+        this.x + this.windowSize,
+        this.top - this.windowSize * 3 * i - this.windowSize,
+        this.windowSize,
+        this.windowSize * 2
+      );
+      rect(
+        this.x + this.w - 2 * this.windowSize,
+        this.top - this.windowSize * 3 * i - this.windowSize,
+        this.windowSize,
+        this.windowSize * 2
+      );
+    }
+
+    //bottom
+    noFill();
+    rect(this.x, this.bottom, this.w, height - this.bottom + 1);
+
+    for (let i = this.bottomMax; i > 0; i--) {
+      fill(111);
+      if (this.bottom + this.windowSize * 3 * i + this.windowSize < height) {
+        rect(
+          this.x + this.windowSize,
+          this.bottom + this.windowSize * 3 * i - this.windowSize,
+          this.windowSize,
+          this.windowSize * 2
+        );
+        rect(
+          this.x + this.w - 2 * this.windowSize,
+          this.bottom + this.windowSize * 3 * i - this.windowSize,
+          this.windowSize,
+          this.windowSize * 2
+        );
+      }
+    }
   }
 
   update() {
