@@ -11,7 +11,7 @@ class Pipe {
     this.windowSize = this.w / this.horizontalDivs;
     this.topMax = floor((this.top - this.windowSize) / (this.windowSize * 3));
     this.bottomMax = floor(
-      (this.bottom - this.windowSize) / (this.windowSize * 3)
+      (height - this.bottom - this.windowSize) / (this.windowSize * 3)
     );
   }
 
@@ -30,15 +30,16 @@ class Pipe {
 
     for (let i = this.topMax; i > 0; i--) {
       fill(111);
+      let topY = this.top - this.windowSize * 3 * i - this.windowSize;
       rect(
         this.x + this.windowSize,
-        this.top - this.windowSize * 3 * i - this.windowSize,
+        topY,
         this.windowSize,
         this.windowSize * 2
       );
       rect(
         this.x + this.w - 2 * this.windowSize,
-        this.top - this.windowSize * 3 * i - this.windowSize,
+        topY,
         this.windowSize,
         this.windowSize * 2
       );
@@ -51,15 +52,16 @@ class Pipe {
     for (let i = this.bottomMax; i > 0; i--) {
       fill(111);
       if (this.bottom + this.windowSize * 3 * i + this.windowSize < height) {
+        let bottomY = this.bottom + this.windowSize * 3 * i - this.windowSize;
         rect(
           this.x + this.windowSize,
-          this.bottom + this.windowSize * 3 * i - this.windowSize,
+          bottomY,
           this.windowSize,
           this.windowSize * 2
         );
         rect(
           this.x + this.w - 2 * this.windowSize,
-          this.bottom + this.windowSize * 3 * i - this.windowSize,
+          bottomY,
           this.windowSize,
           this.windowSize * 2
         );

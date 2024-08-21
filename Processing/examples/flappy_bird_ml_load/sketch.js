@@ -14,25 +14,23 @@ function setup() {
 
   frameRate(60);
   classifier = ml5.neuralNetwork({
-    //inputs: 4,
-    //outputs: ["flap", "no flap"],
+    inputs: 4,
+    outputs: ["flap", "no flap"],
     task: "classification",
     neuroEvolution: true,
   });
 
-  console.log(111);
   const modelInfo = {
-    model: "./model/model.json",
-    metadata: "./model/model_meta.json",
-    weights: "./model/model.weights.bin",
+    model: "model.json",
+    metadata: "model_meta.json",
+    weights: "model.weights.bin",
   };
-  classifier.load("model.json", modelLoadedCallback);
-  //modelLoadedCallback();
+  classifier.load(modelInfo, modelLoadedCallback);
 }
 
 function modelLoadedCallback() {
-  console.log("modelLoadedCallback");
-  for (let i = 0; i < 1; i++) {
+  console.log("modelLoaded ready");
+  for (let i = 0; i < 10; i++) {
     birds[i] = new Bird(classifier);
   }
   pipes.push(new Pipe());
@@ -70,12 +68,8 @@ function draw() {
     }
 
     if (allBirdsDead()) {
-      console.log("ALL dead");
-      console.log("normalizeFitness");
       normalizeFitness();
-      console.log("reproduction");
       reproduction();
-      console.log("resetPipes");
       resetPipes();
       if (timePass > maxTimePass) {
         maxTimePass = timePass;
@@ -115,13 +109,10 @@ function allBirdsDead() {
 function reproduction() {
   let nextBirds = [];
   for (let i = 0; i < birds.length; i++) {
-    console.log("weightedSelection");
     let parentA = weightedSelection();
     let parentB = weightedSelection();
-    console.log("crossover");
     let child = parentA.crossover(parentB);
     child.mutate(0.01);
-    console.log("new b");
     nextBirds[i] = new Bird(child);
   }
   birds = nextBirds;
