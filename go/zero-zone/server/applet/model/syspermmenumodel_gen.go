@@ -92,7 +92,8 @@ func (m *defaultSysPermMenuModel) FindOne(ctx context.Context, id int64) (*SysPe
 func (m *defaultSysPermMenuModel) Insert(ctx context.Context, data *SysPermMenu) (sql.Result, error) {
 	arkAdminSysPermMenuIdKey := fmt.Sprintf("%s%v", cacheZoneZoneAdminSysPermMenuIdPrefix, data.Id)
 	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
-		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, sysPermMenuRowsExpectAutoSet)
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", m.table, sysPermMenuRowsExpectAutoSet)
+		fmt.Println(query)
 		return conn.ExecCtx(ctx, query, data.ParentId, data.Name, data.Router, data.Perms, data.Type, data.Icon, data.OrderNum, data.ViewPath, data.IsShow, data.KeepAlive, data.ActiveRouter)
 	}, arkAdminSysPermMenuIdKey)
 	return ret, err

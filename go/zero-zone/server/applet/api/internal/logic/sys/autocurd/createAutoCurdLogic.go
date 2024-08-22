@@ -340,11 +340,11 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				IsShow:   1,
 			})
 			if err != nil {
-				fmt.Println("出错了：", err)
+				fmt.Println("出错了1：", err)
 			}
 			menuId, err := res.LastInsertId()
 			if err != nil {
-				fmt.Println("出错了：", err)
+				fmt.Println("出错了2：", err)
 			}
 			//menu, _ := l.svcCtx.SysPermMenuModel.FindOneByName(l.ctx, reqModelName)
 			l.svcCtx.SysPermMenuModel.Insert(l.ctx, &model.SysPermMenu{
