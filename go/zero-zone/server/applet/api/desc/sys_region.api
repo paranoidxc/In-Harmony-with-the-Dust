@@ -1,0 +1,149 @@
+type SysRegion {
+	Id        int64  `json:"id"`
+	No        string `json:"no"`
+	Name      string `json:"name"`
+	ParentNo  string `json:"parentNo"`
+	Code      string `json:"code"`
+	TypeName  string `json:"typeName"`
+	PySzm     string `json:"pYSzm"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+	IsDel     int64  `json:"isDel"`
+}
+
+type SysRegionCreateReq {
+	No        string `json:"no,optional" label:"编号"`
+	Name      string `json:"name,optional" label:"名称"`
+	ParentNo  string `json:"parentNo,optional" label:"父级编号"`
+	Code      string `json:"code,optional" label:"区码"`
+	TypeName  string `json:"typeName,optional" label:"类型名称"`
+	PySzm     string `json:"pYSzm,optional" label:"拼音"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
+	IsDel     int64  `json:"isDel,optional"`
+}
+
+type SysRegionDeleteReq {
+	Id int64 `json:"id"`
+}
+
+type SysRegionDeletesReq {
+	Id []int64 `json:"id"`
+}
+
+type SysRegionUpdateReq {
+	Id        int64  `json:"id"`
+	No        string `json:"no,optional" label:"编号"`
+	Name      string `json:"name,optional" label:"名称"`
+	ParentNo  string `json:"parentNo,optional" label:"父级编号"`
+	Code      string `json:"code,optional" label:"区码"`
+	TypeName  string `json:"typeName,optional" label:"类型名称"`
+	PySzm     string `json:"pYSzm,optional" label:"拼音"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
+	IsDel     int64  `json:"isDel,optional"`
+}
+
+type SysRegionDetailReq {
+	Id int64 `form:"id"`
+}
+
+type SysRegionDetailResp {
+	Id        int64  `json:"id"`
+	No        string `json:"no" label:"编号"`
+	Name      string `json:"name" label:"名称"`
+	ParentNo  string `json:"parentNo" label:"父级编号"`
+	Code      string `json:"code" label:"区码"`
+	TypeName  string `json:"typeName" label:"类型名称"`
+	PySzm     string `json:"pYSzm" label:"拼音"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+	IsDel     int64  `json:"isDel"`
+}
+
+type SysRegionListReq {
+	No             string `form:"no,optional"`
+	Name           string `form:"name,optional"`
+	ParentNo       string `form:"parentNo,optional"`
+	Code           string `form:"code,optional"`
+	TypeName       string `form:"typeName,optional"`
+	PySzm          string `form:"pYSzm,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IsDel          int64  `form:"isDel,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
+}
+
+type SysRegionListResp {
+	List  []SysRegion `json:"list"`
+	Total int64       `json:"total"`
+}
+
+type SysRegionPageReq {
+	PageReq
+	No             string `form:"no,optional"`
+	Name           string `form:"name,optional"`
+	ParentNo       string `form:"parentNo,optional"`
+	Code           string `form:"code,optional"`
+	TypeName       string `form:"typeName,optional"`
+	PySzm          string `form:"pYSzm,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IsDel          int64  `form:"isDel,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
+}
+
+type SysRegionPageResp {
+	List       []SysRegion `json:"list"`
+	Pagination Pagination  `json:"pagination"`
+}
+
+type SysRegionTree {
+	Name      string `json:"name"`
+	No        int64 `json:"no"`
+	PySzm     string `json:"pYSzm"`
+	Children []SysRegionTree   `json:"children"`
+}
+
+type SysRegionTreeResp {
+	TreeData  []SysRegionTree `json:"treeData"`
+}
+
+@server (
+	group:  feat/sys_region
+	prefix: /admin/feat/sysRegion
+	jwt:    JwtAuth
+)
+
+service core-api {
+	@handler SysRegionTree
+	get /tree returns (SysRegionTreeResp)
+
+	@handler SysRegionList
+	get /list (SysRegionListReq) returns (SysRegionListResp)
+
+	@handler SysRegionPage
+	get /page (SysRegionPageReq) returns (SysRegionPageResp)
+
+	@handler SysRegionCreate
+	post /create (SysRegionCreateReq)
+
+	@handler SysRegionDelete
+	post /delete (SysRegionDeleteReq)
+
+	@handler SysRegionDeletes
+	post /deletes (SysRegionDeletesReq)
+
+	@handler SysRegionUpdate
+	post /update (SysRegionUpdateReq)
+
+	@handler SysRegionDetail
+	get /detail (SysRegionDetailReq) returns (SysRegionDetailResp)
+}
+

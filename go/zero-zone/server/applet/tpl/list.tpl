@@ -1,6 +1,6 @@
 
 func (l *{{ .Name }}ListLogic) {{ .Name }}List(req *types.{{ .Name }}ListReq) (resp *types.{{ .Name }}ListResp, err error) {
-    where := []string{}
+    where := []string{"1"}
     if req != nil {
         if req.IncludeDeleted == 0 {
 		    where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")
@@ -13,7 +13,9 @@ func (l *{{ .Name }}ListLogic) {{ .Name }}List(req *types.{{ .Name }}ListReq) (r
     }
     {{- end }}
     */
-    feat{{ .Name }}List, err := l.svcCtx.Feat{{ .Name }}Model.FindAllByWhere(l.ctx, where)
+
+    whereStr := strings.Join(where, " AND ")
+    feat{{ .Name }}List, err := l.svcCtx.Feat{{ .Name }}Model.FindAllByWhere(l.ctx, whereStr)
 	if err != nil {
 		return nil, errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}

@@ -126,6 +126,123 @@ type RedisKeyListResp struct {
 	List []RedisKey `json:"list"`
 }
 
+type SysRegion struct {
+	Id        int64  `json:"id"`
+	No        string `json:"no"`
+	Name      string `json:"name"`
+	ParentNo  string `json:"parentNo"`
+	Code      string `json:"code"`
+	TypeName  string `json:"typeName"`
+	PySzm     string `json:"pYSzm"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+	IsDel     int64  `json:"isDel"`
+}
+
+type SysRegionCreateReq struct {
+	No        string `json:"no,optional" label:"编号"`
+	Name      string `json:"name,optional" label:"名称"`
+	ParentNo  string `json:"parentNo,optional" label:"父级编号"`
+	Code      string `json:"code,optional" label:"区码"`
+	TypeName  string `json:"typeName,optional" label:"类型名称"`
+	PySzm     string `json:"pYSzm,optional" label:"拼音"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
+	IsDel     int64  `json:"isDel,optional"`
+}
+
+type SysRegionDeleteReq struct {
+	Id int64 `json:"id"`
+}
+
+type SysRegionDeletesReq struct {
+	Id []int64 `json:"id"`
+}
+
+type SysRegionDetailReq struct {
+	Id int64 `form:"id"`
+}
+
+type SysRegionDetailResp struct {
+	Id        int64  `json:"id"`
+	No        string `json:"no" label:"编号"`
+	Name      string `json:"name" label:"名称"`
+	ParentNo  string `json:"parentNo" label:"父级编号"`
+	Code      string `json:"code" label:"区码"`
+	TypeName  string `json:"typeName" label:"类型名称"`
+	PySzm     string `json:"pYSzm" label:"拼音"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+	DeletedAt string `json:"deletedAt"`
+	IsDel     int64  `json:"isDel"`
+}
+
+type SysRegionListReq struct {
+	No             string `form:"no,optional"`
+	Name           string `form:"name,optional"`
+	ParentNo       string `form:"parentNo,optional"`
+	Code           string `form:"code,optional"`
+	TypeName       string `form:"typeName,optional"`
+	PySzm          string `form:"pYSzm,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IsDel          int64  `form:"isDel,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
+}
+
+type SysRegionListResp struct {
+	List  []SysRegion `json:"list"`
+	Total int64       `json:"total"`
+}
+
+type SysRegionPageReq struct {
+	PageReq
+	No             string `form:"no,optional"`
+	Name           string `form:"name,optional"`
+	ParentNo       string `form:"parentNo,optional"`
+	Code           string `form:"code,optional"`
+	TypeName       string `form:"typeName,optional"`
+	PySzm          string `form:"pYSzm,optional"`
+	CreatedAt      string `form:"createdAt,optional"`
+	UpdatedAt      string `form:"updatedAt,optional"`
+	DeletedAt      string `form:"deletedAt,optional"`
+	IsDel          int64  `form:"isDel,optional"`
+	IncludeDeleted int    `form:"includeDeleted,optional"`
+}
+
+type SysRegionPageResp struct {
+	List       []SysRegion `json:"list"`
+	Pagination Pagination  `json:"pagination"`
+}
+
+type SysRegionTree struct {
+	Name     string          `json:"name"`
+	No       int64           `json:"no"`
+	PySzm    string          `json:"pYSzm"`
+	Children []SysRegionTree `json:"children"`
+}
+
+type SysRegionTreeResp struct {
+	TreeData []SysRegionTree `json:"treeData"`
+}
+
+type SysRegionUpdateReq struct {
+	Id        int64  `json:"id"`
+	No        string `json:"no,optional" label:"编号"`
+	Name      string `json:"name,optional" label:"名称"`
+	ParentNo  string `json:"parentNo,optional" label:"父级编号"`
+	Code      string `json:"code,optional" label:"区码"`
+	TypeName  string `json:"typeName,optional" label:"类型名称"`
+	PySzm     string `json:"pYSzm,optional" label:"拼音"`
+	CreatedAt string `json:"createdAt,optional"`
+	UpdatedAt string `json:"updatedAt,optional"`
+	DeletedAt string `json:"deletedAt,optional"`
+	IsDel     int64  `json:"isDel,optional"`
+}
+
 type TestGorm struct {
 	ID        int64  `json:"id"`
 	CreatedAt string `json:"created_at"`

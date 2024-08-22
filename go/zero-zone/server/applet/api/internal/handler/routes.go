@@ -7,6 +7,7 @@ import (
 	featdashboard "zero-zone/applet/api/internal/handler/feat/dashboard"
 	featdemo_curd "zero-zone/applet/api/internal/handler/feat/demo_curd"
 	featredis "zero-zone/applet/api/internal/handler/feat/redis"
+	featsys_region "zero-zone/applet/api/internal/handler/feat/sys_region"
 	feattest_gorm "zero-zone/applet/api/internal/handler/feat/test_gorm"
 	wechat "zero-zone/applet/api/internal/handler/wechat"
 	"zero-zone/applet/api/internal/svc"
@@ -89,6 +90,53 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 		rest.WithJwt(serverCtx.Config.JwtAuth.AccessSecret),
 		rest.WithPrefix("/admin/feat/redis"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/create",
+				Handler: featsys_region.SysRegionCreateHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/delete",
+				Handler: featsys_region.SysRegionDeleteHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/deletes",
+				Handler: featsys_region.SysRegionDeletesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/detail",
+				Handler: featsys_region.SysRegionDetailHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: featsys_region.SysRegionListHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/page",
+				Handler: featsys_region.SysRegionPageHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/tree",
+				Handler: featsys_region.SysRegionTreeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/update",
+				Handler: featsys_region.SysRegionUpdateHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.JwtAuth.AccessSecret),
+		rest.WithPrefix("/admin/feat/sysRegion"),
 	)
 
 	server.AddRoutes(

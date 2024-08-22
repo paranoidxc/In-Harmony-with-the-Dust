@@ -1,6 +1,6 @@
 
 func (l *{{ .Name }}PageLogic) {{ .Name }}Page(req *types.{{ .Name }}PageReq) (resp *types.{{ .Name }}PageResp, err error) {
-    where := []string{}
+    where := []string{"1"}
     if req != nil {
         if req.IncludeDeleted == 0 {
             where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")

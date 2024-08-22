@@ -25,6 +25,7 @@ type ServiceContext struct {
 	SysProfessionModel  model.SysProfessionModel
 	SysDictionaryModel  model.SysDictionaryModel
 	SysLogModel         model.SysLogModel
+	FeatSysRegionModel  model.SysRegionModel
 	FeatDemoCurdModel   model.DemoCurdModel
 	FeatTestGormModel   model.TestGormModel
 }
@@ -65,6 +66,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SysProfessionModel:  model.NewSysProfessionModel(mysqlConn, c.Cache),
 		SysDictionaryModel:  model.NewSysDictionaryModel(mysqlConn, c.Cache),
 		SysLogModel:         model.NewSysLogModel(mysqlConn, c.Cache),
+		FeatSysRegionModel:  model.NewSysRegionModel(mysqlConn, c.Cache),
 		FeatDemoCurdModel:   model.NewDemoCurdModel(mysqlConn, c.Cache),
 		FeatTestGormModel:   model.NewTestGormModel(mysqlGorm.ConnGorm),
 	}
