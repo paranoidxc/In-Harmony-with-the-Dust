@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-const BASE_API = "/admin/feat";
+const BASE_API = "/admin/{{ .DirectoryLowerCase}}";
 
 export default {
   all(query) {

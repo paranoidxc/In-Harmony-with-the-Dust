@@ -9,7 +9,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/zeromicro/go-zero/core/logx"
 	"zero-zone/applet/model"
-
+	
 	"zero-zone/pkg/utils"
 )
 
@@ -40,3 +40,4 @@ func (l *DemoCurdDetailLogic) DemoCurdDetail(req *types.DemoCurdDetailReq) (resp
 	}
 	return
 }
+

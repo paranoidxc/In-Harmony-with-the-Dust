@@ -1,6 +1,6 @@
 package tmpAutoFeat
 
-type TmpSysRegion struct {
+type FeatSysRegion struct {
 	Id        int64  `json:"id" db:"column:id;comment:唯一id;"`
 	No        string `json:"no" label:"编号" db:"column:no;comment:编号;"`
 	Name      string `json:"name" label:"名称" db:"column:no;comment:名称;"`

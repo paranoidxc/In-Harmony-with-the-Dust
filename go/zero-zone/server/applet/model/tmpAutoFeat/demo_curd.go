@@ -4,7 +4,7 @@ package tmpAutoFeat
 // db tag column 和 comment  o
 // comment 不填 会使用label字段
 
-type TmpDemoCurd struct {
+type FeatDemoCurd struct {
 	Id int64 `json:"id" gorm:"column:id;comment:唯一id;"`
 
 	FirmName  string `json:"firmName" validate:"required" label:"电影名称" db:"column:firm_name;comment:厂商名称;"`

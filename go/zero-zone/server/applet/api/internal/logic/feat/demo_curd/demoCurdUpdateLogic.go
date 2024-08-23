@@ -10,6 +10,7 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 	"zero-zone/applet/model"
 	errorx2 "zero-zone/pkg/errorx"
+	
 )
 
 type DemoCurdUpdateLogic struct {
@@ -46,3 +47,4 @@ func (l *DemoCurdUpdateLogic) DemoCurdUpdate(req *types.DemoCurdUpdateReq) (err 
 
 	return
 }
+

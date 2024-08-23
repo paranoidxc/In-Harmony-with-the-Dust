@@ -2,7 +2,6 @@ package demo_curd
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"zero-zone/applet/api/internal/svc"
@@ -30,36 +29,36 @@ func NewDemoCurdPageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Demo
 }
 
 func (l *DemoCurdPageLogic) DemoCurdPage(req *types.DemoCurdPageReq) (resp *types.DemoCurdPageResp, err error) {
-	where := []string{}
+	where := []string{"1"}
 	if req != nil {
 		if req.IncludeDeleted == 0 {
 			where = append(where, "t.deleted_at = '0000-00-00 00:00:00'")
 		}
 	}
-	if len(strings.TrimSpace(req.FirmName)) > 0 {
-		where = append(where, fmt.Sprintf("firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%"))
-	}
-
 	/*
+	   if len(strings.TrimSpace(req.FirmName)) > 0 {
+	       where = append(where, fmt.Sprintf("firm_name LIKE '%s'", "%"+strings.TrimSpace(req.FirmName)+"%"))
+	   }
 	   if len(strings.TrimSpace(req.FirmAlias)) > 0 {
-	       where = where + fmt.Sprintf(" AND firm_alias LIKE '%s'", "%"+strings.TrimSpace(req.FirmAlias)+"%")
+	       where = append(where, fmt.Sprintf(" LIKE '%s'", "%"+strings.TrimSpace(req.FirmAlias)+"%"))
 	   }
 	   if len(strings.TrimSpace(req.FirmCode)) > 0 {
-	       where = where + fmt.Sprintf(" AND firm_code LIKE '%s'", "%"+strings.TrimSpace(req.FirmCode)+"%")
+	       where = append(where, fmt.Sprintf("firm_code LIKE '%s'", "%"+strings.TrimSpace(req.FirmCode)+"%"))
 	   }
 	   if len(strings.TrimSpace(req.FirmDesc)) > 0 {
-	       where = where + fmt.Sprintf(" AND firm_desc LIKE '%s'", "%"+strings.TrimSpace(req.FirmDesc)+"%")
+	       where = append(where, fmt.Sprintf(" LIKE '%s'", "%"+strings.TrimSpace(req.FirmDesc)+"%"))
 	   }
 	   if len(strings.TrimSpace(req.CreatedAt)) > 0 {
-	       where = where + fmt.Sprintf(" AND create_at LIKE '%s'", "%"+strings.TrimSpace(req.CreatedAt)+"%")
+	       where = append(where, fmt.Sprintf(" LIKE '%s'", "%"+strings.TrimSpace(req.CreatedAt)+"%"))
 	   }
 	   if len(strings.TrimSpace(req.UpdatedAt)) > 0 {
-	       where = where + fmt.Sprintf(" AND update_at LIKE '%s'", "%"+strings.TrimSpace(req.UpdatedAt)+"%")
+	       where = append(where, fmt.Sprintf(" LIKE '%s'", "%"+strings.TrimSpace(req.UpdatedAt)+"%"))
 	   }
 	   if len(strings.TrimSpace(req.DeletedAt)) > 0 {
-	       where = where + fmt.Sprintf(" AND delete_at LIKE '%s'", "%"+strings.TrimSpace(req.DeletedAt)+"%")
+	       where = append(where, fmt.Sprintf(" LIKE '%s'", "%"+strings.TrimSpace(req.DeletedAt)+"%"))
 	   }
 	*/
+
 	whereStr := strings.Join(where, " AND ")
 	featDemoCurdPage, err := l.svcCtx.FeatDemoCurdModel.FindPageByWhere(l.ctx, whereStr, req.Page, req.Limit)
 	if err != nil {

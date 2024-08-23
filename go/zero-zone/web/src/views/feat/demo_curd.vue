@@ -3,16 +3,32 @@
     <div class="">
       <el-form :model="tableSearchForm" inline>
         <el-form-item label="厂商名称">
-            <el-input v-model="tableSearchForm.firmName" placeholder="" clearable />
+          <el-input
+            v-model="tableSearchForm.firmName"
+            placeholder=""
+            clearable
+          />
         </el-form-item>
-        <el-form-item label="厂商别名">
-            <el-input v-model="tableSearchForm.firmAlias" placeholder="" clearable />
+        <el-form-item label="">
+          <el-input
+            v-model="tableSearchForm.firmAlias"
+            placeholder=""
+            clearable
+          />
         </el-form-item>
         <el-form-item label="电影编码">
-            <el-input v-model="tableSearchForm.firmCode" placeholder="" clearable />
+          <el-input
+            v-model="tableSearchForm.firmCode"
+            placeholder=""
+            clearable
+          />
         </el-form-item>
-        <el-form-item label="厂商描述">
-            <el-input v-model="tableSearchForm.firmDesc" placeholder="" clearable />
+        <el-form-item label="">
+          <el-input
+            v-model="tableSearchForm.firmDesc"
+            placeholder=""
+            clearable
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSearchSubmit">
@@ -60,25 +76,25 @@
       <el-table-column fixed type="selection" width="55" />
       <el-table-column fixed prop="id" label="ID" width="60" />
       <el-table-column prop="firmName" label="厂商名称" width="100" />
-      <el-table-column prop="firmAlias" label="厂商别名" width="100" />
+      <el-table-column prop="firmAlias" label="" width="100" />
       <el-table-column prop="firmCode" label="电影编码" width="100" />
-      <el-table-column prop="firmDesc" label="厂商描述" width="100" />
-      <el-table-column prop="createdAt" label="创建时间" width="100" />
-      <el-table-column prop="updatedAt" label="更新时间" width="100" />
-      <el-table-column prop="deletedAt" label="删除时间" width="100" />
+      <el-table-column prop="firmDesc" label="" width="100" />
+      <el-table-column prop="createdAt" label="" width="100" />
+      <el-table-column prop="updatedAt" label="" width="100" />
+      <el-table-column prop="deletedAt" label="" width="100" />
       <el-table-column fixed="right" label="操作" width="160">
         <template #default="scope">
           <el-button size="small" @click="handleEdit(scope.row)">
             编 辑
           </el-button>
           <el-popconfirm
-                title="确定要删除么?"
-                @confirm="handleRowDel(scope.row)"
+            title="确定要删除么?"
+            @confirm="handleRowDel(scope.row)"
           >
-              <template #reference>
-                    <el-button size="small" type="danger"> 删 除</el-button>
-              </template>
-         </el-popconfirm>
+            <template #reference>
+              <el-button size="small" type="danger"> 删 除</el-button>
+            </template>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -102,7 +118,8 @@
       v-model="dialogFormVisible"
       :title="dialogType === 'create' ? '新增' : '编辑'"
     >
-      <el-form :model="tableForm"
+      <el-form
+        :model="tableForm"
         ref="tableFormRef"
         :rules="rules"
         label-position="right"
@@ -113,21 +130,20 @@
           label="编号"
           label-width="auto"
         >
-            <el-input v-model="tableForm.id" autocomplete="off" />
+          <el-input v-model="tableForm.id" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="厂商名称" prop="firmName" :label-width="100" >
-            <el-input v-model="tableForm.firmName" placeholder="" clearable />
+        <el-form-item label="厂商名称" prop="firmName" :label-width="100">
+          <el-input v-model="tableForm.firmName" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="厂商别名" prop="firmAlias" :label-width="100" >
-            <el-input v-model="tableForm.firmAlias" placeholder="" clearable />
+        <el-form-item label="" prop="firmAlias" :label-width="100">
+          <el-input v-model="tableForm.firmAlias" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="电影编码" prop="firmCode" :label-width="100" >
-            <el-input v-model="tableForm.firmCode" placeholder="" clearable />
+        <el-form-item label="电影编码" prop="firmCode" :label-width="100">
+          <el-input v-model="tableForm.firmCode" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="厂商描述" prop="firmDesc" :label-width="100" >
-            <el-input v-model="tableForm.firmDesc" placeholder="" clearable />
+        <el-form-item label="" prop="firmDesc" :label-width="100">
+          <el-input v-model="tableForm.firmDesc" placeholder="" clearable />
         </el-form-item>
-
       </el-form>
       <template #footer>
         <span class="dialog-footer">
@@ -158,21 +174,21 @@ let total = $ref(0);
 let curPage = $ref(1);
 
 const rules = $ref({
-    /*
-    firmName: [
-        { required: true, message: '请输入 厂商名称', trigger: 'blur' },
-    ],
-    firmAlias: [
-        { required: true, message: '请输入 厂商别名', trigger: 'blur' },
-    ],
-    firmCode: [
-        { required: true, message: '请输入 电影编码', trigger: 'blur' },
-    ],
-    firmDesc: [
-        { required: true, message: '请输入 厂商描述', trigger: 'blur' },
-    ],
-    */
-})
+  /*
+  firmName: [
+      { required: true, message: '请输入 厂商名称', trigger: 'blur' },
+  ],
+  firmAlias: [
+      { required: true, message: '请输入 ', trigger: 'blur' },
+  ],
+  firmCode: [
+      { required: true, message: '请输入 电影编码', trigger: 'blur' },
+  ],
+  firmDesc: [
+      { required: true, message: '请输入 ', trigger: 'blur' },
+  ],
+  */
+});
 
 //查询
 const onSearchSubmit = async () => {
@@ -190,7 +206,7 @@ const onSearchSubmit = async () => {
 
 /* 请求分页 */
 const getTableDataList = async (cur, limit) => {
-  let cpSearchForm =  tableSearchForm;
+  let cpSearchForm = tableSearchForm;
   cpSearchForm.page = cur;
   cpSearchForm.limit = limit;
   let res = await sysTableApi.page(cpSearchForm);
@@ -226,7 +242,7 @@ const handleRowDel = async (row) => {
   await getTableDataList(curPage, limit);
 };
 
-const handleDelList = async() => {
+const handleDelList = async () => {
   /*
   multipleSelection.forEach((id) => {
 	reqRowDel(id)
@@ -264,54 +280,51 @@ const handleEdit = async (row) => {
 // 新增
 const handleCreate = () => {
   dialogFormVisible = true;
-  tableForm = {
-  };
+  tableForm = {};
   dialogType = "create";
 };
 
 const handleDialogOpen = () => {
-  nextTick( () => {
-    proxy.$refs.tableFormRef.clearValidate()
-  })
-}
+  nextTick(() => {
+    proxy.$refs.tableFormRef.clearValidate();
+  });
+};
 
 // 确认
 const dialogConfirm = async () => {
   if (dialogType === "create") {
     // 添加数据
     proxy.$refs.tableFormRef.validate((valid) => {
-        if (valid) {
-            sysTableApi
-              .create(tableForm)
-              .then((res) => {
-                if (res.code == 200) {
-                    ElMessage({
-                      message: "创建成功",
-                      type: "success",
-                      plain: true,
-                    });
-                    dialogFormVisible = false;
-                    getTableDataList(curPage, limit);
-                }
-              })
-       }
-   });
+      if (valid) {
+        sysTableApi.create(tableForm).then((res) => {
+          if (res.code == 200) {
+            ElMessage({
+              message: "创建成功",
+              type: "success",
+              plain: true,
+            });
+            dialogFormVisible = false;
+            getTableDataList(curPage, limit);
+          }
+        });
+      }
+    });
   } else {
     // 修改 内容
     proxy.$refs.tableFormRef.validate((valid) => {
-        if (valid) {
-            sysTableApi.update(tableForm).then((res) => {
-                if (res.code == 200) {
-                    ElMessage({
-                      message: "更新成功",
-                      type: "success",
-                      plain: true,
-                    });
-                    dialogFormVisible = false;
-                    getTableDataList(curPage, limit);
-                }
+      if (valid) {
+        sysTableApi.update(tableForm).then((res) => {
+          if (res.code == 200) {
+            ElMessage({
+              message: "更新成功",
+              type: "success",
+              plain: true,
             });
-        }
+            dialogFormVisible = false;
+            getTableDataList(curPage, limit);
+          }
+        });
+      }
     });
   }
 };
@@ -336,10 +349,10 @@ const getStatusLabel = (idx) => {
 };
 
 const getOptLabel = (options, idx) => {
-    const index = options.findIndex((option) => option.value === idx);
-    if (index !== -1) {
-        return options[index].label;
-    }
+  const index = options.findIndex((option) => option.value === idx);
+  if (index !== -1) {
+    return options[index].label;
+  }
 };
 </script>
 

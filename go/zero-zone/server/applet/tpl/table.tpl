@@ -126,7 +126,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 
 const { proxy } = getCurrentInstance();
 
-import sysTableApi from "@/api/feat/{{ .UnderlineName }}.js";
+import sysTableApi from "@/api/{{ .DirectoryLowerCase }}/{{ .UnderlineName }}.js";
 
 let tableSearchForm = $ref({});
 let tableData = $ref([]); // 表格数据

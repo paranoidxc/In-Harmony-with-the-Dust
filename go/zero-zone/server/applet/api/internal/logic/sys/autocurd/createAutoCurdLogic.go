@@ -37,6 +37,7 @@ func NewCreateAutoCurdLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cr
 }
 
 var Directory = ""
+var DirectoryLowerCase = ""
 
 func (l *CreateAutoCurdLogic) checkCurdStruct() error {
 	return nil
@@ -74,6 +75,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	for _, pName := range prefixName {
 		if strings.HasPrefix(name, pName) {
 			Directory = pName
+			DirectoryLowerCase = strings.ToLower(Directory)
 			isPrefixFound = true
 			break
 		}
@@ -84,6 +86,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 	}
 
 	//name = strings.Replace(name, "Tmp", "", -1)
+	name = strings.Replace(name, Directory, "", 1)
 	fmt.Println("结构体名称", name)
 
 	underlineName := GetUnderlineWord(name)
@@ -368,10 +371,10 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 			res, err := l.svcCtx.SysPermMenuModel.Insert(l.ctx, &model.SysPermMenu{
 				ParentId: 42,
 				Name:     reqModelName,
-				Router:   "/feat/" + underlineName,
+				Router:   "/" + DirectoryLowerCase + "/" + underlineName,
 				Perms:    "[]",
 				Type:     1,
-				ViewPath: "views/feat/" + underlineName,
+				ViewPath: "views/" + DirectoryLowerCase + "/" + underlineName,
 				IsShow:   1,
 			})
 			if err != nil {
@@ -387,7 +390,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "查询列表",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/page\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/page\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -397,7 +400,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "所有列表",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/list\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/list\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -407,7 +410,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "新建",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/create\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/create\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -417,7 +420,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "更新",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/update\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/update\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -427,7 +430,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "详情",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/detail\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/detail\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -437,7 +440,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "删除",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/delete\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/delete\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -447,7 +450,7 @@ func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error
 				ParentId: menuId,
 				Name:     reqModelName + "批量删除",
 				Router:   "",
-				Perms:    "[\"admin/feat/" + reqModelName + "/deletes\"]",
+				Perms:    "[\"admin/" + DirectoryLowerCase + "/" + reqModelName + "/deletes\"]",
 				Type:     2,
 				ViewPath: "",
 				IsShow:   1,
@@ -552,8 +555,8 @@ func getServerContent(name, underlineName, lowerCaseName string) string {
 	return fmt.Sprintf(`
 
 @server(
-	group: feat/%v
-	prefix: /admin/feat/%v
+	group: %v/%v
+	prefix: /admin/%v/%v
 	jwt:        JwtAuth
 )
 
@@ -580,7 +583,7 @@ service core-api {
 	get /detail(%vDetailReq) returns (%vDetailResp)
 }
 
-`, underlineName, lowerCaseName, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name)
+`, DirectoryLowerCase, underlineName, DirectoryLowerCase, lowerCaseName, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name, name)
 }
 
 func createApiFile(underlineName, res string) error {
@@ -671,14 +674,14 @@ func (l *%vCreateLogic) %vCreate(req *types.%vCreateReq) (err error) {
 	if err != nil {
 		return errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
-	_, err = l.svcCtx.Feat%vModel.Insert(l.ctx, modelParams)
+	_, err = l.svcCtx.%v%vModel.Insert(l.ctx, modelParams)
 	if err != nil {
 		return errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
 
 	return
 }
-`, name, name, name, name, name)
+`, name, name, name, name, Directory, name)
 
 	// 删除逻辑
 	deleteLogic := fmt.Sprintf(`
@@ -695,7 +698,7 @@ func (l *%vDeleteLogic) %vDelete(req *types.%vDeleteReq) (err error) {
 	deletesLogic := fmt.Sprintf(`
 func (l *%vDeletesLogic) %vDeletes(req *types.%vDeletesReq) (err error) {
 	if len(req.%v) > 0  {
-		err = l.svcCtx.Feat%vModel.Deletes(l.ctx, req.%v)
+		err = l.svcCtx.%v%vModel.Deletes(l.ctx, req.%v)
 		if err != nil {
 			return  errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 		}
@@ -705,13 +708,13 @@ func (l *%vDeletesLogic) %vDeletes(req *types.%vDeletesReq) (err error) {
 
 	return
 }
-`, name, name, name, primaryKeyName, name, primaryKeyName)
+`, name, name, name, primaryKeyName, Directory, name, primaryKeyName)
 
 	// 修改逻辑
 	updateLogic := fmt.Sprintf(`
 func (l *%vUpdateLogic) %vUpdate(req *types.%vUpdateReq) (err error) {
 	modelParams := &model.%v{}
-	modelParams, err = l.svcCtx.Feat%vModel.FindOne(l.ctx, req.%v)
+	modelParams, err = l.svcCtx.%v%vModel.FindOne(l.ctx, req.%v)
 	if err != nil {
 		return errorx2.NewDefaultError(errorx2.UserIdErrorCode)
 	}
@@ -722,21 +725,21 @@ func (l *%vUpdateLogic) %vUpdate(req *types.%vUpdateReq) (err error) {
 		return errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
 
-	err = l.svcCtx.Feat%vModel.Update(l.ctx, modelParams)
+	err = l.svcCtx.%v%vModel.Update(l.ctx, modelParams)
 	if err != nil {
 		return errorx2.NewSystemError(errorx2.ServerErrorCode, err.Error())
 	}
 
 	return
 }
-`, name, name, name, name, name, primaryKeyName, name)
+`, name, name, name, name, Directory, name, primaryKeyName, Directory, name)
 
 	// 详情逻辑
 	detailLogic := fmt.Sprintf(`
 func (l *%vDetailLogic) %vDetail(req *types.%vDetailReq) (resp *types.%vDetailResp, err error) {
 	resp = &types.%vDetailResp{}
 	item := &model.%v{}
-	item, err = l.svcCtx.Feat%vModel.FindOne(l.ctx, req.%v)
+	item, err = l.svcCtx.%v%vModel.FindOne(l.ctx, req.%v)
 	err = copier.Copy(resp, item)
 	resp.CreatedAt = utils.Time2Str(item.CreatedAt)
 	resp.UpdatedAt = utils.Time2Str(item.UpdatedAt)
@@ -746,7 +749,7 @@ func (l *%vDetailLogic) %vDetail(req *types.%vDetailReq) (resp *types.%vDetailRe
 	}
 	return
 }
-`, name, name, name, name, name, name, name, primaryKeyName)
+`, name, name, name, name, name, name, Directory, name, primaryKeyName)
 
 	// 列表逻辑
 	listLogic, _ := getListLogic(name, vueFields)
@@ -757,13 +760,13 @@ func (l *%vDetailLogic) %vDetail(req *types.%vDetailReq) (resp *types.%vDetailRe
 	// 生成存放的文件路径
 	fileName := strings.ToLower(name)
 	projectWd, _ := os.Getwd()
-	createLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"CreateLogic.go")
-	deleteLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"DeleteLogic.go")
-	deletesLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"DeletesLogic.go")
-	updateLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"UpdateLogic.go")
-	detailLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"DetailLogic.go")
-	listLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"ListLogic.go")
-	pageLogicFile := filepath.Join(projectWd, "./internal/logic/feat/"+underlineName+"/", fileName+"PageLogic.go")
+	createLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"CreateLogic.go")
+	deleteLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"DeleteLogic.go")
+	deletesLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"DeletesLogic.go")
+	updateLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"UpdateLogic.go")
+	detailLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"DetailLogic.go")
+	listLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"ListLogic.go")
+	pageLogicFile := filepath.Join(projectWd, "./internal/logic/"+DirectoryLowerCase+"/"+underlineName+"/", fileName+"PageLogic.go")
 
 	fileList := map[string]string{
 		createLogicFile:  createLogic,
@@ -907,14 +910,15 @@ func genWebApiFile(underlineName, lowerCaseName, primaryKeyJson string) error {
 		fmt.Println("create template failed, err:", err)
 		return err
 	}
-	apiFile, err := os.Create(fileDir + "/src/api/feat/" + underlineName + ".js")
-	fmt.Println("api file", fileDir+"/src/api/feat/"+underlineName+".js")
+	apiFile, err := os.Create(fileDir + "/src/api/" + DirectoryLowerCase + "/" + underlineName + ".js")
+	fmt.Println("api file", fileDir+"/src/api/"+DirectoryLowerCase+"/"+underlineName+".js")
 	defer apiFile.Close()
 
 	data := map[string]interface{}{
-		"UnderlineName":  underlineName,
-		"PrimaryKeyJson": primaryKeyJson,
-		"LowerCaseName":  lowerCaseName,
+		"DirectoryLowerCase": DirectoryLowerCase,
+		"UnderlineName":      underlineName,
+		"PrimaryKeyJson":     primaryKeyJson,
+		"LowerCaseName":      lowerCaseName,
 	}
 
 	err = tpl.Execute(apiFile, data)
@@ -933,14 +937,15 @@ func genWebVueFile(name, underlineName, primaryKeyJson string, vueFields interfa
 		fmt.Println("create template failed, err:", err)
 		return err
 	}
-	file, err := os.Create(fileDir + "/src/views/feat/" + underlineName + ".vue")
+	file, err := os.Create(fileDir + "/src/views/" + DirectoryLowerCase + "/" + underlineName + ".vue")
 	defer file.Close()
 	data := map[string]interface{}{
-		"Name":           name,
-		"UnderlineName":  underlineName,
-		"PrimaryKeyJson": primaryKeyJson,
-		"VueFields":      vueFields,
-		"MinVueFields":   minVueFields,
+		"DirectoryLowerCase": DirectoryLowerCase,
+		"Name":               name,
+		"UnderlineName":      underlineName,
+		"PrimaryKeyJson":     primaryKeyJson,
+		"VueFields":          vueFields,
+		"MinVueFields":       minVueFields,
 	}
 	err = tpl.Execute(file, data)
 	if err != nil {
