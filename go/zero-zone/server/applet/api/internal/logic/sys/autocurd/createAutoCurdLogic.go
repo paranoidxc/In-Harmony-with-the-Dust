@@ -3,6 +3,7 @@ package autocurd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"io/ioutil"
@@ -35,20 +36,54 @@ func NewCreateAutoCurdLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Cr
 	}
 }
 
+var Directory = ""
+
+func (l *CreateAutoCurdLogic) checkCurdStruct() error {
+	return nil
+}
+
+func (l *CreateAutoCurdLogic) checkDirectory() error {
+	return nil
+}
+
 func (l *CreateAutoCurdLogic) CreateAutoCurd(req *types.AutoCurdCreateReq) error {
 	// 获取结构体
 	reqModelName := req.Name
 	var modelStruct interface{}
+	isFind := false
 	for k, v := range model.AutoCrudModelList {
 		if k == reqModelName {
 			modelStruct = v
+			isFind = true
+			break
 		}
 	}
+
+	if !isFind {
+		return errors.New("CURD 结构体不存在")
+	}
+
 	m := reflect.TypeOf(modelStruct)
 	// 大驼峰名字
+
 	// 结构体名称
 	name := m.Name()
-	name = strings.Replace(name, "Tmp", "", -1)
+	prefixName := []string{"Sys", "Feat"}
+
+	isPrefixFound := false
+	for _, pName := range prefixName {
+		if strings.HasPrefix(name, pName) {
+			Directory = pName
+			isPrefixFound = true
+			break
+		}
+	}
+
+	if !isPrefixFound {
+		return errors.New("文件夹不存在")
+	}
+
+	//name = strings.Replace(name, "Tmp", "", -1)
 	fmt.Println("结构体名称", name)
 
 	underlineName := GetUnderlineWord(name)
