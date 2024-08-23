@@ -100,6 +100,15 @@
           </el-select>
         </el-form-item>
 
+        <el-form-item label="区域级联选择器">
+          <el-cascader
+            v-model="value"
+            :options="regionTree"
+            :props="cascaderProps"
+            @change="handleCascaderChange"
+          />
+        </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="onSearchSubmit">查询</el-button>
         </el-form-item>
@@ -110,6 +119,7 @@
 <script setup>
 import { getCurrentInstance, proxyRefs } from "vue";
 import sysDeptApi from "@/api/system/sys_dept.js";
+import sysRegionApi from "@/api/feat/sys_region.js";
 
 const { proxy } = getCurrentInstance();
 
@@ -293,6 +303,52 @@ const onSearchSubmit = async () => {
     }
   });
 };
+
+// Cascader 级联选择器
+let regionTree = $ref([]);
+const getRegionTree = async () => {
+  let res = await sysRegionApi.tree({});
+  if (res.code == 200) {
+    regionTree = res.data.treeData;
+    console.log(regionTree);
+  }
+};
+getRegionTree();
+
+const cascaderProps = {
+  value: "no",
+  label: "name",
+};
+
+const handleCascaderChange = (value) => {
+  console.log(value[0]);
+};
+
+const cascaderOptions = [
+  {
+    value: "guide",
+    label: "Guide",
+    children: [],
+  },
+  {
+    value: "resource",
+    label: "Resource",
+    children: [
+      {
+        value: "axure",
+        label: "Axure Components",
+      },
+      {
+        value: "sketch",
+        label: "Sketch Templates",
+      },
+      {
+        value: "docs",
+        label: "Design Documentation",
+      },
+    ],
+  },
+];
 
 // 确认
 </script>

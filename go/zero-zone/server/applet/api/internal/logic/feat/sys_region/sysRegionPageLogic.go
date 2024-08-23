@@ -78,6 +78,9 @@ func (l *SysRegionPageLogic) SysRegionPage(req *types.SysRegionPageReq) (resp *t
 	SysRegionPage := make([]types.SysRegion, 0)
 	for _, v := range featSysRegionPage {
 		err := copier.Copy(&item, &v)
+		item.No = utils.Int642Str(v.No)
+		item.ParentNo = utils.Int642Str(v.ParentNo)
+		item.TypeName = v.Typename
 		item.CreatedAt = utils.Time2Str(v.CreatedAt)
 		item.UpdatedAt = utils.Time2Str(v.UpdatedAt)
 		if err != nil {

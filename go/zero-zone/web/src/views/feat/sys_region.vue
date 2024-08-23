@@ -20,7 +20,7 @@
         <el-form-item label="拼音">
             <el-input v-model="tableSearchForm.pYSzm" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="删除时间">
+        <el-form-item label="是否删除">
             <el-input v-model="tableSearchForm.isDel" placeholder="" clearable />
         </el-form-item>
         <el-form-item>
@@ -77,7 +77,7 @@
       <el-table-column prop="createdAt" label="创建时间" width="100" />
       <el-table-column prop="updatedAt" label="更新时间" width="100" />
       <el-table-column prop="deletedAt" label="删除时间" width="100" />
-      <el-table-column prop="isDel" label="删除时间" width="100" />
+      <el-table-column prop="isDel" label="是否删除" width="100" />
       <el-table-column fixed="right" label="操作" width="160">
         <template #default="scope">
           <el-button size="small" @click="handleEdit(scope.row)">
@@ -145,7 +145,7 @@
         <el-form-item label="拼音" prop="pYSzm" :label-width="100" >
             <el-input v-model="tableForm.pYSzm" placeholder="" clearable />
         </el-form-item>
-        <el-form-item label="删除时间" prop="isDel" :label-width="100" >
+        <el-form-item label="是否删除" prop="isDel" :label-width="100" >
             <el-input v-model="tableForm.isDel" placeholder="" clearable />
         </el-form-item>
 
@@ -199,7 +199,7 @@ const rules = $ref({
         { required: true, message: '请输入 拼音', trigger: 'blur' },
     ],
     isDel: [
-        { required: true, message: '请输入 删除时间', trigger: 'blur' },
+        { required: true, message: '请输入 是否删除', trigger: 'blur' },
     ],
     */
 })

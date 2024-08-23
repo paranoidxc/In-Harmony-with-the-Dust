@@ -1,7 +1,6 @@
 package svc
 
 import (
-	"zero-zone/applet/api/common/database"
 	"zero-zone/applet/api/internal/config"
 	"zero-zone/applet/api/internal/middleware"
 	"zero-zone/applet/model"
@@ -32,7 +31,7 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlConn := sqlx.NewMysql(c.Mysql.DataSource)
-	mysqlGorm := database.NewDB(c.Mysql.DataSource) //引入数据库得到数据库链接
+	//mysqlGorm := database.NewDB(c.Mysql.DataSource) //引入数据库得到数据库链接
 	redisClient := redis.New(c.Redis.Host, func(r *redis.Redis) {
 		r.Type = c.Redis.Type
 		r.Pass = c.Redis.Pass
@@ -68,6 +67,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SysLogModel:         model.NewSysLogModel(mysqlConn, c.Cache),
 		FeatSysRegionModel:  model.NewSysRegionModel(mysqlConn, c.Cache),
 		FeatDemoCurdModel:   model.NewDemoCurdModel(mysqlConn, c.Cache),
-		FeatTestGormModel:   model.NewTestGormModel(mysqlGorm.ConnGorm),
+		//FeatTestGormModel:   model.NewTestGormModel(mysqlGorm.ConnGorm),
 	}
 }

@@ -42,18 +42,18 @@ type (
 	}
 
 	SysRegion struct {
-		Id        int64         `db:"id"`        // ID
-		No        int64         `db:"no"`        // 区域编码
-		Name      string        `db:"name"`      // 区域名称
-		ParentNo  int64         `db:"parent_no"` // 上级区域
-		Code      string        `db:"code"`      // 电话区号
-		Level     int64         `db:"level"`     // 区域级别
-		Typename  string        `db:"typename"`  // 级别名称
-		PySzm     string        `db:"py_szm"`    // 首字母
-		IsDel     sql.NullInt64 `db:"is_del"`
-		CreatedAt time.Time     `db:"created_at"` // 创建时间
-		UpdatedAt time.Time     `db:"updated_at"` // 更新时间
-		DeletedAt string        `db:"deleted_at"` // 删除时间
+		Id        int64     `db:"id"`        // ID
+		No        int64     `db:"no"`        // 区域编码
+		Name      string    `db:"name"`      // 区域名称
+		ParentNo  int64     `db:"parent_no"` // 上级区域
+		Code      string    `db:"code"`      // 电话区号
+		Level     int64     `db:"level"`     // 区域级别
+		Typename  string    `db:"typename"`  // 级别名称
+		PySzm     string    `db:"py_szm"`    // 首字母
+		IsDel     int64     `db:"is_del"`
+		CreatedAt time.Time `db:"created_at"` // 创建时间
+		UpdatedAt time.Time `db:"updated_at"` // 更新时间
+		DeletedAt string    `db:"deleted_at"` // 删除时间
 	}
 )
 
