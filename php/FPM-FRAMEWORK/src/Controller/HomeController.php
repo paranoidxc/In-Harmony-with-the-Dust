@@ -2,14 +2,32 @@
 
 namespace App\Controller;
 
+use App\Widget;
+use Paranoid\Framework\Controller\AbstractController;
 use Paranoid\Framework\Http\Response;
 
-class HomeController
+class HomeController extends AbstractController
 {
+    public function __construct(private Widget $widget)
+    {
+
+    }
+
     public function index(): Response
     {
-        $content = '<h1>Hello World From HomeController</h1>';
+        return $this->render('home.html.twig');
+    }
+
+    /*
+    public function index(): Response
+    {
+        //dd($this->container->get('twig'));
+        //
+        //$this->container->get('twig')->render();
+
+        $content = "<h1>Hello {$this->widget->name} From HomeController</h1>";
 
         return new Response($content);
     }
+    */
 }

@@ -1,0 +1,33 @@
+{
+    "name": "paranoid/fpm-framework",
+    "description": "FUCKING THE WORLD",
+    "minimum-stability": "dev",
+    "license": "FUCK THE WORLD",
+    "authors": [
+        {
+            "name": "paranoid",
+            "email": "fucking@theWorld.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Paranoid\\Framework\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Paranoid\\Framework\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "7.2.x-dev",
+        "phpunit/phpunit": "10.1.x-dev"
+    },
+    "require": {
+        "nikic/fast-route": "2.0.x-dev",
+        "psr/container": "2.0.x-dev",
+        "league/container": "^4.0.0",
+        "symfony/dotenv": "^6.0",
+        "twig/twig": "^3.0"
+    }
+}
