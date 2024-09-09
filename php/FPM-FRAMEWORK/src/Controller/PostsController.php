@@ -6,6 +6,7 @@ use App\Entity\Post;
 use App\Repository\PostMapper;
 use App\Repository\PostRepository;
 use Paranoid\Framework\Controller\AbstractController;
+use Paranoid\Framework\Http\RedirectResponse;
 use Paranoid\Framework\Http\Response;
 
 class PostsController extends AbstractController
@@ -32,7 +33,7 @@ class PostsController extends AbstractController
         return $this->render('create-post.html.twig');
     }
 
-    public function store(): void
+    public function store(): RedirectResponse
     {
         $title = $this->request->postParams['title'];
         $body = $this->request->postParams['body'];
@@ -40,6 +41,8 @@ class PostsController extends AbstractController
         $post= Post::create($title, $body);
 
         $this->postMapper->save($post);
-        dd($post);
+        //dd($post);
+
+        return new RedirectResponse('/posts');
     }
 }
