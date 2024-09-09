@@ -1,5 +1,7 @@
 docker compose up -d
 
+ab -n 1000 -c 100 http://localhost:8001/
+
 docker compose exec app composer dump-autoload
 docker compose exec app composer require symfony/var-dumper
 
@@ -24,3 +26,7 @@ docker compose exec app composer require psr/container
 
 
 docker compose exec app composer dump-autoload
+
+docker compose exec app php bin/console
+docker compose exec app php bin/console database:mirgrations:mirgrate
+docker compose exec app php bin/console database:mirgrations:mirgrate --up=1 --foo

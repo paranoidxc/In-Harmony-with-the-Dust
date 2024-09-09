@@ -37,7 +37,9 @@ class ComposerStaticInita2098042aef5ee4106fc37d717b79a79
         'P' => 
         array (
             'Psr\\SimpleCache\\' => 16,
+            'Psr\\Log\\' => 8,
             'Psr\\Container\\' => 14,
+            'Psr\\Cache\\' => 10,
             'PhpParser\\' => 10,
             'Paranoid\\Framework\\Tests\\' => 25,
             'Paranoid\\Framework\\' => 19,
@@ -52,6 +54,10 @@ class ComposerStaticInita2098042aef5ee4106fc37d717b79a79
         ),
         'D' => 
         array (
+            'Doctrine\\Deprecations\\' => 22,
+            'Doctrine\\DBAL\\' => 14,
+            'Doctrine\\Common\\Cache\\' => 22,
+            'Doctrine\\Common\\' => 16,
             'DeepCopy\\' => 9,
         ),
         'A' => 
@@ -89,9 +95,17 @@ class ComposerStaticInita2098042aef5ee4106fc37d717b79a79
         array (
             0 => __DIR__ . '/..' . '/psr/simple-cache/src',
         ),
+        'Psr\\Log\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/log/src',
+        ),
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'Psr\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/cache/src',
         ),
         'PhpParser\\' => 
         array (
@@ -112,6 +126,22 @@ class ComposerStaticInita2098042aef5ee4106fc37d717b79a79
         'FastRoute\\' => 
         array (
             0 => __DIR__ . '/..' . '/nikic/fast-route/src',
+        ),
+        'Doctrine\\Deprecations\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/deprecations/lib/Doctrine/Deprecations',
+        ),
+        'Doctrine\\DBAL\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/dbal/src',
+        ),
+        'Doctrine\\Common\\Cache\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/cache/lib/Doctrine/Common/Cache',
+        ),
+        'Doctrine\\Common\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/doctrine/event-manager/src',
         ),
         'DeepCopy\\' => 
         array (

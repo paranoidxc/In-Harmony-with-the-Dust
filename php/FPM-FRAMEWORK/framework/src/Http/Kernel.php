@@ -2,6 +2,7 @@
 
 namespace Paranoid\Framework\Http;
 
+use Doctrine\DBAL\Connection;
 use Exception;
 use Paranoid\Framework\Routing\Router;
 use Paranoid\Framework\Routing\RouterInterface;
@@ -25,6 +26,7 @@ class Kernel
     {
         try {
             //throw new \Exception("Kernel ERR");
+            //dd($this->container->get(Connection::class));
 
             [$routeHandler, $vars] = $this->router->dispatcher($request, $this->container);
 
@@ -45,11 +47,9 @@ class Kernel
         }
 
         if ($exception instanceof HttpException) {
-            return $response = new Response($exception->getMessage(), $exception->getStatusCode());
+            return new Response($exception->getMessage(), $exception->getStatusCode());
         }
 
-        $response = new Response("Server error", Response::HTTP_INTERNAL_SERVER_ERROR);
-
-        return $response;
+        return new Response("Server error", Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

@@ -93,7 +93,7 @@ if (!function_exists('mb_strstr')) {
     function mb_strstr(?string $haystack, ?string $needle, ?bool $before_needle = false, ?string $encoding = null): string|false { return p\Mbstring::mb_strstr((string) $haystack, (string) $needle, (bool) $before_needle, $encoding); }
 }
 if (!function_exists('mb_get_info')) {
-    function mb_get_info(?string $type = 'all'): array|string|int|false { return p\Mbstring::mb_get_info((string) $type); }
+    function mb_get_info(?string $type = 'all'): array|string|int|false|null { return p\Mbstring::mb_get_info((string) $type); }
 }
 if (!function_exists('mb_http_output')) {
     function mb_http_output(?string $encoding = null): string|bool { return p\Mbstring::mb_http_output($encoding); }
