@@ -1,3 +1,7 @@
+function preload() {
+  //img = loadImage("")
+}
+
 function setup() {
   createCanvas(640, 360);
 }
