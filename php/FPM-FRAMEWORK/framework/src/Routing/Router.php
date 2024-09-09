@@ -3,6 +3,7 @@
 namespace Paranoid\Framework\Routing;
 
 use FastRoute\Dispatcher;
+use Paranoid\Framework\Controller\AbstractController;
 use Paranoid\Framework\Http\HttpException;
 use Paranoid\Framework\Http\HttpRequestMethodException;
 use Paranoid\Framework\Http\Request;
@@ -21,7 +22,12 @@ class Router implements RouterInterface
             [$controllerId, $method] = $handler;
             $controller = $container->get($controllerId);
             $handler = [$controller, $method];
+
+            if (is_subclass_of($controller, AbstractController::class)) {
+                $controller->setRequest($request);
+            }
         }
+
 
         return [$handler, $vars];
     }

@@ -1,6 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block main %}
-<h1>Post {{ postId }}</h1>
-<h1>Post  postId|raw </h1>
+    <h1>Post postId|raw </h1>
+    <p>Post {{ post.id }}</p1>
+    <p>Post {{ post.title }}</p1>
+    <p>Post {{ post.body }}</p>
+    <p>Post {-{ post.createdAt }}</p>
 {% endblock %}
