@@ -41,4 +41,10 @@ class Request
     {
         $this->session = $session;
     }
+
+    public function input($key): mixed
+    {
+        return $this->postParams[$key];
+    }
+
 }

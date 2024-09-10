@@ -3,12 +3,23 @@
 <body>
 <h1>base</h1>
 {% if session().hasFlash('success') %}
+    <h2>Suc:</h2>
     <ul>
     {% for message in session().getFlash('success') %}
         <li style="">{{ message }}</li>
     {% endfor %}
     </ul>
 {% endif %}
+
+{% if session().hasFlash('error') %}
+    <h2>Error:</h2>
+    <ul>
+        {% for message in session().getFlash('error') %}
+            <li style="">{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
 <div>
 {% block main %} {% endblock %}
 </div>
