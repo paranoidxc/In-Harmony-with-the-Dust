@@ -4,6 +4,7 @@ namespace Paranoid\Framework\Http;
 
 use Doctrine\DBAL\Connection;
 use Exception;
+use Paranoid\Framework\Http\Middleware\RequestHandlerInterface;
 use Paranoid\Framework\Routing\Router;
 use Paranoid\Framework\Routing\RouterInterface;
 use Psr\Container\ContainerInterface;
@@ -16,7 +17,8 @@ class Kernel
     //public function __construct(private Router $router)
     public function __construct(
         private RouterInterface $router,
-        private ContainerInterface $container
+        private ContainerInterface $container,
+        private RequestHandlerInterface $requestHandler,
     )
     {
         $this->appEnv = $container->get("APP_ENV");
@@ -28,9 +30,10 @@ class Kernel
             //throw new \Exception("Kernel ERR");
             //dd($this->container->get(Connection::class));
 
-            [$routeHandler, $vars] = $this->router->dispatcher($request, $this->container);
+            //[$routeHandler, $vars] = $this->router->dispatcher($request, $this->container);
+            //$response = call_user_func_array($routeHandler, $vars);
 
-            $response = call_user_func_array($routeHandler, $vars);
+            $response = $this->requestHandler->handle($request);
         } catch (\Exception $exception) {
             $response = $this->createExceptionResponse($exception);
         }

@@ -1,5 +1,7 @@
 <?php
 
+use Paranoid\Framework\Routing\RouterInterface;
+
 $dotenv = new \Symfony\Component\Dotenv\Dotenv();
 $dotenv->load(BASE_PATH . '/.env');
 
@@ -33,9 +35,16 @@ $container->extend(\Paranoid\Framework\Routing\RouterInterface::class)
         [new \League\Container\Argument\Literal\ArrayArgument($routes)]
     );
 
+$container->add(
+    \Paranoid\Framework\Http\Middleware\RequestHandlerInterface::class,
+    \Paranoid\Framework\Http\Middleware\RequestHandler::class,
+)->addArgument($container);
+
 $container->add(\Paranoid\Framework\Http\Kernel::class)
     ->addArgument(\Paranoid\Framework\Routing\RouterInterface::class)
-    ->addArgument($container);
+    ->addArgument($container)
+    ->addArgument(\Paranoid\Framework\Http\Middleware\RequestHandlerInterface::class);
+
 
 $container->add(\Paranoid\Framework\Console\Application::class)
     ->addArgument($container);
@@ -76,4 +85,7 @@ $container->addShared(\Doctrine\DBAL\Connection::class, function() use($containe
     return $container->get(\Paranoid\Framework\Dbal\ConnectionFactory::class)->create();
 });
 
+$container->add(\Paranoid\Framework\Http\Middleware\RouterDispatch::class)
+    ->addArgument(RouterInterface::class)
+    ->addArgument($container);
 return $container;

@@ -5,7 +5,14 @@ class Session implements SessionInterface
 {
     private const FLASH_KEY = 'flash';
 
+    /*
     public function __construct()
+    {
+        session_start();
+    }
+    */
+
+    public function start(): void
     {
         session_start();
     }
