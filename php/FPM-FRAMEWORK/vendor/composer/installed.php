@@ -102,7 +102,7 @@
         'paranoid/fpm-framework' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '4c7367d4610f698516bb0349244b61e775c826a8',
+            'reference' => 'dc3750ccb168e4494e58ba6a26cac827413ebc6e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../paranoid/fpm-framework',
             'aliases' => array(),
@@ -209,6 +209,17 @@
             'provided' => array(
                 0 => '^1.0',
             ),
+        ),
+        'psr/event-dispatcher' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'reference' => 'bbd9eacc080d33861e5b5c75b3b8c4d7e6d01874',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../psr/event-dispatcher',
+            'aliases' => array(
+                0 => '1.0.x-dev',
+            ),
+            'dev_requirement' => false,
         ),
         'psr/log' => array(
             'pretty_version' => 'dev-master',
@@ -399,7 +410,7 @@
         'symfony/polyfill-mbstring' => array(
             'pretty_version' => '1.x-dev',
             'version' => '1.9999999.9999999.9999999-dev',
-            'reference' => '85181ba99b2345b0ef10ce42ecac37612d9fd341',
+            'reference' => '2369cb908b33d7b7518cce042615de430142497f',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-mbstring',
             'aliases' => array(),
@@ -435,7 +446,7 @@
         'twig/twig' => array(
             'pretty_version' => '3.x-dev',
             'version' => '3.9999999.9999999.9999999-dev',
-            'reference' => '540b54e0d5c7b1d911b7403f6215770bb2ffc192',
+            'reference' => '194cced47b766fb49ac587ff7d4a02529d1431d4',
             'type' => 'library',
             'install_path' => __DIR__ . '/../twig/twig',
             'aliases' => array(),

@@ -30,21 +30,29 @@ $container->add(
     \Paranoid\Framework\Routing\Router::class,
 );
 
+$container->extend(\Paranoid\Framework\Routing\RouterInterface::class);
+/*
 $container->extend(\Paranoid\Framework\Routing\RouterInterface::class)
     ->addMethodCall(
         'setRoutes',
         [new \League\Container\Argument\Literal\ArrayArgument($routes)]
     );
+*/
 
 $container->add(
     \Paranoid\Framework\Http\Middleware\RequestHandlerInterface::class,
     \Paranoid\Framework\Http\Middleware\RequestHandler::class,
 )->addArgument($container);
 
+
+$container->addShared(\Paranoid\Framework\EventDispatcher\EventDispatcher::class);
+
 $container->add(\Paranoid\Framework\Http\Kernel::class)
-    ->addArgument(\Paranoid\Framework\Routing\RouterInterface::class)
-    ->addArgument($container)
-    ->addArgument(\Paranoid\Framework\Http\Middleware\RequestHandlerInterface::class);
+    ->addArguments([
+        $container,
+        \Paranoid\Framework\Http\Middleware\RequestHandlerInterface::class,
+        \Paranoid\Framework\EventDispatcher\EventDispatcher::class,
+    ]);
 
 
 $container->add(\Paranoid\Framework\Console\Application::class)
@@ -97,5 +105,7 @@ $container->add(\Paranoid\Framework\Authentication\SessionAuthentication::class)
         SessionInterface::class,
     ]);
 
+$container->add(\Paranoid\Framework\Http\Middleware\ExtractRouteInfo::class)
+    ->addArgument(new \League\Container\Argument\Literal\ArrayArgument($routes));
 
 return $container;

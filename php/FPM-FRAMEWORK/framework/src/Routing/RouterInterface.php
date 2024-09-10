@@ -8,5 +8,5 @@ interface RouterInterface
 {
     public function dispatcher(Request $request, ContainerInterface $container);
 
-    public function setRoutes(array $routes): void;
+    //public function setRoutes(array $routes): void;
 }

@@ -506,13 +506,14 @@
             "dist": {
                 "type": "path",
                 "url": "framework",
-                "reference": "4c7367d4610f698516bb0349244b61e775c826a8"
+                "reference": "dc3750ccb168e4494e58ba6a26cac827413ebc6e"
             },
             "require": {
                 "doctrine/dbal": "^3.6",
                 "league/container": "^4.0.0",
                 "nikic/fast-route": "2.0.x-dev",
                 "psr/container": "2.0.x-dev",
+                "psr/event-dispatcher": "^1.0",
                 "symfony/dotenv": "^6.0",
                 "twig/twig": "^3.0"
             },
@@ -651,6 +652,59 @@
                 "source": "https://github.com/php-fig/container"
             },
             "time": "2023-09-22T11:11:30+00:00"
+        },
+        {
+            "name": "psr/event-dispatcher",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/event-dispatcher.git",
+                "reference": "bbd9eacc080d33861e5b5c75b3b8c4d7e6d01874"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/event-dispatcher/zipball/bbd9eacc080d33861e5b5c75b3b8c4d7e6d01874",
+                "reference": "bbd9eacc080d33861e5b5c75b3b8c4d7e6d01874",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2.0"
+            },
+            "suggest": {
+                "fig/event-dispatcher-util": "Provides some useful PSR-14 utilities"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\EventDispatcher\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Standard interfaces for event handling.",
+            "keywords": [
+                "events",
+                "psr",
+                "psr-14"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/event-dispatcher"
+            },
+            "time": "2024-03-17T21:29:03+00:00"
         },
         {
             "name": "psr/log",
@@ -959,7 +1013,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/1.x"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.31.0"
             },
             "funding": [
                 {
@@ -983,12 +1037,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "85181ba99b2345b0ef10ce42ecac37612d9fd341"
+                "reference": "2369cb908b33d7b7518cce042615de430142497f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/85181ba99b2345b0ef10ce42ecac37612d9fd341",
-                "reference": "85181ba99b2345b0ef10ce42ecac37612d9fd341",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/2369cb908b33d7b7518cce042615de430142497f",
+                "reference": "2369cb908b33d7b7518cce042615de430142497f",
                 "shasum": ""
             },
             "require": {
@@ -1056,7 +1110,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T11:45:10+00:00"
+            "time": "2024-09-10T14:38:51+00:00"
         },
         {
             "name": "symfony/polyfill-php81",
@@ -1117,7 +1171,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php81/tree/1.x"
+                "source": "https://github.com/symfony/polyfill-php81/tree/v1.31.0"
             },
             "funding": [
                 {
@@ -1141,12 +1195,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "540b54e0d5c7b1d911b7403f6215770bb2ffc192"
+                "reference": "194cced47b766fb49ac587ff7d4a02529d1431d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/540b54e0d5c7b1d911b7403f6215770bb2ffc192",
-                "reference": "540b54e0d5c7b1d911b7403f6215770bb2ffc192",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/194cced47b766fb49ac587ff7d4a02529d1431d4",
+                "reference": "194cced47b766fb49ac587ff7d4a02529d1431d4",
                 "shasum": ""
             },
             "require": {
@@ -1213,7 +1267,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-09T09:41:27+00:00"
+            "time": "2024-09-10T15:11:21+00:00"
         }
     ],
     "packages-dev": [

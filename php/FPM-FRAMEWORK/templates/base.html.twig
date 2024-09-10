@@ -2,6 +2,13 @@
 <html lang="en">
 <body>
 <h1>base</h1>
+
+{% if session().isAuthenticated() %}
+    <a href="/logout">logout</a>
+{% else %}
+    <a href="/login">login</a>
+{% endif %}
+
 {% if session().hasFlash('success') %}
     <h2>Suc:</h2>
     <ul>

@@ -4,13 +4,17 @@ namespace App\Controller;
 
 use App\Form\User\RegistrationForm;
 use App\Repository\UserMapper;
+use Paranoid\Framework\Authentication\SessionAuthentication;
 use Paranoid\Framework\Controller\AbstractController;
 use Paranoid\Framework\Http\RedirectResponse;
 use Paranoid\Framework\Http\Response;
 
 class RegisterController extends AbstractController
 {
-    public function __construct(private UserMapper $userMapper)
+    public function __construct(
+        private UserMapper $userMapper,
+        private SessionAuthentication $authComponent,
+    )
     {
     }
 
@@ -40,7 +44,8 @@ class RegisterController extends AbstractController
             'success',
             "user register ok id:".$user->getId(),
         );
+        $this->authComponent->login($user);
 
-        return new RedirectResponse('/');
+        return new RedirectResponse('/dashboard');
     }
 }

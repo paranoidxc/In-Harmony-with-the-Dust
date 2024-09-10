@@ -7,7 +7,7 @@ use Paranoid\Framework\Http\Response;
 
 class DashboardController extends AbstractController
 {
-    public function dashboard(): Response
+    public function index(): Response
     {
         return $this->render('dashboard.html.twig');
     }

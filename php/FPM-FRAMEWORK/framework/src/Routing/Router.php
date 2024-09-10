@@ -2,10 +2,7 @@
 
 namespace Paranoid\Framework\Routing;
 
-use FastRoute\Dispatcher;
 use Paranoid\Framework\Controller\AbstractController;
-use Paranoid\Framework\Http\HttpException;
-use Paranoid\Framework\Http\HttpRequestMethodException;
 use Paranoid\Framework\Http\Request;
 use Psr\Container\ContainerInterface;
 
@@ -13,6 +10,26 @@ class Router implements RouterInterface
 {
     private array $routes = [];
 
+    public function dispatcher(Request $request, ContainerInterface $container): array
+    {
+        $routeHandler = $request->getRouteHandler();
+        $routeHandlerArgs = $request->getRouteHandlerArgs();
+
+
+        if (is_array($routeHandler)) {
+            [$controllerId, $method] = $routeHandler;
+            $controller = $container->get($controllerId);
+
+            if (is_subclass_of($controller, AbstractController::class)) {
+                $controller->setRequest($request);
+            }
+            $routeHandler = [$controller, $method];
+        }
+
+        return [$routeHandler, $routeHandlerArgs];
+    }
+
+    /*
     public function dispatcher(Request $request, ContainerInterface $container): array
     {
         $routeInfo = $this->extractRouteInfo($request);
@@ -41,16 +58,11 @@ class Router implements RouterInterface
     {
         // create a dispatcher
         $dispatcher = \FastRoute\simpleDispatcher(function (\FastRoute\ConfigureRoutes $r) {
-            // The /{title} suffix is optional
-            // $r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
             foreach ($this->routes as $route) {
                 $r->addRoute(...$route);
             }
         });
 
-        //dd($request);
-        //dd($dispatcher);
-        // dispatcher a url, to obtain the route info
         $routeInfo = $dispatcher->dispatch(
             $request->getMethod(),
             $request->getPathInfo()
@@ -73,4 +85,5 @@ class Router implements RouterInterface
         //dd($routeInfo[1]);
         //dd($routeInfo[1]);
     }
+    */
 }

@@ -2,6 +2,7 @@
 
 namespace Paranoid\Framework\Authentication;
 
+use Paranoid\Framework\Session\Session;
 use Paranoid\Framework\Session\SessionInterface;
 
 class SessionAuthentication implements SessionAuthInterface
@@ -22,26 +23,27 @@ class SessionAuthentication implements SessionAuthInterface
             return false;
         }
 
-        if (password_verify($password, $user->getPassword())) {
-            // login
-            $this->login($user);
-            return true;
+        if (!password_verify($password, $user->getPassword())) {
+            return false;
         }
 
-        return false;
+        // login
+        $this->login($user);
+        return true;
     }
 
     public function login(AuthUserInterface $user)
     {
         //dd($user);
         $this->session->start();
-        $this->session->set('auth_id', $user->getAuthId());
+        $this->session->set(Session::AUTH_KEY, $user->getAuthId());
 
         $this->user = $user;
     }
 
     public function logout()
     {
+        $this->session->remove(Session::AUTH_KEY);
     }
 
     public function getUser(): AuthUserInterface

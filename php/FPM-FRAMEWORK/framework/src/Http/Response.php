@@ -28,9 +28,29 @@ class Response
         return $this->status;
     }
 
-    public function getHeaders(string $header): mixed
+    public function setStatus(int $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getHeader(string $header): mixed
     {
         return $this->headers[$header];
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    public function setHeader(string $key, string $val)
+    {
+        $this->headers[$key] = $val;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
     }
 
 }

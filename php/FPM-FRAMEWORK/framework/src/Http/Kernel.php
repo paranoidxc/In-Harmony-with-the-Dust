@@ -4,6 +4,8 @@ namespace Paranoid\Framework\Http;
 
 use Doctrine\DBAL\Connection;
 use Exception;
+use Paranoid\Framework\EventDispatcher\EventDispatcher;
+use Paranoid\Framework\Http\Event\ResponseEvent;
 use Paranoid\Framework\Http\Middleware\RequestHandlerInterface;
 use Paranoid\Framework\Routing\Router;
 use Paranoid\Framework\Routing\RouterInterface;
@@ -16,9 +18,9 @@ class Kernel
 
     //public function __construct(private Router $router)
     public function __construct(
-        private RouterInterface $router,
         private ContainerInterface $container,
         private RequestHandlerInterface $requestHandler,
+        private EventDispatcher $eventDispatcher,
     )
     {
         $this->appEnv = $container->get("APP_ENV");
@@ -37,6 +39,9 @@ class Kernel
         } catch (\Exception $exception) {
             $response = $this->createExceptionResponse($exception);
         }
+
+        $this->eventDispatcher->dispatch(new ResponseEvent($request, $response));
+
         return $response;
     }
 
