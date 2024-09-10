@@ -1,6 +1,7 @@
 <?php
 
 use Paranoid\Framework\Routing\RouterInterface;
+use Paranoid\Framework\Session\SessionInterface;
 
 $dotenv = new \Symfony\Component\Dotenv\Dotenv();
 $dotenv->load(BASE_PATH . '/.env');
@@ -88,4 +89,13 @@ $container->addShared(\Doctrine\DBAL\Connection::class, function() use($containe
 $container->add(\Paranoid\Framework\Http\Middleware\RouterDispatch::class)
     ->addArgument(RouterInterface::class)
     ->addArgument($container);
+
+
+$container->add(\Paranoid\Framework\Authentication\SessionAuthentication::class)
+    ->addArguments([
+        \App\Repository\UserRepository::class,
+        SessionInterface::class,
+    ]);
+
+
 return $container;

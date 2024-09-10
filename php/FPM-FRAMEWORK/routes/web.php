@@ -11,6 +11,7 @@ return [
     ['POST', '/register', [\App\Controller\RegisterController::class, 'register']],
     ['GET', '/login', [\App\Controller\LoginController::class, 'index']],
     ['POST', '/login', [\App\Controller\LoginController::class, 'login']],
+    ['GET', '/dashboard', [\App\Controller\DashboardController::class, 'dashboard']],
     ['GET', '/hello/{name:.+}', function(string $name) {
         return new Response("Hello {$name}");
     }],

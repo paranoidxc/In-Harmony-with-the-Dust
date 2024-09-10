@@ -59,5 +59,6 @@ class Kernel
     public function terminate(Request $request, Response $response)
     {
         $request->getSession()?->clearFlash();
+        //$request->getSession()?->remove('auth_id');
     }
 }
