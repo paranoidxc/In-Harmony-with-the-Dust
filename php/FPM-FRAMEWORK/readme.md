@@ -30,3 +30,8 @@ docker compose exec app composer dump-autoload
 docker compose exec app php bin/console
 docker compose exec app php bin/console database:mirgrations:mirgrate
 docker compose exec app php bin/console database:mirgrations:mirgrate --up=1 --foo
+
+
+# TEST
+cd framework
+./vendor/bin/phpunit tests/SessionTest.php --colors 

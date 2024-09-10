@@ -45,11 +45,23 @@ $container->add(\Paranoid\Framework\Console\Kernel::class)
     ->addArgument( \Paranoid\Framework\Console\Application::class);
 
 
+/*
 $container->addShared('filesystem-loader', \Twig\Loader\FilesystemLoader::class)
     ->addArgument(new \League\Container\Argument\Literal\StringArgument($templatesPath));
 
 $container->addShared('twig', \Twig\Environment::class)
     ->addArgument('filesystem-loader');
+*/
+$container->addShared(
+    \Paranoid\Framework\Session\SessionInterface::class,
+    \Paranoid\Framework\Session\Session::class,
+);
+$container->add('template-renderer-factory', \Paranoid\Framework\Template\TwigFactory::class)
+    ->addArgument(\Paranoid\Framework\Session\SessionInterface::class)
+    ->addArgument(new \League\Container\Argument\Literal\StringArgument($templatesPath));
+$container->addShared('twig', function() use ($container) {
+    return $container->get('template-renderer-factory')->create();
+});
 
 $container->add(\Paranoid\Framework\Controller\AbstractController::class);
 

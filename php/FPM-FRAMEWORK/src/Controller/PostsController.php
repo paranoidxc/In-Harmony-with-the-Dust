@@ -8,12 +8,14 @@ use App\Repository\PostRepository;
 use Paranoid\Framework\Controller\AbstractController;
 use Paranoid\Framework\Http\RedirectResponse;
 use Paranoid\Framework\Http\Response;
+use Paranoid\Framework\Session\SessionInterface;
 
 class PostsController extends AbstractController
 {
     public function __construct(
         private PostMapper $postMapper,
         private PostRepository $postRepository,
+        private SessionInterface $session,
     )
     {
     }
@@ -43,6 +45,7 @@ class PostsController extends AbstractController
         $this->postMapper->save($post);
         //dd($post);
 
+        $this->session->setFlash("success", sprintf("Post %s successfully created", $title));
         return new RedirectResponse('/posts');
     }
 }
