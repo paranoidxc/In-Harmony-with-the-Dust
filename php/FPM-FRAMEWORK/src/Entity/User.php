@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
-class User
+use Paranoid\Framework\Authentication\AuthUserInterface;
+
+class User implements AuthUserInterface
 {
     public function __construct(
         private ?int $id,
