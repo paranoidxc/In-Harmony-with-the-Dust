@@ -12,8 +12,15 @@ require_once BASE_PATH . '/vendor/autoload.php';
 $container = require BASE_PATH . '/config/services.php';
 //dd($container);
 
-// bootstrapping
-require  BASE_PATH.'/bootstrap/bootstrap.php';
+// bootstrapping start
+$providers = [
+    \App\Provider\EventServiceProvider::class
+];
+foreach ($providers as $providerClass) {
+    $providers = $container->get($providerClass);
+    $providers->register();
+}
+// bootstrapping end
 
 /*
 $eventDispatcher = $container->get(\Paranoid\Framework\EventDispatcher\EventDispatcher::class);
