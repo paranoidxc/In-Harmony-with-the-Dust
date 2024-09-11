@@ -3,7 +3,7 @@
 use Paranoid\Framework\Routing\RouterInterface;
 use Paranoid\Framework\Session\SessionInterface;
 
-$dotenv = parse_ini_file(BASE_PATH . '/.env');
+$dotenv = parse_ini_file(dirname(__DIR__) . '/.env');
 $_SERVER["dotenv"] = $dotenv;
 /*
 $dotenv = new \Symfony\Component\Dotenv\Dotenv();
@@ -13,15 +13,17 @@ $container = new \League\Container\Container();
 
 $container->delegate(new \League\Container\ReflectionContainer(true));
 
-$routes = include BASE_PATH . '/routes/web.php';
+$basePath = dirname(__DIR__);
+
+$routes = include $basePath . '/routes/web.php';
 
 $appEnv = $_SERVER["dotenv"]['APP_ENV'] ?? "prod";
 
-$templatesPath = BASE_PATH . '/templates';
+$templatesPath = $basePath . '/templates';
 
 $container->add('APP_ENV', new \League\Container\Argument\Literal\StringArgument($appEnv));
 
-$databaseUrl = 'sqlite:///'.BASE_PATH.'/var/db.sqlite';
+$databaseUrl = 'sqlite:///'.$basePath.'/var/db.sqlite';
 
 $container->add(
     'base-commands-namespace',

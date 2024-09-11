@@ -15,7 +15,16 @@ class Response
     }
 
     public function send(): void {
+        ob_start();
+
+        // send header
+        foreach ($this->headers as $key => $value) {
+            header("$key: $value");
+        }
+
         echo $this->content;
+
+        ob_end_flush();
     }
 
     public function setContent(?string $content): void

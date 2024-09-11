@@ -7,18 +7,13 @@ class JsonResponse extends Response
 {
     public function __construct(private array $data, private int $code = 200, private string $msg = "操作成功")
     {
-        $res = [
-            "code" => $code,
-            "msg" => $msg,
-            "data" => $data,
-        ];
+        $res = ["code" => $code, "msg" => $msg, "data" => $data,];
         $content = json_encode($res, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        parent::__construct($content, 200, ["Content-Type: application/json"]);
+        parent::__construct($content, 200, ["Content-Type" => "application/json;charset=UTF-8"]);
     }
 
     public function send(): void
     {
-        echo $this->getContent();
-        exit;
+        parent::send();
     }
 }
