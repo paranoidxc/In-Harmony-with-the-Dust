@@ -34,9 +34,9 @@ class Request
         return $this->server['REQUEST_METHOD'];
     }
 
-    public function getSession(): SessionInterface
+    public function getSession(): ?SessionInterface
     {
-        return $this->session;
+        return $this->session ?? null;
     }
 
     public function setSession(SessionInterface $session): void

@@ -35,3 +35,14 @@ docker compose exec app php bin/console database:mirgrations:mirgrate --up=1 --f
 # TEST
 cd framework
 ./vendor/bin/phpunit tests/SessionTest.php --colors 
+
+
+# DOC
+
+## router
+- https://github.com/nikic/FastRoute?tab=readme-ov-file
+- https://github.com/mindplay-dk/walkway
+- https://github.com/bephp/router/blob/master/README.zh-CN.md
+
+## DB
+- https://www.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/query-builder.html

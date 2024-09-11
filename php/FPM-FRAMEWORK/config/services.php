@@ -3,16 +3,19 @@
 use Paranoid\Framework\Routing\RouterInterface;
 use Paranoid\Framework\Session\SessionInterface;
 
+$dotenv = parse_ini_file(BASE_PATH . '/.env');
+$_SERVER["dotenv"] = $dotenv;
+/*
 $dotenv = new \Symfony\Component\Dotenv\Dotenv();
 $dotenv->load(BASE_PATH . '/.env');
-
+*/
 $container = new \League\Container\Container();
 
 $container->delegate(new \League\Container\ReflectionContainer(true));
 
 $routes = include BASE_PATH . '/routes/web.php';
 
-$appEnv = $_SERVER['APP_ENV'];
+$appEnv = $_SERVER["dotenv"]['APP_ENV'] ?? "prod";
 
 $templatesPath = BASE_PATH . '/templates';
 
