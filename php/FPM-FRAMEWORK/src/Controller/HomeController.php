@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Widget;
 use Paranoid\Framework\Controller\AbstractController;
+use Paranoid\Framework\Http\JsonResponse;
 use Paranoid\Framework\Http\Response;
 
 class HomeController extends AbstractController
@@ -16,6 +17,14 @@ class HomeController extends AbstractController
     public function index(): Response
     {
         return $this->render('home.html.twig');
+    }
+
+    public function json(): Response
+    {
+        $data = [
+            "key"=>"测试 The Fucking World",
+        ];
+        return new JsonResponse($data);
     }
 
     /*

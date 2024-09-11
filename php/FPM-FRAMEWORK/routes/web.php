@@ -5,6 +5,7 @@ use Paranoid\Framework\Http\Response;
 // $r->addRoute('GET', '/articles/{id:\d+}[/{title}]', 'get_article_handler');
 return [
     ['GET', '/', [\App\Controller\HomeController::class, 'index']],
+    ['GET', '/json', [\App\Controller\HomeController::class, 'json']],
     ['GET', '/posts/{id:\d+}', [\App\Controller\PostsController::class, 'show']],
     ['GET', '/posts', [\App\Controller\PostsController::class, 'create']],
     ['POST', '/posts', [\App\Controller\PostsController::class, 'store']],
