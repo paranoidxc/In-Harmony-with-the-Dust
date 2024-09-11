@@ -4,12 +4,19 @@ namespace Paranoid\Framework\Session;
 class Session implements SessionInterface
 {
     private const FLASH_KEY = 'flash';
+    public const CSRF_KEY = 'csrf_token';
     public const AUTH_KEY = 'auth_id';
 
     public function start(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        session_start();
+
+        if (!$this->has(self::CSRF_KEY)) {
+            $this->set(self::CSRF_KEY, bin2hex(random_bytes(32)));
         }
     }
 

@@ -10,6 +10,7 @@ class RequestHandler implements RequestHandlerInterface
     private array $middleware = [
         ExtractRouteInfo::class,
         StartSession::class,
+        VerifyCsrfToken::class,
         RouterDispatch::class,
     ];
 

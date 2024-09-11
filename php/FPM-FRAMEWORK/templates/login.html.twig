@@ -3,6 +3,7 @@
 {% block main %}
     <h1>login</h1>
     <form action="/login" method="post">
+        <input type='text' name='_token' value="{{ session().get('csrf_token') }}" />
         <div>
             username:
             <input type='text' name='username' />

@@ -9,6 +9,13 @@ class Request
     private SessionInterface $session;
     private mixed $routeHandler;
     private array $routeHandlerArgs;
+    private array $jsonParams = [];
+
+    public const METHOD_GET = "GET";
+    public const METHOD_POST = "POST";
+    public const METHOD_PATCH = "PATCH";
+    public const METHOD_DELETE = "DELETE";
+    public const METHOD_UPDATE = "UPDATE";
 
     public function __construct(
         public readonly array $getParams,
@@ -42,6 +49,21 @@ class Request
     public function setSession(SessionInterface $session): void
     {
         $this->session = $session;
+    }
+
+    public function json($key): mixed
+    {
+        return $this->jsonParams[$key] ?? "";
+    }
+
+    public function setJson(array $data=[])
+    {
+        return $this->jsonParams = $data;
+    }
+
+    public function get($key): mixed
+    {
+        return $this->getParams[$key];
     }
 
     public function input($key): mixed
