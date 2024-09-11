@@ -3,8 +3,9 @@
 namespace App\Entity;
 
 use Paranoid\Framework\Authentication\AuthUserInterface;
+use Paranoid\Framework\Dbal\Entity;
 
-class User implements AuthUserInterface
+class User extends Entity implements AuthUserInterface
 {
     public function __construct(
         private ?int $id,
