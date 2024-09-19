@@ -7,6 +7,7 @@ const data = reactive({
   resultTip: "",
   compareType: false,
   picked: "false",
+  compareDisabled: false,
   old: "",
   new: "",
 })
@@ -44,7 +45,9 @@ function compare() {
     return
   }
 
+  data.compareDisabled = true
   CallCompare(data.old, data.new).then(result => {
+    data.compareDisabled = false
     if (result != "-") {
       data.result = result
     }
@@ -85,7 +88,7 @@ function compare() {
           <input id="old" v-model="data.old" autocomplete="off" class="input" type="text"/>
         </td >
         <td width="100">
-          <button class="btn" @click="selectOld">LEFT</button>
+          <button class="btn" @click="selectOld">源文件</button>
         </td>
       </tr>
       <tr>
@@ -97,7 +100,7 @@ function compare() {
           <input id="new" v-model="data.new" autocomplete="off" class="input" type="text"/>
         </td>
         <td>
-          <button class="btn" @click="selectNew">RIGHT</button>
+          <button class="btn" @click="selectNew">目标文件</button>
         </td>
       </tr>
 
@@ -107,7 +110,7 @@ function compare() {
         -->
         <td colspan="1" style="text-align:right"></td>
         <td>
-          <button class="btn" @click="compare">compare</button>
+          <button class="btn" :disabled=data.compareDisabled @click="compare">开始比对</button>
         </td>
       </tr>
 
@@ -184,11 +187,11 @@ table {
 }
 
 .textareaResult {
-  border: none;
+  border: 1px solid #ccc;
   border-radius: 3px;
   outline: none;
   line-height: 20px;
-  padding: 0 10px;
+  padding: 6px;
   height: 600px;
   width: 100%;
   background-color: rgba(240, 240, 240, 1);
