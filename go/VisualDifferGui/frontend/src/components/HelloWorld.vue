@@ -98,14 +98,26 @@ function compare() {
         <td width="100px">
           <button class="
           min-w-32
-          mb-2 h-12
+          mb-2 h-11
           border-4 
           rounded-xl
-          p-1.5
           bg-indigo-500
           text-white
           font-semibold
           hover:bg-indigo-700
+
+          w-full sm:w-auto 
+          bg-indigo-600 
+          hover:bg-indigo-700 
+          disabled:bg-indigo-300 
+          dark:disabled:bg-indigo-800 
+          text-white 
+          dark:disabled:text-indigo-400 
+          text-sm font-semibold 
+          rounded-md 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
           "
           @click="selectOld">
           源文件
@@ -125,15 +137,28 @@ function compare() {
         <td>
           <button class=" 
           mt-2
+
           min-w-32
-          mb-2 h-12
+          mb-2 h-11
           border-4 
           rounded-xl
-          p-1.5
           bg-indigo-500
           text-white
           font-semibold
           hover:bg-indigo-700
+
+          w-full sm:w-auto 
+          bg-indigo-600 
+          hover:bg-indigo-700 
+          disabled:bg-indigo-300 
+          dark:disabled:bg-indigo-800 
+          text-white 
+          dark:disabled:text-indigo-400 
+          text-sm font-semibold 
+          rounded-md 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
           " @click="selectNew">目标文件</button>
         </td>
       </tr>
@@ -147,14 +172,14 @@ function compare() {
           <button 
           class="
           min-w-32
-          mb-2 h-12
+          mb-2 h-11
           border-4 
           rounded-xl
-          p-1.5
-          bg-indigo-500
+          bg-indigo-600 
           text-white
           font-semibold
           hover:bg-indigo-700
+          shadow 
           "
            :disabled=data.compareDisabled @click="compare">开始比对</button>
         </td>
