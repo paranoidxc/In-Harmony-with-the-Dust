@@ -10,6 +10,7 @@ const data = reactive({
   compareDisabled: false,
   old: "",
   new: "",
+  showResult: false,
 })
 
 function selectOld() {
@@ -48,13 +49,15 @@ function compare() {
   data.compareDisabled = true
   CallCompare(data.old, data.new).then(result => {
     data.compareDisabled = false
+    data.showResult = false
+    data.resultTip = ""
+
     if (result != "-") {
       data.result = result
+      data.showResult = true
     }
     if (result.length == 0) {
       data.resultTip = "文件内容相同"
-    } else {
-      data.resultTip = ""
     }
     //console.log(result)
   })
@@ -71,12 +74,16 @@ function compare() {
         <td width="100">Left</td>
         <td width="100">Right</td>
         -->
-        <td colspan="2" style="text-align:left"> 
-        <input type="radio" id="folder" value="true" v-model="data.picked" />
-        <label for="folder">比对文件夹</label>
-        &nbsp; &nbsp; &nbsp;
-        <input type="radio" id="files" value="false" v-model="data.picked" />
-        <label for="files">比对文件</label>
+        <td colspan="2" style="text-align:left" class="align-middle"> 
+        <div class="align-top md:align-top ">
+          <input type="radio" id="folder" value="true" v-model="data.picked" />
+          <label for="folder">&nbsp;比对文件夹</label>
+
+          &nbsp; &nbsp; &nbsp;
+
+          <input type="radio" id="files" value="false" v-model="data.picked" />
+          <label for="files"> &nbsp;比对文件</label>
+        </div>
         </td>
       </tr>
       <tr>
@@ -84,11 +91,25 @@ function compare() {
         <td></td>
         <td></td>
         -->
-        <td width="100%">
-          <input id="old" v-model="data.old" autocomplete="off" class="input" type="text"/>
+        <td width="90%">
+          <input id="old" class="mb-2 w-full h-10 border-2 rounded-md p-1.5 border-indigo-500" 
+          v-model="data.old" autocomplete="off" type="text"/>
         </td >
-        <td width="100">
-          <button class="btn" @click="selectOld">源文件</button>
+        <td width="100px">
+          <button class="
+          min-w-32
+          mb-2 h-12
+          border-4 
+          rounded-xl
+          p-1.5
+          bg-indigo-500
+          text-white
+          font-semibold
+          hover:bg-indigo-700
+          "
+          @click="selectOld">
+          源文件
+          </button>
         </td>
       </tr>
       <tr>
@@ -97,10 +118,23 @@ function compare() {
         <td></td>
         -->
         <td>
-          <input id="new" v-model="data.new" autocomplete="off" class="input" type="text"/>
+          <input id="new" 
+          class="w-full h-10 border-2 rounded-md p-1.5 border-indigo-500"
+          v-model="data.new" autocomplete="off" type="text"/>
         </td>
         <td>
-          <button class="btn" @click="selectNew">目标文件</button>
+          <button class=" 
+          mt-2
+          min-w-32
+          mb-2 h-12
+          border-4 
+          rounded-xl
+          p-1.5
+          bg-indigo-500
+          text-white
+          font-semibold
+          hover:bg-indigo-700
+          " @click="selectNew">目标文件</button>
         </td>
       </tr>
 
@@ -110,7 +144,19 @@ function compare() {
         -->
         <td colspan="1" style="text-align:right"></td>
         <td>
-          <button class="btn" :disabled=data.compareDisabled @click="compare">开始比对</button>
+          <button 
+          class="
+          min-w-32
+          mb-2 h-12
+          border-4 
+          rounded-xl
+          p-1.5
+          bg-indigo-500
+          text-white
+          font-semibold
+          hover:bg-indigo-700
+          "
+           :disabled=data.compareDisabled @click="compare">开始比对</button>
         </td>
       </tr>
 
@@ -119,11 +165,19 @@ function compare() {
         <td></td>
         <td></td>
         -->
-        <td colspan="1">
-          <p> {{ data.resultTip }}</p>
-          <textarea v-model="data.result" class="textareaResult"></textarea>
+        <td colspan="2">
+          <p class="
+          mb-2
+          text-indigo-500
+          font-semibold
+          "> {{ data.resultTip }}</p>
+          <div v-if="data.showResult">
+          <textarea v-model="data.result" 
+          class="w-full h-dvh 
+          w-full border-2 rounded-md p-1.5 border-indigo-500 
+          "></textarea>
+          </div>
         </td>
-        <td></td>
       </tr>
       </tbody>
     </table>
