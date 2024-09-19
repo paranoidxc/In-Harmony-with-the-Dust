@@ -1,19 +1,22 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 var (
-	Red     = "\033[31m"
-	Green   = "\033[32m"
-	Yellow  = "\033[33m"
-	Reset   = "\033[0m"
-	Magenta = "\033[35m"
+	Red     = ""
+	Green   = ""
+	Yellow  = ""
+	Reset   = ""
+	Magenta = ""
 
-	CreatedPrefix = "=== CREATED ==="
-	RemovedPrefix = "=== REMOVED ==="
-	ChangedPrefix = "=== CHANGED ==="
+	CreatedPrefix = "=== 新建 ==="
+	RemovedPrefix = "=== 删除 ==="
+	ChangedPrefix = "=== 修改 ==="
 
-	ErrorMsg = "=== compare file vs file , folder vs folder ==="
+	ErrorMsg = "只能比对文件夹或者文件"
 )
 
 type Compare struct {
@@ -94,27 +97,37 @@ func DoCompareFile(pathOldFile, pathNewFile string) ([]byte, error) {
 }
 
 // LogInfoCompare logInfo compare
-func LogInfoCompare(compare *Compare) {
+func LogInfoCompare(compare *Compare) string {
+	strs := []string{}
 	if compare.RemovedFiles != nil {
-		fmt.Println(Red + RemovedPrefix + Reset)
+		//fmt.Println(Red + RemovedPrefix + Reset)
+		strs = append(strs, Red+RemovedPrefix+Reset)
 		for _, path := range compare.RemovedFiles {
-			fmt.Printf("+ %s\n", path)
+			//fmt.Printf("+ %s\n", path)
+			strs = append(strs, fmt.Sprintf("+ %s\n", path))
 		}
 	}
 
 	if compare.CreatedFiles != nil {
-		fmt.Println()
-		fmt.Println(Green + CreatedPrefix + Reset)
+		//fmt.Println()
+		//fmt.Println(Green + CreatedPrefix + Reset)
+
+		strs = append(strs, Green+CreatedPrefix+Reset)
 		for _, path := range compare.CreatedFiles {
-			fmt.Printf("+ %s\n", path)
+			//fmt.Printf("+ %s\n", path)
+			strs = append(strs, fmt.Sprintf("+ %s\n", path))
 		}
 	}
 
 	if compare.Changed != nil {
-		fmt.Println()
-		fmt.Println(Yellow + ChangedPrefix + Reset)
+		//fmt.Println()
+		//fmt.Println(Yellow + ChangedPrefix + Reset)
+		strs = append(strs, Yellow+ChangedPrefix+Reset)
 		for _, change := range compare.Changed {
-			fmt.Printf("%s", change)
+			//fmt.Printf("%s", change)
+			strs = append(strs, fmt.Sprintf("+ %s\n", change))
 		}
 	}
+
+	return strings.Join(strs, "\r\n")
 }

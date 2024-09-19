@@ -39,56 +39,85 @@ func (a *App) SelectOldFolder() string {
 	return selection
 }
 
-func (a *App) SelectOld() string {
-	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Select File",
-		/*
-			Filters: []runtime.FileFilter{
-				{
-					DisplayName: "Images (*.png;*.jpg)",
-					Pattern:     "*.png;*.jpg",
-				}, {
-					DisplayName: "Videos (*.mov;*.mp4)",
-					Pattern:     "*.mov;*.mp4",
-				},
-			},
-		*/
-	})
+func (a *App) SelectOld(compareType bool) string {
+	if compareType {
+		selection, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+			Title: "Select Folder",
+		})
 
-	if err != nil {
+		if err != nil {
+		}
+		runtime.LogInfo(a.ctx, selection)
+		return selection
+	} else {
+		selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title: "Select File",
+		})
+		if err != nil {
+		}
+		runtime.LogInfo(a.ctx, selection)
+		return selection
 	}
-	runtime.LogInfo(a.ctx, selection)
-	return selection
 }
 
-func (a *App) SelectNew() string {
-	selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
-		Title: "Select File",
-		Filters: []runtime.FileFilter{
-			{
-				DisplayName: "Images (*.png;*.jpg)",
-				Pattern:     "*.png;*.jpg",
-			}, {
-				DisplayName: "Videos (*.mov;*.mp4)",
-				Pattern:     "*.mov;*.mp4",
-			},
-		},
-	})
+func (a *App) SelectNew(compareType bool) string {
+	if compareType {
+		selection, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+			Title: "Select Folder",
+		})
 
-	if err != nil {
+		if err != nil {
+		}
+		runtime.LogInfo(a.ctx, selection)
+		return selection
+	} else {
+		selection, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+			Title: "Select File",
+		})
+		if err != nil {
+		}
+		runtime.LogInfo(a.ctx, selection)
+		return selection
 	}
-
-	runtime.LogInfo(a.ctx, selection)
-	return selection
 }
 
 func (a *App) CallCompare(oldRootPath, newRootPath string) string {
-	changed, err := DoCompareFile(oldRootPath, newRootPath)
-	if err != nil {
-		runtime.LogError(a.ctx, err.Error())
-		return err.Error()
+	//runtime.LogInfo(a.ctx, oldRootPath)
+	//runtime.LogInfo(a.ctx, newRootPath)
+	//runtime.LogInfo(a.ctx, strconv.Itoa(compareType))
+	//var err error
+	var changed string
+
+	isOldRootPathDir, _ := IsDir(oldRootPath)
+	isNewRootPathDir, _ := IsDir(newRootPath)
+
+	if isOldRootPathDir && !isNewRootPathDir || !isOldRootPathDir && isNewRootPathDir {
+		a.MessageBox(ErrorMsg)
+		return "-1"
+	}
+
+	if isOldRootPathDir && isNewRootPathDir {
+		compare, err := DoCompareFolder(oldRootPath, newRootPath)
+		if err != nil {
+		}
+		changed = LogInfoCompare(compare)
+	}
+
+	if !isOldRootPathDir && !isNewRootPathDir {
+		changedByte, err := DoCompareFile(oldRootPath, newRootPath)
+		if err != nil {
+		}
+		changed = string(changedByte)
 	}
 
 	//fmt.Println(Yellow + ChangedPrefix + Reset)
-	return fmt.Sprintf("%s", changed)
+	//return fmt.Sprintf("%s", changed)
+	return changed
+}
+
+func (a *App) MessageBox(str string) {
+	runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
+		Title:   "提示信息",
+		Message: str,
+	})
 }

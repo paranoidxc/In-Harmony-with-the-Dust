@@ -10,12 +10,16 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
-export function SelectNew() {
-  return window['go']['main']['App']['SelectNew']();
+export function MessageBox(arg1) {
+  return window['go']['main']['App']['MessageBox'](arg1);
 }
 
-export function SelectOld() {
-  return window['go']['main']['App']['SelectOld']();
+export function SelectNew(arg1) {
+  return window['go']['main']['App']['SelectNew'](arg1);
+}
+
+export function SelectOld(arg1) {
+  return window['go']['main']['App']['SelectOld'](arg1);
 }
 
 export function SelectOldFolder() {

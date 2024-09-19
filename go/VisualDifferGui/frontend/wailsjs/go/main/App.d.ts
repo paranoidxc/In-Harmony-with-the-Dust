@@ -5,8 +5,10 @@ export function CallCompare(arg1:string,arg2:string):Promise<string>;
 
 export function Greet(arg1:string):Promise<string>;
 
-export function SelectNew():Promise<string>;
+export function MessageBox(arg1:string):Promise<void>;
 
-export function SelectOld():Promise<string>;
+export function SelectNew(arg1:boolean):Promise<string>;
+
+export function SelectOld(arg1:boolean):Promise<string>;
 
 export function SelectOldFolder():Promise<string>;
