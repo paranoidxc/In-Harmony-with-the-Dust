@@ -119,15 +119,21 @@ func (a *App) CallCompare(oldRootPath, newRootPath string) string {
 	//var err error
 	//var changed string
 
-	c := &CompareForJs{
-		Source: oldRootPath,
-		Dest:   newRootPath,
-	}
+	c := &CompareForJs{}
 
 	//mapStr := make(map[string]map[string]string)
 
-	isOldRootPathDir, _ := IsDir(oldRootPath)
-	isNewRootPathDir, _ := IsDir(newRootPath)
+	isOldRootPathDir, err := IsDir(oldRootPath)
+	if err != nil {
+		a.MessageBox(err.Error())
+		return ""
+	}
+
+	isNewRootPathDir, err := IsDir(newRootPath)
+	if err != nil {
+		a.MessageBox(err.Error())
+		return ""
+	}
 
 	if isOldRootPathDir && !isNewRootPathDir || !isOldRootPathDir && isNewRootPathDir {
 		a.MessageBox(ErrorMsg)
@@ -137,8 +143,9 @@ func (a *App) CallCompare(oldRootPath, newRootPath string) string {
 	if isOldRootPathDir && isNewRootPathDir {
 		compare, err := DoCompareFolder(oldRootPath, newRootPath)
 		if err != nil {
+			a.MessageBox(ErrorMsg)
+			return ""
 		}
-		//changed = LogInfoCompare(compare)
 		c = LogInfoCompare(compare)
 	}
 
@@ -146,8 +153,8 @@ func (a *App) CallCompare(oldRootPath, newRootPath string) string {
 		c = DoCompareFileWrap(oldRootPath, newRootPath)
 	}
 
-	//fmt.Println(Yellow + ChangedPrefix + Reset)
-	//return fmt.Sprintf("%s", changed)
+	c.Source = oldRootPath
+	c.Dest = newRootPath
 	jsonStr, _ := json.Marshal(c)
 	return string(jsonStr)
 }
