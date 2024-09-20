@@ -64,12 +64,12 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 		pathOldFile := oldRootPath + path
 		pathNewFile := newRootPath + path
 
-		diff, err := DoCompareFile(pathOldFile, pathNewFile)
+		diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
 		if err != nil {
 			return nil, err
 		}
-		if diff != nil {
-			compare.Changed[path] = string(diff)
+		if diffStr != "" {
+			compare.Changed[path] = diffStr
 			//compare.Changed = append(compare.Changed, diff)
 		}
 	}
@@ -86,42 +86,45 @@ func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
 		Dest:   pathNewFile,
 	}
 
-	changedByte, err := DoCompareFile(pathOldFile, pathNewFile)
+	diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
 	if err != nil {
 	}
-	//changed = string(changedByte)
+	c.SingleFileDiff = diffStr
 	c.Change = make(map[string]string)
 	c.Tpo = 0
-	str := string(changedByte)
-	if str == "" {
+	if diffStr == "" {
 		c.Tips = "文件内容相同"
 	} else {
 		c.Diff = true
-		c.SingleFileDiff = strings.Replace(string(changedByte), "\r\n", "<br/>", -1)
 	}
 
 	return c
 }
 
-func DoCompareFile(pathOldFile, pathNewFile string) ([]byte, error) {
+func DoCompareFile(pathOldFile, pathNewFile string) (string, error) {
 	oldFile, err := GetFileInfo(pathOldFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if oldFile.IsDir {
-		return nil, nil
+		return "", nil
 	}
 
 	newFile, err := GetFileInfo(pathNewFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if newFile.IsDir {
-		return nil, nil
+		return "", nil
 	}
 
 	diff := Diff(pathOldFile, oldFile.Data, pathNewFile, newFile.Data)
-	return diff, nil
+
+	diffStr := string(diff)
+	diffStr = strings.Replace(diffStr, "\r\n", "<br/>", -1)
+	diffStr = strings.Replace(diffStr, "\n", "<br/>", -1)
+
+	return diffStr, nil
 }
 
 // LogInfoCompare logInfo compare
