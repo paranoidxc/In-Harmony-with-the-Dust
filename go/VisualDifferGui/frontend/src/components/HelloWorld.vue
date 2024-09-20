@@ -4,13 +4,14 @@ import {Greet, SelectOld, SelectOldFolder, SelectNew, MessageBox, CallCompare} f
 
 const data = reactive({
   name: "",
-  resultTip: "",
   compareType: false,
   picked: "false",
   compareDisabled: false,
   old: "",
   new: "",
   showResult: false,
+
+  compareObj: {}
 })
 
 function selectOld() {
@@ -40,6 +41,10 @@ function selectNew() {
   })
 }
 
+function test() {
+  console.log("test");
+}
+
 function compare() {
   if (!(data.old.length && data.new.length)) {
     MessageBox("请提供比对文件")
@@ -50,16 +55,32 @@ function compare() {
   CallCompare(data.old, data.new).then(result => {
     data.compareDisabled = false
     data.showResult = false
-    data.resultTip = ""
 
-    if (result != "-") {
-      data.result = result
-      data.showResult = true
+    console.log(result)
+    let json = eval('('+result+')')
+    console.log(json)
+    console.log(json.Del)
+
+    for(let k in json.Del) {
+      console.log(k, json.Del[k]);
     }
-    if (result.length == 0) {
-      data.resultTip = "文件内容相同"
+
+    for(let k in json.Change) {
+      console.log(k, json.Change[k]);
     }
-    //console.log(result)
+
+    data.compareObj = json
+    /*
+    console.log(json.Sli)
+    for(let k in json.Sli) {
+      console.log(k, json.Sli.k);
+    }
+    */
+    /*
+    console.log(json.CHANGE.length)
+    console.log(json.DEL.length)
+    console.log(json.NEW.length)
+    */
   })
 } 
 
@@ -180,6 +201,7 @@ function compare() {
           font-semibold
           hover:bg-indigo-700
           shadow 
+          text-sm 
           "
            :disabled=data.compareDisabled @click="compare">开始比对</button>
         </td>
@@ -191,17 +213,60 @@ function compare() {
         <td></td>
         -->
         <td colspan="2">
-          <p class="
-          mb-2
-          text-indigo-500
-          font-semibold
-          "> {{ data.resultTip }}</p>
-          <div v-if="data.showResult">
-          <textarea v-model="data.result" 
-          class="w-full h-dvh 
-          w-full border-2 rounded-md p-1.5 border-indigo-500 
-          "></textarea>
-          </div>
+        <p 
+        v-if = "data.compareObj.Tips != ''"
+        class="
+            mb-2
+            text-indigo-700
+            font-semibold
+          "> {{ data.compareObj.Tips }}</p>
+
+        <div
+            v-if="data.compareObj.Tpo && data.compareObj.Diff"
+            class="
+            w-full border-2 
+            border-indigo-500 
+            rounded-md 
+            bg-white
+            "> 
+          <table v-show="data.compareObj.Diff">
+              <tbody>
+                <tr class="w-full bg-white border-1 border-indigo-500" v-for="item of data.compareObj.Del">
+                  <td class="w-1/2 border-1 border-indigo-500  line-through text-rose-700	"> {{ item }} </td>
+                  <td class="w-2 border-1 border-indigo-500  font-semibold text-rose-700	"> - </td>
+                  <td class="w-1/2 border-1 border-indigo-500"> </td>
+                </tr>
+                <tr class="w-full bg-white" v-for="item of data.compareObj.Add">
+                  <td class="w-1/2"> </td>
+                  <td class="w-2 font-semibold text-emerald-900"> + </td>
+                  <td class="w-1/2 text-emerald-900"> {{ item }} </td>
+                </tr>
+                <tr class="w-full bg-white" v-for="val, key of data.compareObj.Change">
+                  <td class="w-1/2 text-yellow-700"> {{ key }} </td>
+                  <td class="w-2 font-semibold text-yellow-700"> != </td>
+                  <td class="w-1/2" @dbclick="test"> {{ val }} </td>
+                </tr>
+              </tbody>
+          </table>
+        </div>
+
+        <div v-if="data.compareObj.Tpo==0 && data.compareObj.Diff">
+            <div
+            v-html="data.compareObj.SingleFileDiff"
+            class="
+            border-2 
+            w-10/12	
+            text-left	
+            text-wrap	
+            border-indigo-500 
+            bg-white
+            rounded-md 
+            p-1.5 
+            max-h-96	
+            overflow-scroll	
+            "></div>
+        </div>
+
         </td>
       </tr>
       </tbody>
@@ -218,51 +283,6 @@ table {
   height: 20px;
   line-height: 20px;
   margin: 1.5rem auto;
-}
-
-.input-box {
-  margin: 10px;
-}
-.btn {
-  width: 80px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 3px;
-  border: none;
-  margin: 0 0 0 20px;
-  padding: 0 8px;
-  cursor: pointer;
-}
-
-.input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
-}
-
-.input {
-  border: none;
-  border-radius: 3px;
-  outline: none;
-  height: 30px;
-  width: 100%;
-  padding: 0 6px;
-  border: 1px solid #ccc;
-  background-color: rgba(240, 240, 240, 1);
-  -webkit-font-smoothing: antialiased;
-}
-
-.input-box .input:hover {
-  /*
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-  */
-}
-
-.input-box .input:focus {
-  /*
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-  */
 }
 
 .textareaResult {

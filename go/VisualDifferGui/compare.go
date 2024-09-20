@@ -22,7 +22,7 @@ var (
 type Compare struct {
 	RemovedFiles []string
 	CreatedFiles []string
-	Changed      [][]byte
+	Changed      map[string]string
 }
 
 // DoCompareFolder compare folder
@@ -58,6 +58,8 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 		compare.CreatedFiles = append(compare.CreatedFiles, path)
 	}
 
+	compare.Changed = make(map[string]string)
+
 	for path := range sameTree {
 		pathOldFile := oldRootPath + path
 		pathNewFile := newRootPath + path
@@ -67,7 +69,8 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 			return nil, err
 		}
 		if diff != nil {
-			compare.Changed = append(compare.Changed, diff)
+			compare.Changed[path] = string(diff)
+			//compare.Changed = append(compare.Changed, diff)
 		}
 	}
 
@@ -75,6 +78,31 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 }
 
 // DoCompareFile compare file
+
+func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
+	c := &CompareForJs{
+		Tpo:    0,
+		Source: pathOldFile,
+		Dest:   pathNewFile,
+	}
+
+	changedByte, err := DoCompareFile(pathOldFile, pathNewFile)
+	if err != nil {
+	}
+	//changed = string(changedByte)
+	c.Change = make(map[string]string)
+	c.Tpo = 0
+	str := string(changedByte)
+	if str == "" {
+		c.Tips = "文件内容相同"
+	} else {
+		c.Diff = true
+		c.SingleFileDiff = strings.Replace(string(changedByte), "\r\n", "<br/>", -1)
+	}
+
+	return c
+}
+
 func DoCompareFile(pathOldFile, pathNewFile string) ([]byte, error) {
 	oldFile, err := GetFileInfo(pathOldFile)
 	if err != nil {
@@ -97,37 +125,65 @@ func DoCompareFile(pathOldFile, pathNewFile string) ([]byte, error) {
 }
 
 // LogInfoCompare logInfo compare
-func LogInfoCompare(compare *Compare) string {
+// func LogInfoCompare(compare *Compare) map[string]map[string]string {
+func LogInfoCompare(compare *Compare) *CompareForJs {
 	strs := []string{}
+	mapStr := make(map[string]map[string]string)
+
+	c := CompareForJs{Tpo: 1}
+	c.Change = make(map[string]string)
+	isDiff := false
+
 	if compare.RemovedFiles != nil {
+		mapStr["DEL"] = make(map[string]string)
 		//fmt.Println(Red + RemovedPrefix + Reset)
 		strs = append(strs, Red+RemovedPrefix+Reset)
 		for _, path := range compare.RemovedFiles {
+			isDiff = true
 			//fmt.Printf("+ %s\n", path)
 			strs = append(strs, fmt.Sprintf("+ %s\n", path))
+			mapStr["DEL"][path] = path
+			c.Del = append(c.Del, path)
 		}
 	}
 
 	if compare.CreatedFiles != nil {
 		//fmt.Println()
 		//fmt.Println(Green + CreatedPrefix + Reset)
-
+		mapStr["NEW"] = make(map[string]string)
 		strs = append(strs, Green+CreatedPrefix+Reset)
 		for _, path := range compare.CreatedFiles {
+			isDiff = true
 			//fmt.Printf("+ %s\n", path)
 			strs = append(strs, fmt.Sprintf("+ %s\n", path))
+			//mapStr["NEW"] = append(mapStr["NEW"], path)
+			mapStr["NEW"][path] = path
+			c.Add = append(c.Add, path)
 		}
 	}
 
 	if compare.Changed != nil {
 		//fmt.Println()
 		//fmt.Println(Yellow + ChangedPrefix + Reset)
+		mapStr["CHANGE"] = make(map[string]string)
 		strs = append(strs, Yellow+ChangedPrefix+Reset)
-		for _, change := range compare.Changed {
+		for path, change := range compare.Changed {
+			isDiff = true
 			//fmt.Printf("%s", change)
-			strs = append(strs, fmt.Sprintf("+ %s\n", change))
+			changeStr := fmt.Sprintf("+ %s\n", change)
+			//strs = append(strs, fmt.Sprintf("+ %s\n", change))
+			//mapStr["CHANGE"][path] = changeStr //= append(mapStr["CHANGE"], path)
+			c.Change[path] = changeStr
 		}
 	}
 
-	return strings.Join(strs, "\r\n")
+	c.Diff = isDiff
+
+	if !isDiff {
+		c.Tips = "文件夹内容相同"
+	}
+
+	//return strings.Join(strs, "\r\n")
+	//return mapStr
+	return &c
 }

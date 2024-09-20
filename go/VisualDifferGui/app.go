@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -81,38 +82,74 @@ func (a *App) SelectNew(compareType bool) string {
 	}
 }
 
+type CompareForJs struct {
+	Source         string
+	Dest           string
+	Tpo            int
+	Tips           string
+	Diff           bool
+	SingleFileDiff string
+	Del            []string
+	Add            []string
+	Change         map[string]string
+}
+
+func (a *App) xCallCompare(oldRootPath, newRootPath string) string {
+	c := CompareForJs{}
+	c.Change = make(map[string]string)
+
+	c.Del = append(c.Del, "a.txt")
+	c.Del = append(c.Del, "b.txt")
+
+	c.Add = append(c.Add, "b.txt")
+	c.Add = append(c.Add, "b.txt")
+
+	c.Change["a.txt"] = "+dsdfs"
+	c.Change["b.txt"] = "+dsdfs"
+
+	s, _ := json.Marshal(c)
+	return string(s)
+}
+
 func (a *App) CallCompare(oldRootPath, newRootPath string) string {
+	//func (a *App) xCallCompare(oldRootPath, newRootPath string) map[string]map[string]string {
 	//runtime.LogInfo(a.ctx, oldRootPath)
 	//runtime.LogInfo(a.ctx, newRootPath)
 	//runtime.LogInfo(a.ctx, strconv.Itoa(compareType))
 	//var err error
-	var changed string
+	//var changed string
+
+	c := &CompareForJs{
+		Source: oldRootPath,
+		Dest:   newRootPath,
+	}
+
+	//mapStr := make(map[string]map[string]string)
 
 	isOldRootPathDir, _ := IsDir(oldRootPath)
 	isNewRootPathDir, _ := IsDir(newRootPath)
 
 	if isOldRootPathDir && !isNewRootPathDir || !isOldRootPathDir && isNewRootPathDir {
 		a.MessageBox(ErrorMsg)
-		return "-1"
+		return ""
 	}
 
 	if isOldRootPathDir && isNewRootPathDir {
 		compare, err := DoCompareFolder(oldRootPath, newRootPath)
 		if err != nil {
 		}
-		changed = LogInfoCompare(compare)
+		//changed = LogInfoCompare(compare)
+		c = LogInfoCompare(compare)
 	}
 
 	if !isOldRootPathDir && !isNewRootPathDir {
-		changedByte, err := DoCompareFile(oldRootPath, newRootPath)
-		if err != nil {
-		}
-		changed = string(changedByte)
+		c = DoCompareFileWrap(oldRootPath, newRootPath)
 	}
 
 	//fmt.Println(Yellow + ChangedPrefix + Reset)
 	//return fmt.Sprintf("%s", changed)
-	return changed
+	jsonStr, _ := json.Marshal(c)
+	return string(jsonStr)
 }
 
 func (a *App) MessageBox(str string) {
