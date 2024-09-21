@@ -10,20 +10,31 @@ const data = reactive({
   old: "",
   new: "",
   detail: {
-    show: false,
-    title: "",
-    content: "",
-    //content: "snil<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>bdfdsfsafsaf",
+    show: true,
+    title: "ssss",
+    //content: "",
+    content: "snil<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>bdfdsfsafsaf",
   },
   compareObj: {}
 })
 
+
+function selectType(type) {
+  if (type == 0) {
+    data.compareType = false
+  } else {
+    data.compareType = true
+  }
+}
+
 function selectOld() {
+  /*
   if (data.picked == "false") {
     data.compareType = false
   } else {
     data.compareType = true
   }
+  */
   SelectOld(data.compareType).then(result => {
     if (result.length) {
       data.old = result
@@ -32,11 +43,13 @@ function selectOld() {
 }
 
 function selectNew() {
+  /*
   if (data.picked == "false") {
     data.compareType = false
   } else {
     data.compareType = true
   }
+  */
 
   SelectNew(data.compareType).then(result => {
     if (result.length) {
@@ -102,232 +115,290 @@ function compare() {
 
 <template>
   <main>
-    <table class='m-2'>
-      <tbody>
-        <tr>
-          <!--
-        <td width="100">Left</td>
-        <td width="100">Right</td>
-        -->
-          <td colspan="2" style="text-align:left" class="align-middle">
-            <div class="align-top md:align-top ">
-              <input type="radio" id="folder" value="true" v-model="data.picked" />
-              <label for="folder">&nbsp;比对文件夹</label>
-
-              &nbsp; &nbsp; &nbsp;
-
-              <input type="radio" id="files" value="false" v-model="data.picked" />
-              <label for="files"> &nbsp;比对文件</label>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <!--
-        <td></td>
-        <td></td>
-        -->
-          <td width="90%">
-            <input id="old" class="mb-2 w-full h-10 border-2 rounded-md p-1.5 border-indigo-500" v-model="data.old"
-              autocomplete="off" type="text" />
-          </td>
-          <td width="100px">
-            <button class="
+    <div class='px-2 pb-0 bg-white h-full h-dvh h-screen'>
+      <table class='w-full'>
+        <tbody>
+          <tr>
+            <td colspan="2" style="text-align:left" class="align-middle">
+              <button v-if="data.compareType" class="
           min-w-32
-          mb-2 h-11
-          border-4 
-          rounded-xl
-          bg-indigo-500
+          h-10
+          border-1 
+          rounded-md
+          bg-gray-700
           text-white
           font-semibold
-          hover:bg-indigo-700
+          w-full
+          sm:w-auto 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
+          mr-5 
+              ">比对文件夹</button>
 
-          w-full sm:w-auto 
-          bg-indigo-600 
-          hover:bg-indigo-700 
-          disabled:bg-indigo-300 
-          dark:disabled:bg-indigo-800 
-          text-white 
-          dark:disabled:text-indigo-400 
-          text-sm font-semibold 
-          rounded-md 
+              <button v-if="data.compareType == 0" class=" 
+          min-w-32
+          h-10
+          border-1 
+          rounded-md
+          text-gray-700
+          bg-gray-200 
+          font-semibold
+          w-full
+          sm:w-auto 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
+          mr-5
+          " @click="selectType(1)">比对文件夹</button>
+
+              <button v-if="data.compareType" class=" 
+          min-w-32
+          mt-2
+          mb-2
+          h-10
+          rounded-md
+          w-full
+          sm:w-auto 
+          bg-gray-200 
+          text-gray-700
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
+          " @click="selectType(0)">比对文件</button>
+
+              <button v-if="!data.compareType" class=" 
+          min-w-32
+          mt-2
+          mb-2
+          h-10
+          rounded-md
+          w-full
+          sm:w-auto 
+          text-white
+          bg-gray-700 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
+          " @click="selectType(0)">比对文件</button>
+              <!--
+              <div class="align-top md:align-top ">
+                <input type="radio" id="folder" value="true" v-model="data.picked" />
+                <label for="folder">&nbsp;比对文件夹</label>
+
+                &nbsp; &nbsp; &nbsp;
+
+                <input type="radio" id="files" value="false" v-model="data.picked" />
+                <label for="files"> &nbsp;比对文件</label>
+              </div>
+            -->
+            </td>
+          </tr>
+          <tr>
+            <td class="w-11/12">
+              <input id="old"
+                class="mb-2 w-full h-10 border-2 hover:border-gray-700 focus:border-gray-700 rounded-md p-1.5 border-gray-300"
+                v-model="data.old" autocomplete="off" type="text" />
+            </td>
+            <td class="w-1/12 text-right">
+              <button class="
+          min-w-32
+          ml-4
+          mb-2
+          h-10
+          border-1 
+          rounded-md
+          text-gray-700
+          font-semibold
+          w-full
+          sm:w-auto 
+          bg-gray-200 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
           shadow 
           focus:outline-none 
           cursor-pointer
           " @click="selectOld">
-              源文件
-            </button>
-          </td>
-        </tr>
-        <tr>
-          <!--
-        <td></td>
-        <td></td>
-        -->
-          <td>
-            <input id="new" class="w-full h-10 border-2 rounded-md p-1.5 border-indigo-500" v-model="data.new"
-              autocomplete="off" type="text" />
-          </td>
-          <td>
-            <button class=" 
-          mt-2
-
+                源文件
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input id="new"
+                class="w-full h-10 border-2 hover:border-gray-700 focus:border-gray-700 rounded-md p-1.5 border-gray-300"
+                v-model="data.new" autocomplete="off" type="text" />
+            </td>
+            <td class="text-right">
+              <button class=" 
           min-w-32
-          mb-2 h-11
-          border-4 
-          rounded-xl
-          bg-indigo-500
-          text-white
+          mt-2
+          mb-2
+          h-10
+          border-1 
+          rounded-md
+          text-gray-700
           font-semibold
-          hover:bg-indigo-700
-
-          w-full sm:w-auto 
-          bg-indigo-600 
-          hover:bg-indigo-700 
-          disabled:bg-indigo-300 
-          dark:disabled:bg-indigo-800 
-          text-white 
-          dark:disabled:text-indigo-400 
-          text-sm font-semibold 
-          rounded-md 
+          w-full
+          sm:w-auto 
+          bg-gray-200 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
           shadow 
           focus:outline-none 
           cursor-pointer
           " @click="selectNew">目标文件</button>
-          </td>
-        </tr>
+            </td>
+          </tr>
 
-        <tr>
-          <!--
-        <td colspan="3" style="text-align:right"> </td>
-        -->
-          <td colspan="1" style="text-align:right"></td>
-          <td>
-            <button class="
+          <tr>
+            <td colspan="1" class="text-right"></td>
+            <td class="text-right">
+              <button class="
             min-w-32
-            mb-2 h-11
-            border-4 
-            rounded-xl
-            bg-indigo-600 
-            text-white
-            font-semibold
-            hover:bg-indigo-700
-            shadow 
-            text-sm 
+          mt-2
+          mb-2
+          h-10
+          border-1 
+          rounded-md
+          text-gray-700
+          font-semibold
+          w-full
+          sm:w-auto 
+          bg-gray-200 
+          hover:bg-gray-700 
+          hover:text-white
+          font-semibold 
+          shadow 
+          focus:outline-none 
+          cursor-pointer
           " :disabled=data.compareDisabled @click="compare">开始比对</button>
-          </td>
-        </tr>
+            </td>
+          </tr>
 
-        <tr>
-          <td colspan="2">
-            <p v-if="data.compareObj.Tips != ''" class="
+          <tr>
+            <td colspan="2">
+              <p v-if="data.compareObj.Tips != ''" class="
             mb-2
             text-indigo-700
             font-semibold
           "> {{ data.compareObj.Tips }}</p>
 
-            <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
-            w-full border-2 
-            border-b-none
-            border-indigo-500 
-            rounded-md 
-            bg-white
-            ">
-              <table v-show="data.compareObj.Diff">
-                <thead>
-                  <tr class="w-full h-11 bg-indigo-600 border-b-2 border-indigo-500 font-semibold text-white text-lg	">
-                    <td class="w-1/2">
-                      {{ data.compareObj.Source }}
-                    </td>
-                    <td class="w-2"> </td>
-                    <td class="w-1/2">
-                      {{ data.compareObj.Dest }}
-                    </td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr class="w-full h-10 bg-white border-b-2 border-indigo-500 text-rose-700 font-semibold  text-lg"
-                    v-for="item of data.compareObj.Del">
-                    <td class="line-through"> {{ item }} </td>
-                    <td class=""> - </td>
-                    <td class=""> </td>
-                  </tr>
-                  <tr class="w-full h-10 bg-white border-b-2 border-indigo-500 text-emerald-900  font-semibold  text-lg"
-                    v-for="item of data.compareObj.Add">
-                    <td class=""> </td>
-                    <td class=""> + </td>
-                    <td class=""> {{ item }} </td>
-                  </tr>
-                  <tr @dblclick="detailShow(key)" v-for="val, key of data.compareObj.Change" class="cursor-pointer
- w-full h-10 bg-white border-b-2 border-indigo-500 text-yellow-700 font-semibold  text-lg">
-                    <td class=""> {{ key }} </td>
-                    <td class=""> != </td>
-                    <td class=""> {{ key }} </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
+              w-full border border-b-none border-gray-300
+              ">
+                <table class="border-collapse" v-show="data.compareObj.Diff">
+                  <thead>
+                    <tr class="w-full h-11 bg-gray-200 border border-gray-300 font-semibold text-gray-900 text-lg	">
+                      <td class="w-1/2">
+                        {{ data.compareObj.Source }}
+                      </td>
+                      <td class="w-2"> </td>
+                      <td class="w-1/2">
+                        {{ data.compareObj.Dest }}
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="w-full h-10  border border-gray-200 text-rose-700 font-semibold  text-lg"
+                      v-for="item of data.compareObj.Del">
+                      <td class="line-through"> {{ item }} </td>
+                      <td class=""> - </td>
+                      <td class=""> </td>
+                    </tr>
+                    <tr class="w-full h-10  border border-gray-200 text-emerald-900  font-semibold  text-lg"
+                      v-for="item of data.compareObj.Add">
+                      <td class=""> </td>
+                      <td class=""> + </td>
+                      <td class=""> {{ item }} </td>
+                    </tr>
+                    <tr
+                      class="cursor-pointer w-full h-10  border border-gray-200 text-yellow-700 font-semibold  text-lg"
+                      @dblclick="detailShow(key)" v-for="val, key of data.compareObj.Change">
+                      <td class=""> {{ key }} </td>
+                      <td class=""> != </td>
+                      <td class=""> {{ key }} </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-            <div v-if="data.compareObj.Tpo == 0 && data.compareObj.Diff">
-              <div v-html="data.compareObj.SingleFileDiff" class="
-            border-2 
+              </div>
+
+              <div v-if="data.compareObj.Tpo == 0 && data.compareObj.Diff">
+                <div v-html="data.compareObj.SingleFileDiff" class="
+            border-2
             w-12/12	
             text-left	
             text-wrap	
-            border-indigo-500 
+            border-gray-500 
             bg-white
             rounded-md 
             p-1.5 
-            min-h-96	
-            max-h-96	
             overflow-scroll	
+            max-h-96
+            h-screen
             "></div>
-            </div>
+              </div>
 
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- detail view -->
+
     <div v-if="data.detail.show">
-      <div class="
-              absolute text-left inset-0 bg-white p-2 border-2
-              ">
+      <div class="z-50 absolute top-0 left-0 h-20 text-left inset-0 bg-white p-2 border border-10 
+      border-b-gray-300
+      ">
         <div class="">
           <button class=" 
+              h-10
               min-w-32
-              mb-2
-              h-11
-              border-4 
-              rounded-xl
-              bg-indigo-500
+              rounded-md
               sm:w-auto 
-              bg-indigo-600 
-              hover:bg-indigo-700 
-              text-white 
+              bg-gray-200 
+              text-black 
+              hover:bg-gray-700 
+              hover:text-white
               text-sm 
               font-semibold 
-              shadow 
-              focus:outline-none 
-              cursor-pointer
+              cursor-pointer 
           " @click="detailClose">返回列表</button>
-          <p class="
-                  mb-2
-                  text-indigo-700
-                  font-semibold
-                ">{{ data.detail.title }}</p>
+          <p class="h-10 mt-1 align-middle text-indigo-700 font-semibold ">{{ data.detail.title }}</p>
         </div>
+      </div>
+    </div>
 
+    <div v-if="data.detail.show">
+      <div class="z-40 absolute bg-white top-20 left-0 w-full h-full">
         <div v-html="data.detail.content" class="
-            relative
+            space-x-0.5
+            m-2
+            p-2
             border-2 
-            w-12/12	
             text-left	
             text-wrap	
-            border-indigo-500 
+            border-gray-500 
             bg-white
             rounded-md 
-            p-1.5 
+            w-11/12
+            md:w-auto
             h-5/6
             overflow-scroll	
             "></div>

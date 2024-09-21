@@ -10,7 +10,7 @@ VisulaDiffer is a tool for compare folder and files change, written in Go.
   + What file content have been change content
 - Compare file B vs A
 
-![Screenshot](<Screenshot.png>)
+![Screenshot](<Screenshot.jpg>)
 
 ## Usage
 
