@@ -323,7 +323,7 @@ function compare() {
               <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
               border border-b-none border-t-none border-gray-300
               w-full
-              h-full
+              h-svh
               max-h-96
               overflow-auto
               ">
@@ -413,6 +413,7 @@ function compare() {
             w-11/12
             md:w-auto
             h-5/6
+            min-h-content
             overflow-scroll	
             "></div>
       </div>
