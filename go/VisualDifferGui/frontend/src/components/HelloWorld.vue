@@ -10,10 +10,10 @@ const data = reactive({
   old: "",
   new: "",
   detail: {
-    show: true,
-    title: "ssss",
-    //content: "",
-    content: "snil<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>bdfdsfsafsaf",
+    show: false,
+    title: "",
+    content: "",
+    //content: "snil<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>bdfdsfsafsaf",
   },
   compareObj: {}
 })
