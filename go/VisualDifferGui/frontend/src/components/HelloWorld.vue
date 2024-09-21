@@ -7,6 +7,7 @@ const data = reactive({
   compareType: false,
   picked: "false",
   compareDisabled: false,
+  compareBtnText: "开始比对 ",
   old: "",
   new: "",
   detail: {
@@ -76,7 +77,9 @@ function compare() {
   }
 
   data.compareDisabled = true
+  data.compareBtnText =  "处理中...",
   CallCompare(data.old, data.new).then(result => {
+    data.compareBtnText =  "开始比对",
     data.compareDisabled = false
 
     if (result.length) {
@@ -132,7 +135,6 @@ function compare() {
           sm:w-auto 
           hover:bg-gray-700 
           hover:text-white
-          font-semibold 
           shadow 
           focus:outline-none 
           cursor-pointer
@@ -146,7 +148,6 @@ function compare() {
           rounded-md
           text-gray-700
           bg-gray-200 
-          font-semibold
           w-full
           sm:w-auto 
           hover:bg-gray-700 
@@ -280,13 +281,14 @@ function compare() {
           w-full
           sm:w-auto 
           bg-gray-200 
-          hover:bg-gray-700 
-          hover:text-white
+          enabled:hover:bg-gray-700 
+          enabled:hover:text-white
           font-semibold 
           shadow 
           focus:outline-none 
           cursor-pointer
-          " :disabled=data.compareDisabled @click="compare">开始比对</button>
+          disabled:opacity-75
+          " :disabled=data.compareDisabled @click="compare">{{ data.compareBtnText }}</button>
             </td>
           </tr>
 
@@ -296,46 +298,57 @@ function compare() {
             mb-2
             text-indigo-700
             font-semibold
+            h-full
           "> {{ data.compareObj.Tips }}</p>
 
               <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
-              w-full border border-b-none border-gray-300
+              border border-b-none border-gray-300
+              w-full
               ">
-                <table class="border-collapse" v-show="data.compareObj.Diff">
+                <table class="w-full border-collapse" v-show="data.compareObj.Diff">
                   <thead>
-                    <tr class="w-full h-11 bg-gray-200 border border-gray-300 font-semibold text-gray-900 text-lg	">
-                      <td class="w-1/2">
+                    <tr class="h-11 bg-gray-200 font-semibold text-gray-900 text-lg	">
+                      <td width="200" class="max-w-60 truncate">
                         {{ data.compareObj.Source }}
                       </td>
                       <td class="w-2"> </td>
-                      <td class="w-1/2">
+                      <td width="200" class="max-w-60 truncate">
                         {{ data.compareObj.Dest }}
                       </td>
                     </tr>
                   </thead>
+                </table>
+              </div>
+
+              <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
+              border border-b-none border-t-none border-gray-300
+              w-full
+              h-full
+              max-h-96
+              overflow-auto
+              ">
+                <table class="w-full border-collapse" v-show="data.compareObj.Diff">
                   <tbody>
-                    <tr class="w-full h-10  border border-gray-200 text-rose-700 font-semibold  text-lg"
+                    <tr class="h-10 border border-t-none border-gray-200 text-rose-700 font-semibold  text-lg"
                       v-for="item of data.compareObj.Del">
-                      <td class="line-through"> {{ item }} </td>
+                      <td class="max-w-60 max-w-11/12 line-through truncate" :title="item"> {{ item }} </td>
                       <td class=""> - </td>
                       <td class=""> </td>
                     </tr>
-                    <tr class="w-full h-10  border border-gray-200 text-emerald-900  font-semibold  text-lg"
+                    <tr class="h-10  border border-gray-200 text-emerald-900  font-semibold  text-lg"
                       v-for="item of data.compareObj.Add">
                       <td class=""> </td>
                       <td class=""> + </td>
-                      <td class=""> {{ item }} </td>
+                      <td class="max-w-60 truncate" :title="item"> {{ item }} </td>
                     </tr>
-                    <tr
-                      class="cursor-pointer w-full h-10  border border-gray-200 text-yellow-700 font-semibold  text-lg"
+                    <tr class="cursor-pointer h-10  border border-gray-200 text-yellow-700 font-semibold  text-lg"
                       @dblclick="detailShow(key)" v-for="val, key of data.compareObj.Change">
-                      <td class=""> {{ key }} </td>
+                      <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
                       <td class=""> != </td>
-                      <td class=""> {{ key }} </td>
+                      <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
                     </tr>
                   </tbody>
                 </table>
-
               </div>
 
               <div v-if="data.compareObj.Tpo == 0 && data.compareObj.Diff">
