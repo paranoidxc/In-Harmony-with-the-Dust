@@ -10,6 +10,7 @@ import (
 const (
 	TIMESTAMP   = "SET TIMESTAMP="
 	TERMINAL    = "/*!*/;"
+	USE         = "USE"
 	UPDATE      = "UPDATE"
 	INSERT      = "INSERT"
 	DELETE      = "DELETE"
@@ -19,14 +20,15 @@ const (
 )
 
 const (
-	IDX_TIMESTAMP   = 998
-	IDX_TERMINAL    = 999
-	IDX_UPDATE      = 1
-	IDX_INSERT      = 2
-	IDX_DELETE      = 3
-	IDX_HASH_UPDATE = 101
-	IDX_HASH_INSERT = 102
-	IDX_HASH_DELETE = 103
+	TYPE_TIMESTAMP   = 998
+	TYPE_TERMINAL    = 999
+	TYPE_USE         = 1000
+	TYPE_UPDATE      = 1
+	TYPE_INSERT      = 2
+	TYPE_DELETE      = 3
+	TYPE_HASH_UPDATE = 101
+	TYPE_HASH_INSERT = 102
+	TYPE_HASH_DELETE = 103
 )
 
 var mapCmdStringToIdx map[string]int
@@ -34,17 +36,19 @@ var mapCmdStringToIdx map[string]int
 func init() {
 	mapCmdStringToIdx = make(map[string]int)
 
-	mapCmdStringToIdx[TERMINAL] = IDX_TERMINAL
+	mapCmdStringToIdx[TERMINAL] = TYPE_TERMINAL
+	mapCmdStringToIdx[USE] = TYPE_USE
 
-	mapCmdStringToIdx[UPDATE] = IDX_UPDATE
-	mapCmdStringToIdx[HASH_UPDATE] = IDX_HASH_UPDATE
-	mapCmdStringToIdx[INSERT] = IDX_INSERT
-	mapCmdStringToIdx[HASH_INSERT] = IDX_HASH_INSERT
-	mapCmdStringToIdx[DELETE] = IDX_DELETE
-	mapCmdStringToIdx[HASH_DELETE] = IDX_HASH_DELETE
+	mapCmdStringToIdx[UPDATE] = TYPE_UPDATE
+	mapCmdStringToIdx[HASH_UPDATE] = TYPE_HASH_UPDATE
+	mapCmdStringToIdx[INSERT] = TYPE_INSERT
+	mapCmdStringToIdx[HASH_INSERT] = TYPE_HASH_INSERT
+	mapCmdStringToIdx[DELETE] = TYPE_DELETE
+	mapCmdStringToIdx[HASH_DELETE] = TYPE_HASH_DELETE
 }
 
 type Command struct {
+	Db        string
 	Line      int
 	Typ       int
 	StartTime string
@@ -98,9 +102,10 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	isSqlFinish := true
+	//isSqlFinish := true
 	isStartSql := false
 	startTime := ""
+	db := ""
 
 	command := Command{}
 
@@ -113,7 +118,7 @@ func main() {
 				break
 			}
 		*/
-		if len(cmds) > 50 {
+		if len(cmds) > 1000 {
 			break
 		}
 
@@ -129,47 +134,51 @@ func main() {
 			prefix = strings.ToUpper(s[:10])
 		}
 
-		if isStartSql && !isSqlFinish {
+		if isStartSql {
 			terminalType := checkCommandTerminal(s)
 			if terminalType > 0 {
-				if terminalType == IDX_TERMINAL {
+				if terminalType == TYPE_TERMINAL {
 					isStartSql = false
-					isSqlFinish = true
+					//isSqlFinish = true
 					cmds = append(cmds, command)
-					command = Command{Line: line}
+					command = Command{Line: line, Db: db}
 				} else {
 					cmds = append(cmds, command)
 					isStartSql = true
-					isSqlFinish = false
-					command = Command{Line: line, Typ: terminalType}
+					//isSqlFinish = false
+					command = Command{Line: line, Typ: terminalType, Db: db}
 					command.Sql = command.Sql + " " + strings.TrimSpace(s)
 				}
 			} else {
 				command.Sql = command.Sql + " " + strings.TrimSpace(s)
 				continue
 			}
-		}
-
-		if !isStartSql {
+		} else {
+			//if !isStartSql {
 			if strings.HasPrefix(s, TIMESTAMP) {
 				startTime = strings.ReplaceAll(strings.ReplaceAll(s, TIMESTAMP, ""), TERMINAL, "")
 			} else if len(s) > 10 {
-				cmdType := getCommandType(prefix)
-				if cmdType > 0 {
-					isStartSql = true
-					command = Command{
-						Line:      line,
-						Typ:       cmdType,
-						Sql:       s,
-						StartTime: startTime,
+				if strings.HasPrefix(strings.ToUpper(s[:3]), USE) {
+					db = strings.ReplaceAll(s[3:], TERMINAL, "")
+				} else {
+					cmdType := getCommandType(prefix)
+					if cmdType > 0 {
+						isStartSql = true
+						command = Command{
+							Db:        db,
+							Line:      line,
+							Typ:       cmdType,
+							Sql:       s,
+							StartTime: startTime,
+						}
+						//isSqlFinish = false
 					}
-					isSqlFinish = false
 				}
 			}
 		}
 	}
 
-	for _, cmd := range cmds {
-		fmt.Printf("--------------------------------- \nCommand %+v\n", cmd)
+	for idx, cmd := range cmds {
+		fmt.Printf("--------------------------------- \nCommand %d:%+v\n", idx+1, cmd)
 	}
 }
