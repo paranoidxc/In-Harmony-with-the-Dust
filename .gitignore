@@ -5,3 +5,5 @@ logs
 node_modules
 
 libraries
+go/BinLogVisual/.binlog.001585.sql.swp
+go/BinLogVisual/binlog.001585.sql
