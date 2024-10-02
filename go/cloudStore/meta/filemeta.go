@@ -1,6 +1,7 @@
 package meta
 
 import (
+	mydb "cloudStore/db"
 	"sort"
 )
 
@@ -26,9 +27,7 @@ func UpdateFileMeta(fmeta FileMeta) {
 
 // UpdateFileMetaDB : 新增/更新文件元信息到mysql中
 func UpdateFileMetaDB(fmeta FileMeta) bool {
-	return false
-	// return mydb.OnFileUploadFinished(
-	// 	fmeta.FileSha1, fmeta.FileName, fmeta.FileSize, fmeta.Location)
+	return mydb.OnFileUploadFinished(fmeta.FileSha1, fmeta.FileName, fmeta.FileSize, fmeta.Location)
 }
 
 // GetFileMeta : 通过sha1值获取文件的元信息对象
@@ -37,19 +36,19 @@ func GetFileMeta(fileSha1 string) FileMeta {
 }
 
 // GetFileMetaDB : 从mysql获取文件元信息
-// func GetFileMetaDB(fileSha1 string) (*FileMeta, error) {
-// 	tfile, err := mydb.GetFileMeta(fileSha1)
-// 	if tfile == nil || err != nil {
-// 		return nil, err
-// 	}
-// 	fmeta := FileMeta{
-// 		FileSha1: tfile.FileHash,
-// 		FileName: tfile.FileName.String,
-// 		FileSize: tfile.FileSize.Int64,
-// 		Location: tfile.FileAddr.String,
-// 	}
-// 	return &fmeta, nil
-// }
+func GetFileMetaDB(fileSha1 string) (*FileMeta, error) {
+	tfile, err := mydb.GetFileMeta(fileSha1)
+	if tfile == nil || err != nil {
+		return nil, err
+	}
+	fmeta := FileMeta{
+		FileSha1: tfile.FileHash,
+		FileName: tfile.FileName.String,
+		FileSize: tfile.FileSize.Int64,
+		Location: tfile.FileAddr.String,
+	}
+	return &fmeta, nil
+}
 
 // GetLastFileMetas : 获取批量的文件元信息列表
 func GetLastFileMetas(count int) []FileMeta {
