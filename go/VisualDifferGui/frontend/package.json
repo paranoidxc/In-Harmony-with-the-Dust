@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.2.37"
+    "highlight.js": "^11.10.0",
+    "vue": "^3.2.37",
+    "vue-diff": "^1.2.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^3.0.3",
+    "sass": "^1.79.5",
     "vite": "^3.0.7"
   }
 }

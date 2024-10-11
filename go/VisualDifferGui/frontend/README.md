@@ -6,3 +6,8 @@ check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html
 ## Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+
+
+npm install vue-diff
+npm install --save-dev sass
+npm install highlight.js

@@ -85,6 +85,8 @@ func (a *App) SelectNew(compareType bool) string {
 type CompareForJs struct {
 	Source         string
 	Dest           string
+	Old            string
+	New            string
 	Tpo            int
 	Tips           string
 	Diff           bool

@@ -64,7 +64,7 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 		pathOldFile := oldRootPath + path
 		pathNewFile := newRootPath + path
 
-		diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
+		diffStr, _, _, err := DoCompareFile(pathOldFile, pathNewFile)
 		if err != nil {
 			return nil, err
 		}
@@ -86,9 +86,11 @@ func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
 		Dest:   pathNewFile,
 	}
 
-	diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
+	diffStr, old, new, err := DoCompareFile(pathOldFile, pathNewFile)
 	if err != nil {
 	}
+	c.Old = old
+	c.New = new
 	c.SingleFileDiff = diffStr
 	c.Change = make(map[string]string)
 	c.Tpo = 0
@@ -101,21 +103,21 @@ func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
 	return c
 }
 
-func DoCompareFile(pathOldFile, pathNewFile string) (string, error) {
+func DoCompareFile(pathOldFile, pathNewFile string) (string, string, string, error) {
 	oldFile, err := GetFileInfo(pathOldFile)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	if oldFile.IsDir {
-		return "", nil
+		return "", "", "", nil
 	}
 
 	newFile, err := GetFileInfo(pathNewFile)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	if newFile.IsDir {
-		return "", nil
+		return "", "", "", nil
 	}
 
 	diff := Diff(pathOldFile, oldFile.Data, pathNewFile, newFile.Data)
@@ -124,7 +126,7 @@ func DoCompareFile(pathOldFile, pathNewFile string) (string, error) {
 	diffStr = strings.Replace(diffStr, "\r\n", "<br/>", -1)
 	diffStr = strings.Replace(diffStr, "\n", "<br/>", -1)
 
-	return diffStr, nil
+	return diffStr, string(oldFile.Data), string(newFile.Data), nil
 }
 
 // LogInfoCompare logInfo compare
