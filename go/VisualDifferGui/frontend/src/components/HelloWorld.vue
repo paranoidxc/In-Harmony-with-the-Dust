@@ -1,8 +1,13 @@
 <script setup>
 import {reactive} from 'vue'
+
 import {Greet, SelectOld, SelectOldFolder, SelectNew, MessageBox, CallCompare} from '../../wailsjs/go/main/App'
 
+
 const data = reactive({
+  lang: "plaintext",
+  prev: "",
+  current: "",
   name: "",
   compareType: false,
   picked: "false",
@@ -19,6 +24,28 @@ const data = reactive({
   compareObj: {}
 })
 
+data.prev = `var a1 = {
+  "name": "vue-diff",
+  "version": "0.0.0",
+  "description": "Vue diff viewer",
+  "private": true,
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}`;
+
+data.current = `const b2 = {
+  "name": "vue-diff",
+  "version": "1.0.0",
+  "description": "Vue diff viewer",
+  "scripts": {
+    "test": "vue-cli-service test:unit"
+    "lint": "vue-cli-service lint"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  }
+}`;
 
 function selectType(type) {
   if (type == 0) {
@@ -29,13 +56,6 @@ function selectType(type) {
 }
 
 function selectOld() {
-  /*
-  if (data.picked == "false") {
-    data.compareType = false
-  } else {
-    data.compareType = true
-  }
-  */
   SelectOld(data.compareType).then(result => {
     if (result.length) {
       data.old = result
@@ -44,14 +64,6 @@ function selectOld() {
 }
 
 function selectNew() {
-  /*
-  if (data.picked == "false") {
-    data.compareType = false
-  } else {
-    data.compareType = true
-  }
-  */
-
   SelectNew(data.compareType).then(result => {
     if (result.length) {
       data.new = result
@@ -63,6 +75,8 @@ function detailShow(key) {
   data.detail.show = true
   data.detail.title = key
   data.detail.content = data.compareObj.Change[key]
+  data.detail.prev = data.compareObj.FilesChange[key].OldFileData
+  data.detail.current = data.compareObj.FilesChange[key].NewFileData
 }
 
 function detailClose() {
@@ -83,9 +97,9 @@ function compare() {
     data.compareDisabled = false
 
     if (result.length) {
-      console.log(result)
+      //console.log(result)
       let json = eval('('+result+')')
-      console.log(json)
+      //console.log(json)
       //console.log(json.Del)
 
       /*
@@ -99,6 +113,8 @@ function compare() {
       */
 
       data.compareObj = json
+      data.prev = json.Old
+      data.current = json.New
       /*
       console.log(json.Sli)
       for(let k in json.Sli) {
@@ -291,9 +307,9 @@ function compare() {
           " :disabled=data.compareDisabled @click="compare">{{ data.compareBtnText }}</button>
             </td>
           </tr>
-
           <tr>
             <td colspan="2">
+            <!-- TD_TIP -->
               <p v-if="data.compareObj.Tips != ''" class="
             mb-2
             text-indigo-700
@@ -320,6 +336,7 @@ function compare() {
                 </table>
               </div>
 
+              <!-- TD_DIR -->
               <div v-if="data.compareObj.Tpo && data.compareObj.Diff" class="
               border border-b-none border-t-none border-gray-300
               w-full
@@ -342,7 +359,7 @@ function compare() {
                       <td class="max-w-60 truncate" :title="item"> {{ item }} </td>
                     </tr>
                     <tr class="cursor-pointer h-10  border border-gray-200 text-yellow-700 font-semibold  text-lg"
-                      @dblclick="detailShow(key)" v-for="val, key of data.compareObj.Change">
+                      @dblclick="detailShow(key)" v-for="val, key of data.compareObj.FilesChange">
                       <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
                       <td class=""> != </td>
                       <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
@@ -351,8 +368,23 @@ function compare() {
                 </table>
               </div>
 
+
               <div v-if="data.compareObj.Tpo == 0 && data.compareObj.Diff">
+				  <div class="w-full border-2 border-gray-300 rounded-md" >
+			  <!-- TD_DIFF -->
+			 <Diff
+				mode="split"
+				theme="light"
+				:language="data.lang"
+				:prev="data.prev"
+				:current="data.current"
+				input-delay="0"
+				virtual-scroll="{ height: 500, lineMinHeight: 24, delay: 100 }"
+			  />
+		 	</div>
+              <!-- TD_FILE -->
                 <div v-html="data.compareObj.SingleFileDiff" class="
+			invisible
             border-2
             w-12/12	
             text-left	
@@ -374,7 +406,7 @@ function compare() {
     </div>
 
     <!-- detail view -->
-
+    <!-- TD_DIR_FILE -->
     <div v-if="data.detail.show">
       <div class="z-50 absolute top-0 left-0 h-20 text-left inset-0 bg-white p-2 border border-10 
       border-b-gray-300
@@ -400,7 +432,19 @@ function compare() {
 
     <div v-if="data.detail.show">
       <div class="z-40 absolute bg-white top-20 left-0 w-full h-full">
-        <div v-html="data.detail.content" class="
+		<div class="border-2 border-gray-300 rounded-md m-2" >
+			<Diff
+				mode="split"
+				theme="light"
+				:language="data.lang"
+				:prev="data.detail.prev"
+				:current="data.detail.current"
+				input-delay="0"
+				virtual-scroll="{ height: 500, lineMinHeight: 24, delay: 100 }"
+			  />
+		</div>
+	  	<div v-html="data.detail.content" class="
+			invisible
             space-x-0.5
             m-2
             p-2
@@ -423,4 +467,11 @@ function compare() {
   </main>
 </template>
 
-<style scoped></style>
+<!--<style scoped></style>-->
+<style lang="scss">
+.vue-diff-theme-custom {
+  @import 'highlight.js/scss/vs2015.scss'; // import theme
+
+  background-color: #000; // Set background color
+}
+</style>

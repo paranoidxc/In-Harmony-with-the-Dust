@@ -85,6 +85,8 @@ func (a *App) SelectNew(compareType bool) string {
 type CompareForJs struct {
 	Source         string
 	Dest           string
+	Old            string
+	New            string
 	Tpo            int
 	Tips           string
 	Diff           bool
@@ -92,6 +94,7 @@ type CompareForJs struct {
 	Del            []string
 	Add            []string
 	Change         map[string]string
+	FilesChange    map[string]CompareFile
 }
 
 func (a *App) xCallCompare(oldRootPath, newRootPath string) string {
@@ -113,8 +116,8 @@ func (a *App) xCallCompare(oldRootPath, newRootPath string) string {
 
 func (a *App) CallCompare(oldRootPath, newRootPath string) string {
 	//func (a *App) xCallCompare(oldRootPath, newRootPath string) map[string]map[string]string {
-	//runtime.LogInfo(a.ctx, oldRootPath)
-	//runtime.LogInfo(a.ctx, newRootPath)
+	runtime.LogInfo(a.ctx, oldRootPath)
+	runtime.LogInfo(a.ctx, newRootPath)
 	//runtime.LogInfo(a.ctx, strconv.Itoa(compareType))
 	//var err error
 	//var changed string
@@ -155,7 +158,9 @@ func (a *App) CallCompare(oldRootPath, newRootPath string) string {
 
 	c.Source = oldRootPath
 	c.Dest = newRootPath
+
 	jsonStr, _ := json.Marshal(c)
+	runtime.LogInfo(a.ctx, string(jsonStr))
 	return string(jsonStr)
 }
 

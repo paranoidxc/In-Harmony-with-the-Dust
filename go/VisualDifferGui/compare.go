@@ -19,10 +19,17 @@ var (
 	ErrorMsg = "只能比对文件夹或者文件"
 )
 
+type CompareFile struct {
+	OldFileData    string
+	NewFileData    string
+	SingleFileDiff string
+}
+
 type Compare struct {
 	RemovedFiles []string
 	CreatedFiles []string
 	Changed      map[string]string
+	FilesChanged map[string]CompareFile
 }
 
 // DoCompareFolder compare folder
@@ -59,18 +66,24 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 	}
 
 	compare.Changed = make(map[string]string)
+	compare.FilesChanged = make(map[string]CompareFile)
 
 	for path := range sameTree {
 		pathOldFile := oldRootPath + path
 		pathNewFile := newRootPath + path
 
-		diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
+		diffStr, oldFileData, newFileData, err := DoCompareFile(pathOldFile, pathNewFile)
 		if err != nil {
 			return nil, err
 		}
 		if diffStr != "" {
 			compare.Changed[path] = diffStr
 			//compare.Changed = append(compare.Changed, diff)
+			compare.FilesChanged[path] = CompareFile{
+				OldFileData:    oldFileData,
+				NewFileData:    newFileData,
+				SingleFileDiff: diffStr,
+			}
 		}
 	}
 
@@ -86,9 +99,11 @@ func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
 		Dest:   pathNewFile,
 	}
 
-	diffStr, err := DoCompareFile(pathOldFile, pathNewFile)
+	diffStr, old, new, err := DoCompareFile(pathOldFile, pathNewFile)
 	if err != nil {
 	}
+	c.Old = old
+	c.New = new
 	c.SingleFileDiff = diffStr
 	c.Change = make(map[string]string)
 	c.Tpo = 0
@@ -101,21 +116,21 @@ func DoCompareFileWrap(pathOldFile, pathNewFile string) *CompareForJs {
 	return c
 }
 
-func DoCompareFile(pathOldFile, pathNewFile string) (string, error) {
+func DoCompareFile(pathOldFile, pathNewFile string) (string, string, string, error) {
 	oldFile, err := GetFileInfo(pathOldFile)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	if oldFile.IsDir {
-		return "", nil
+		return "", "", "", nil
 	}
 
 	newFile, err := GetFileInfo(pathNewFile)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 	if newFile.IsDir {
-		return "", nil
+		return "", "", "", nil
 	}
 
 	diff := Diff(pathOldFile, oldFile.Data, pathNewFile, newFile.Data)
@@ -124,7 +139,7 @@ func DoCompareFile(pathOldFile, pathNewFile string) (string, error) {
 	diffStr = strings.Replace(diffStr, "\r\n", "<br/>", -1)
 	diffStr = strings.Replace(diffStr, "\n", "<br/>", -1)
 
-	return diffStr, nil
+	return diffStr, string(oldFile.Data), string(newFile.Data), nil
 }
 
 // LogInfoCompare logInfo compare
@@ -135,6 +150,7 @@ func LogInfoCompare(compare *Compare) *CompareForJs {
 
 	c := CompareForJs{Tpo: 1}
 	c.Change = make(map[string]string)
+	c.FilesChange = make(map[string]CompareFile)
 	isDiff := false
 
 	if compare.RemovedFiles != nil {
@@ -170,14 +186,21 @@ func LogInfoCompare(compare *Compare) *CompareForJs {
 		//fmt.Println(Yellow + ChangedPrefix + Reset)
 		mapStr["CHANGE"] = make(map[string]string)
 		strs = append(strs, Yellow+ChangedPrefix+Reset)
-		for path, change := range compare.Changed {
-			isDiff = true
-			//fmt.Printf("%s", change)
-			changeStr := fmt.Sprintf("+ %s\n", change)
-			//strs = append(strs, fmt.Sprintf("+ %s\n", change))
-			//mapStr["CHANGE"][path] = changeStr //= append(mapStr["CHANGE"], path)
-			c.Change[path] = changeStr
-		}
+		isDiff = true
+		c.FilesChange = compare.FilesChanged
+		// for path, change := range compare.Changed {
+		// 	isDiff = true
+		// 	//fmt.Printf("%s", change)
+		// 	changeStr := fmt.Sprintf("+ %s\n", change)
+		// 	//strs = append(strs, fmt.Sprintf("+ %s\n", change))
+		// 	//mapStr["CHANGE"][path] = changeStr //= append(mapStr["CHANGE"], path)
+		// 	c.Change[path] = changeStr
+		// 	c.FilesChange[path] = CompareFile{
+		// 		OldFileData:    "",
+		// 		NewFileData:    "",
+		// 		SingleFileDiff: changeStr,
+		// 	}
+		// }
 	}
 
 	c.Diff = isDiff
