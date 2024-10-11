@@ -19,10 +19,17 @@ var (
 	ErrorMsg = "只能比对文件夹或者文件"
 )
 
+type CompareFile struct {
+	OldFileData    string
+	NewFileData    string
+	SingleFileDiff string
+}
+
 type Compare struct {
 	RemovedFiles []string
 	CreatedFiles []string
 	Changed      map[string]string
+	FilesChanged map[string]CompareFile
 }
 
 // DoCompareFolder compare folder
@@ -59,18 +66,24 @@ func DoCompareFolder(oldRootPath, newRootPath string) (*Compare, error) {
 	}
 
 	compare.Changed = make(map[string]string)
+	compare.FilesChanged = make(map[string]CompareFile)
 
 	for path := range sameTree {
 		pathOldFile := oldRootPath + path
 		pathNewFile := newRootPath + path
 
-		diffStr, _, _, err := DoCompareFile(pathOldFile, pathNewFile)
+		diffStr, oldFileData, newFileData, err := DoCompareFile(pathOldFile, pathNewFile)
 		if err != nil {
 			return nil, err
 		}
 		if diffStr != "" {
 			compare.Changed[path] = diffStr
 			//compare.Changed = append(compare.Changed, diff)
+			compare.FilesChanged[path] = CompareFile{
+				OldFileData:    oldFileData,
+				NewFileData:    newFileData,
+				SingleFileDiff: diffStr,
+			}
 		}
 	}
 
@@ -137,6 +150,7 @@ func LogInfoCompare(compare *Compare) *CompareForJs {
 
 	c := CompareForJs{Tpo: 1}
 	c.Change = make(map[string]string)
+	c.FilesChange = make(map[string]CompareFile)
 	isDiff := false
 
 	if compare.RemovedFiles != nil {
@@ -172,14 +186,21 @@ func LogInfoCompare(compare *Compare) *CompareForJs {
 		//fmt.Println(Yellow + ChangedPrefix + Reset)
 		mapStr["CHANGE"] = make(map[string]string)
 		strs = append(strs, Yellow+ChangedPrefix+Reset)
-		for path, change := range compare.Changed {
-			isDiff = true
-			//fmt.Printf("%s", change)
-			changeStr := fmt.Sprintf("+ %s\n", change)
-			//strs = append(strs, fmt.Sprintf("+ %s\n", change))
-			//mapStr["CHANGE"][path] = changeStr //= append(mapStr["CHANGE"], path)
-			c.Change[path] = changeStr
-		}
+		isDiff = true
+		c.FilesChange = compare.FilesChanged
+		// for path, change := range compare.Changed {
+		// 	isDiff = true
+		// 	//fmt.Printf("%s", change)
+		// 	changeStr := fmt.Sprintf("+ %s\n", change)
+		// 	//strs = append(strs, fmt.Sprintf("+ %s\n", change))
+		// 	//mapStr["CHANGE"][path] = changeStr //= append(mapStr["CHANGE"], path)
+		// 	c.Change[path] = changeStr
+		// 	c.FilesChange[path] = CompareFile{
+		// 		OldFileData:    "",
+		// 		NewFileData:    "",
+		// 		SingleFileDiff: changeStr,
+		// 	}
+		// }
 	}
 
 	c.Diff = isDiff

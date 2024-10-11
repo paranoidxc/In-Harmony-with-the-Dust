@@ -24,7 +24,6 @@ const data = reactive({
   compareObj: {}
 })
 
-
 data.prev = `var a1 = {
   "name": "vue-diff",
   "version": "0.0.0",
@@ -34,7 +33,6 @@ data.prev = `var a1 = {
     "vue": "^3.0.0"
   }
 }`;
-
 
 data.current = `const b2 = {
   "name": "vue-diff",
@@ -48,6 +46,7 @@ data.current = `const b2 = {
     "vue": "^3.0.0"
   }
 }`;
+
 function selectType(type) {
   if (type == 0) {
     data.compareType = false
@@ -57,13 +56,6 @@ function selectType(type) {
 }
 
 function selectOld() {
-  /*
-  if (data.picked == "false") {
-    data.compareType = false
-  } else {
-    data.compareType = true
-  }
-  */
   SelectOld(data.compareType).then(result => {
     if (result.length) {
       data.old = result
@@ -72,14 +64,6 @@ function selectOld() {
 }
 
 function selectNew() {
-  /*
-  if (data.picked == "false") {
-    data.compareType = false
-  } else {
-    data.compareType = true
-  }
-  */
-
   SelectNew(data.compareType).then(result => {
     if (result.length) {
       data.new = result
@@ -91,6 +75,8 @@ function detailShow(key) {
   data.detail.show = true
   data.detail.title = key
   data.detail.content = data.compareObj.Change[key]
+  data.detail.prev = data.compareObj.FilesChange[key].OldFileData
+  data.detail.current = data.compareObj.FilesChange[key].NewFileData
 }
 
 function detailClose() {
@@ -111,9 +97,9 @@ function compare() {
     data.compareDisabled = false
 
     if (result.length) {
-      console.log(result)
+      //console.log(result)
       let json = eval('('+result+')')
-      console.log(json)
+      //console.log(json)
       //console.log(json.Del)
 
       /*
@@ -321,24 +307,6 @@ function compare() {
           " :disabled=data.compareDisabled @click="compare">{{ data.compareBtnText }}</button>
             </td>
           </tr>
-
-          <tr>
-          <td colspan=2>
-          <!-- TD_DIFF -->
-<div class="w-full border-2 border-gray-300 rounded-md" >
-        <Diff
-            mode="split"
-            theme="light"
-            :language="data.lang"
-            :prev="data.prev"
-            :current="data.current"
-            input-delay="0"
-            virtual-scroll="{ height: 500, lineMinHeight: 24, delay: 100 }"
-          />
-</div>
-          </td>
-          </tr>
-
           <tr>
             <td colspan="2">
             <!-- TD_TIP -->
@@ -391,7 +359,7 @@ function compare() {
                       <td class="max-w-60 truncate" :title="item"> {{ item }} </td>
                     </tr>
                     <tr class="cursor-pointer h-10  border border-gray-200 text-yellow-700 font-semibold  text-lg"
-                      @dblclick="detailShow(key)" v-for="val, key of data.compareObj.Change">
+                      @dblclick="detailShow(key)" v-for="val, key of data.compareObj.FilesChange">
                       <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
                       <td class=""> != </td>
                       <td class="max-w-60 truncate" :title="key"> {{ key }} </td>
@@ -400,9 +368,23 @@ function compare() {
                 </table>
               </div>
 
-              <!-- TD_FILE -->
+
               <div v-if="data.compareObj.Tpo == 0 && data.compareObj.Diff">
+				  <div class="w-full border-2 border-gray-300 rounded-md" >
+			  <!-- TD_DIFF -->
+			 <Diff
+				mode="split"
+				theme="light"
+				:language="data.lang"
+				:prev="data.prev"
+				:current="data.current"
+				input-delay="0"
+				virtual-scroll="{ height: 500, lineMinHeight: 24, delay: 100 }"
+			  />
+		 	</div>
+              <!-- TD_FILE -->
                 <div v-html="data.compareObj.SingleFileDiff" class="
+			invisible
             border-2
             w-12/12	
             text-left	
@@ -450,7 +432,19 @@ function compare() {
 
     <div v-if="data.detail.show">
       <div class="z-40 absolute bg-white top-20 left-0 w-full h-full">
-        <div v-html="data.detail.content" class="
+		<div class="border-2 border-gray-300 rounded-md m-2" >
+			<Diff
+				mode="split"
+				theme="light"
+				:language="data.lang"
+				:prev="data.detail.prev"
+				:current="data.detail.current"
+				input-delay="0"
+				virtual-scroll="{ height: 500, lineMinHeight: 24, delay: 100 }"
+			  />
+		</div>
+	  	<div v-html="data.detail.content" class="
+			invisible
             space-x-0.5
             m-2
             p-2
