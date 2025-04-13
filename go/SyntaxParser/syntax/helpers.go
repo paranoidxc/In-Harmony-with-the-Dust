@@ -1,7 +1,7 @@
 package syntax
 
 import (
-	"log/slog"
+	//"log/slog"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -267,11 +267,11 @@ func recognizeKeywordOrConsume(keywords []string) MapWithInputFn {
 					ComputedTokens: []ComputedToken{token},
 					NextState:      state,
 				}
-				slog.Info(">>>>>>>>>>>>>>>>>>> recognizeKeywordOrConsume <<<<<<<<<<<<<<<<<<<<< ",
-					slog.Any("keyword", kw),
-					slog.Any("token", token),
-					slog.Any("result", result),
-				)
+				// slog.Info(">>>>>>>>>>>>>>>>>>> recognizeKeywordOrConsume <<<<<<<<<<<<<<<<<<<<< ",
+				// 	slog.Any("keyword", kw),
+				// 	slog.Any("token", token),
+				// 	slog.Any("result", result),
+				// )
 				return result
 			}
 		}

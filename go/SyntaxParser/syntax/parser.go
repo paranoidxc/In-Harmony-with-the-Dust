@@ -34,9 +34,9 @@ func (r Result) ShiftForward(n uint64) Result {
 	//slog.Info(">>>> ShiftForward", slog.Any("n", n))
 	if n > 0 {
 		r.NumConsumed += n
-		// for i := 0; i < len(r.ComputedTokens); i++ {
-		// 	r.ComputedTokens[i].Offset += n
-		// }
+		for i := 0; i < len(r.ComputedTokens); i++ {
+			r.ComputedTokens[i].Offset += n
+		}
 	}
 
 	//slog.Info(">>>> ShiftForward", slog.Any("shiftNum", n), slog.Any("result", r))
@@ -68,48 +68,60 @@ func (p *P) ParseAll(buf *Buf) {
 		for pos.Col < len(buf.runes[pos.Row]) {
 			result := p.runParseFunc(pos, buf, state)
 
-			// slog.Info(">>>>> runParseFunc result >>>>>",
+			// slog.Info(">>>>>>>>>>>>>>>>>>> runParseFunc result <<<<<<<<<<<<<<<<<<<",
 			// 	slog.Any("source pos", pos),
 			// 	slog.Any("result", result),
 			// )
+
+			offset := 0
+			if result.ComputedTokens != nil {
+				offset = int(result.ComputedTokens[0].Offset)
+				_, tmpNewStart := SkipNumConsumed(buf, pos, offset)
+				pos = tmpNewStart
+			}
+
 			startPos := pos
 			endPos := pos
 
-			leftNum := -1
-			numConsumed := int(result.NumConsumed)
+			numConsumed := int(result.NumConsumed) - offset
+			tmpNumConsumedEnd, tmpNumConsumedNewStart := SkipNumConsumed(buf, startPos, numConsumed)
+			endPos = tmpNumConsumedEnd
+			pos = tmpNumConsumedNewStart
 
-			for leftNum == -1 {
-				line := buf.runes[pos.Row]
-				lineLen := len(line)
-				newLineCol := (pos.Col + numConsumed)
-				if lineLen-newLineCol == 0 {
-					endPos.Col = lineLen - 1
-					pos.Col = 0
-					pos.Row += 1
-					break
-				} else if lineLen-newLineCol > 0 {
-					pos.Col += numConsumed
-					endPos.Col = pos.Col - 1
-					break
-				} else {
-					numConsumed -= (lineLen - pos.Col)
-
-					pos.Row += 1
-					pos.Col = 0
-
-					if numConsumed <= 0 {
-						endPos.Row = pos.Row - 1
-						endPos.Col = newLineCol - 1
-						break
-					}
-				}
-			}
+			//numConsumed := int(result.NumConsumed) - offset
+			// leftNum := -1
+			// for leftNum == -1 {
+			// 	line := buf.runes[pos.Row]
+			// 	lineLen := len(line)
+			// 	newLineCol := (pos.Col + numConsumed)
+			// 	if lineLen-newLineCol == 0 {
+			// 		endPos.Col = lineLen - 1
+			// 		pos.Col = 0
+			// 		pos.Row += 1
+			// 		break
+			// 	} else if lineLen-newLineCol > 0 {
+			// 		pos.Col += numConsumed
+			// 		endPos.Col = pos.Col - 1
+			// 		break
+			// 	} else {
+			// 		numConsumed -= (lineLen - pos.Col)
+			// 		pos.Row += 1
+			// 		pos.Col = 0
+			// 		endPos.Row = pos.Row
+			// 		if numConsumed <= 0 {
+			// 			endPos.Row = pos.Row - 1
+			// 			endPos.Col = newLineCol - 1
+			// 			break
+			// 		}
+			// 	}
+			// }
 
 			if result.ComputedTokens != nil {
 				slog.Info(">>>>>>>>>>>> Syntax Found <<<<<<<<<<<<",
 					slog.Any("result", result),
 					slog.Any("start pos", startPos),
 					slog.Any("end pos", endPos),
+					slog.Any("string", getBufString(buf, startPos, endPos)),
 					slog.Any("new pos", pos),
 				)
 			}
@@ -143,6 +155,64 @@ func (p *P) ParseAll(buf *Buf) {
 	//}
 	// c := concatLeafComputations(leafComputations)
 	// p.lastComputation = c
+}
+
+func SkipNumConsumed(buf *Buf, startPos Pos, numConsumed int) (endPos Pos, newStartPos Pos) {
+	leftNum := -1
+	pos := startPos
+	endPos = startPos
+	for leftNum == -1 {
+		line := buf.runes[pos.Row]
+		lineLen := len(line)
+		newLineCol := (pos.Col + numConsumed)
+		if lineLen-newLineCol == 0 {
+			endPos.Col = lineLen - 1
+			pos.Col = 0
+			pos.Row += 1
+			break
+		} else if lineLen-newLineCol > 0 {
+			pos.Col += numConsumed
+			endPos.Col = pos.Col - 1
+			break
+		} else {
+			numConsumed -= (lineLen - pos.Col)
+			pos.Row += 1
+			pos.Col = 0
+			endPos.Row = pos.Row
+			if numConsumed <= 0 {
+				endPos.Row = pos.Row - 1
+				endPos.Col = newLineCol - 1
+				break
+			}
+		}
+	}
+
+	newStartPos = pos
+	return
+}
+
+func getBufString(buf *Buf, startPos Pos, endPos Pos) string {
+	s := ""
+	startCol := startPos.Col
+	endCol := endPos.Col
+	for row := startPos.Row; row <= endPos.Row; row++ {
+		line := buf.runes[row]
+		tmp := ""
+		if row == startPos.Row && row == endPos.Row {
+			if endCol >= startCol {
+				tmp = string(line[startCol : endCol+1])
+			} else {
+				tmp = string(line[startCol:]) + "\n"
+			}
+		} else if row == startPos.Row {
+			tmp = string(line[startCol:])
+		} else if row == endPos.Row {
+			tmp = string(line[0 : endCol+1])
+		}
+		s += tmp
+	}
+
+	return s
 }
 
 func (p *P) runParseFunc(pos Pos, buf *Buf, state State) Result {

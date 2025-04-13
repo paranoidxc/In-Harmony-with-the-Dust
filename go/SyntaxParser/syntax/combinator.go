@@ -113,6 +113,8 @@ func (f Func) recoverFromFailure() Func {
 			// 	slog.Any("result", result))
 
 			if result.IsSuccess() {
+				// slog.Info("recoverFromFailure",
+				// 	slog.Any("result", result))
 				return result.ShiftForward(numSkipped)
 			}
 
