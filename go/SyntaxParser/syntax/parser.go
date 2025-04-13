@@ -7,8 +7,9 @@ import (
 type Func func(TrackingRuneIter, State) Result
 
 type Result struct {
-	NumConsumed uint64
-	NextState   State
+	NumConsumed    uint64
+	ComputedTokens []ComputedToken
+	NextState      State
 }
 
 type Pos struct {
@@ -30,12 +31,15 @@ func (r Result) IsFailure() bool {
 
 // ShiftForward shifts the result offsets forward by the specified number of positions.
 func (r Result) ShiftForward(n uint64) Result {
+	//slog.Info(">>>> ShiftForward", slog.Any("n", n))
 	if n > 0 {
 		r.NumConsumed += n
 		// for i := 0; i < len(r.ComputedTokens); i++ {
 		// 	r.ComputedTokens[i].Offset += n
 		// }
 	}
+
+	//slog.Info(">>>> ShiftForward", slog.Any("shiftNum", n), slog.Any("result", r))
 	return r
 }
 
@@ -57,12 +61,69 @@ func (p *P) ParseAll(buf *Buf) {
 	state := State(EmptyState{})
 	// leafComputations := make([]*computation, 0)
 	// n := tree.NumChars()
-	slog.Info("ParseAll")
+	slog.Info("ParseAll", slog.Any("line_count", len(buf.runes)))
 	pos := Pos{}
-	//for pos.Row <= tree.Rows {
-	//for pos.Col <= tree.RowCols {
-	p.runParseFunc(pos, buf, state)
-	//slog.Info("runParseFunc c", slog.Any("c", c))
+
+	for pos.Row < len(buf.runes) {
+		for pos.Col < len(buf.runes[pos.Row]) {
+			result := p.runParseFunc(pos, buf, state)
+
+			// slog.Info(">>>>> runParseFunc result >>>>>",
+			// 	slog.Any("source pos", pos),
+			// 	slog.Any("result", result),
+			// )
+			startPos := pos
+			endPos := pos
+
+			leftNum := -1
+			numConsumed := int(result.NumConsumed)
+
+			for leftNum == -1 {
+				line := buf.runes[pos.Row]
+				lineLen := len(line)
+				newLineCol := (pos.Col + numConsumed)
+				if lineLen-newLineCol == 0 {
+					endPos.Col = lineLen - 1
+					pos.Col = 0
+					pos.Row += 1
+					break
+				} else if lineLen-newLineCol > 0 {
+					pos.Col += numConsumed
+					endPos.Col = pos.Col - 1
+					break
+				} else {
+					numConsumed -= (lineLen - pos.Col)
+
+					pos.Row += 1
+					pos.Col = 0
+
+					if numConsumed <= 0 {
+						endPos.Row = pos.Row - 1
+						endPos.Col = newLineCol - 1
+						break
+					}
+				}
+			}
+
+			if result.ComputedTokens != nil {
+				slog.Info(">>>>>>>>>>>> Syntax Found <<<<<<<<<<<<",
+					slog.Any("result", result),
+					slog.Any("start pos", startPos),
+					slog.Any("end pos", endPos),
+					slog.Any("new pos", pos),
+				)
+			}
+
+			//slog.Info("runParseFunc new pos >>>>> ", slog.Any("new pos", pos))
+			if pos.Col == 0 {
+				break
+			}
+		}
+
+		if pos.Row < len(buf.runes) && len(buf.runes[pos.Row]) == 0 {
+			pos.Row += 1
+		}
+	}
 	//p.runParseFunc(tree, pos, state)
 	//slog.Info("break")
 	//break
@@ -84,7 +145,8 @@ func (p *P) ParseAll(buf *Buf) {
 	// p.lastComputation = c
 }
 
-func (p *P) runParseFunc(pos Pos, buf *Buf, state State) {
+func (p *P) runParseFunc(pos Pos, buf *Buf, state State) Result {
 	trackingIter := NewTrackingRuneIter(pos, buf)
-	p.parseFunc(trackingIter, state)
+	result := p.parseFunc(trackingIter, state)
+	return result
 }

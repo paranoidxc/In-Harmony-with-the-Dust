@@ -2,7 +2,7 @@ package syntax
 
 import (
 	"errors"
-	"log/slog"
+	//"log/slog"
 	"math"
 )
 
@@ -28,7 +28,7 @@ func NewTrackingRuneIter(pos Pos, buf *Buf) TrackingRuneIter {
 }
 
 func (iter *TrackingRuneIter) NextRune() (a rune, e error) {
-	slog.Info("iter NextRune")
+	//slog.Info("iter NextRune ==========")
 	if iter.curPos.Row < len(iter.buf.runes) {
 		line := iter.buf.runes[iter.curPos.Row]
 		if iter.curPos.Col < len(line) {
@@ -41,12 +41,12 @@ func (iter *TrackingRuneIter) NextRune() (a rune, e error) {
 
 	if e == nil {
 		a := iter.buf.runes[iter.curPos.Row][iter.curPos.Col]
-		slog.Info("iter NextRune", slog.Any("rune", string(a)))
+		//slog.Info("iter NextRune", slog.Any("rune", string(a)))
 		if iter.curPos.Col+1 == len(iter.buf.runes[iter.curPos.Row]) {
 			iter.curPos.Col = 0
 			iter.curPos.Row += 1
 		} else {
-			iter.curPos.Col += 0
+			iter.curPos.Col += 1
 		}
 		return a, nil
 	}
