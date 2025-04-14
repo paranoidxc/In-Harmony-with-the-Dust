@@ -14,7 +14,11 @@ func Compile(cmdExprs []CmdExpr) (*StateMachine, error) {
 	if err := validateCmdExprs(cmdExprs); err != nil {
 		return nil, err
 	}
-	return nil, nil
+	sm := &StateMachine{
+		acceptCmd:   make(map[stateId]CmdId),
+		transitions: make(map[stateId][]transition),
+	}
+	return sm, nil
 }
 
 func validateCmdExprs(cmdExprs []CmdExpr) error {
