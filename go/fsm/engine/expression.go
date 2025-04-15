@@ -15,3 +15,37 @@ type Expr interface{}
 type EventExpr struct {
 	Event Event
 }
+
+// EventRangeExpr matches any event in the range [start, end].
+// The range boundaries are inclusive.
+type EventRangeExpr struct {
+	StartEvent Event
+	EndEvent   Event
+}
+
+// ConcatExpr matches a sequence of expressions.
+type ConcatExpr struct {
+	Children []Expr
+}
+
+// AltExpr matches any of a set of expressions.
+type AltExpr struct {
+	Children []Expr
+}
+
+// OptionExpr matches a child expression or an empty input sequence.
+type OptionExpr struct {
+	Child Expr
+}
+
+// StarExpr matches zero or more repetitions of a child expression.
+type StarExpr struct {
+	Child Expr
+}
+
+// CaptureExpr includes the matched child expression in a capture with the specified ID.
+// Captures must NOT be nested.
+type CaptureExpr struct {
+	CaptureId CaptureId
+	Child     Expr
+}

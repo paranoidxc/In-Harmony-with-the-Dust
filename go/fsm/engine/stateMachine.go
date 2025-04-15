@@ -3,7 +3,7 @@ package engine
 type stateId int
 
 type StateMachine struct {
-	numStates  int
+	numStates  uint64
 	startState stateId
 
 	acceptCmd   map[stateId]CmdId
