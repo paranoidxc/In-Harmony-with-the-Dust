@@ -8,8 +8,14 @@ import (
 	"strings"
 )
 
+type pyword struct {
+	py   string
+	word string
+}
+
 var MulPy2Words map[string][]string
 var SiglePy2Words map[string][]string
+var FuzzyPy2Words map[string][]pyword
 
 func readFile(filename string) error {
 	file, err := os.Open(filename)
@@ -27,6 +33,8 @@ func readFile(filename string) error {
 			tmp := SiglePy2Words
 			if strings.Index(words[1], "'") >= 0 {
 				tmp = MulPy2Words
+				first := words[1][0:1]
+				FuzzyPy2Words[first] = append(FuzzyPy2Words[first], pyword{py: words[1], word: words[0]})
 			}
 			tmp[words[1]] = append(tmp[words[1]], words[0])
 		}
@@ -122,12 +130,17 @@ func step2(list []string) (r []string) {
 func step3(list []string) string {
 	// 模糊词查询   可能不需要
 	r := ""
-	for len(list) >= 2 {
-		listStr := strings.Join(list, "'")
-		fmt.Println("listStr", listStr)
-		// find then continue loop
-		list = list[0:(len(list) - 1)]
+	//first := []string{}
+	if len(list) > 0 {
+		//f := list[0][0:1]
 	}
+
+	// for len(list) >= 2 {
+	// 	listStr := strings.Join(list, "'")
+	// 	fmt.Println("listStr", listStr)
+	// 	// find then continue loop
+	// 	list = list[0:(len(list) - 1)]
+	// }
 
 	return r
 }
@@ -152,6 +165,9 @@ func find(input string) {
 
 		r2 := step2(matches)
 		fmt.Printf("r2: %+v\n", r2)
+
+		r3 := step3(matches)
+		fmt.Printf("r3: %+v\n", r3)
 
 		r4 := step4(matches[0])
 		fmt.Printf("r4: %s:%+v\n", matches[0], r4)
