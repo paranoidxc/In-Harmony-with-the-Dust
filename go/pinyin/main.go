@@ -58,6 +58,8 @@ func readFileWord(filename string) error {
 			tmp := SiglePy2Words
 			if strings.Index(words[1], "'") >= 0 {
 				tmp = MulPy2Words
+				first := words[1][0:1]
+				FuzzyPy2Words[first] = append(FuzzyPy2Words[first], pyword{py: words[1], word: words[0]})
 			}
 
 			tmp[words[1]] = append(tmp[words[1]], words[0])
@@ -127,22 +129,114 @@ func step2(list []string) (r []string) {
 	return r
 }
 
-func step3(list []string) string {
-	// 模糊词查询   可能不需要
-	r := ""
-	//first := []string{}
-	if len(list) > 0 {
-		//f := list[0][0:1]
+// cleanString 清理字符串，移除特殊字符
+func cleanString(s string) string {
+	// 使用正则表达式移除所有非字母数字字符（包括标点符号、空格等）
+	re := regexp.MustCompile(`[^\p{L}\p{N}]`) // 匹配非字母和非数字字符
+	return re.ReplaceAllString(s, "")
+}
+
+// fuzzyMatchManual 手动实现模糊匹配
+func fuzzyMatchManual(pattern, target string) bool {
+	cleanedTarget := cleanString(target)
+	// 按 % 分割模糊模式
+	parts := strings.Split(pattern, "%")
+
+	// 当前匹配的起始位置
+	start := 0
+
+	for _, part := range parts {
+		// 查找子串的位置
+		index := strings.Index(cleanedTarget[start:], part)
+		if index == -1 {
+			return false
+		}
+		// 更新起始位置
+		start += index + len(part)
 	}
 
-	// for len(list) >= 2 {
-	// 	listStr := strings.Join(list, "'")
-	// 	fmt.Println("listStr", listStr)
-	// 	// find then continue loop
-	// 	list = list[0:(len(list) - 1)]
-	// }
+	return true
+}
 
-	return r
+// fuzzyMatchWithQuote 限制 % 不跨越 ' 的模糊匹配
+// func fuzzyMatchWithQuote(pattern, target string) bool {
+// 	// 按 % 分割模糊模式
+// 	patternParts := strings.Split(pattern, "%")
+// 	if len(patternParts) != 2 {
+// 		return false // 模式必须包含一个 %，例如 "s%zheng"
+// 	}
+//
+// 	// 按 ' 分割目标字符串
+// 	targetParts := strings.Split(target, "'")
+// 	if len(targetParts) < 2 {
+// 		return false // 目标字符串必须包含至少一个 '
+// 	}
+//
+// 	// 匹配第一部分
+// 	if !strings.HasPrefix(targetParts[0], patternParts[0]) {
+// 		return false // 第一部分必须以模糊模式的前缀开头
+// 	}
+//
+// 	// 匹配最后一部分
+// 	if !strings.HasSuffix(targetParts[len(targetParts)-1], patternParts[1]) {
+// 		return false // 最后一部分必须以模糊模式的后缀结尾
+// 	}
+//
+// 	return true // 所有条件都满足
+// }
+
+// fuzzyMatchWithQuote 严格限制 % 不跨越 ' 的模糊匹配
+func fuzzyMatchWithQuote(pattern, target string) bool {
+	// 按 % 分割模糊模式
+	patternParts := strings.Split(pattern, "%")
+	if len(patternParts) != 2 {
+		return false // 模式必须包含一个 %，例如 "s%zheng"
+	}
+
+	// 按 ' 分割目标字符串
+	targetParts := strings.Split(target, "'")
+	if len(targetParts) < 2 {
+		return false // 目标字符串必须包含至少一个 '
+	}
+
+	// 匹配第一部分
+	if !strings.HasPrefix(targetParts[0], patternParts[0]) {
+		return false // 第一部分必须以模糊模式的前缀开头
+	}
+
+	// 匹配最后一部分
+	if !strings.HasSuffix(targetParts[len(targetParts)-1], patternParts[1]) {
+		return false // 最后一部分必须以模糊模式的后缀结尾
+	}
+
+	// 确保 % 的匹配范围不跨越多个 '
+	// 即：模糊模式的前缀和后缀之间只能有一个 '
+	if len(targetParts) > 2 {
+		return false // 如果目标字符串包含多个 '，则匹配失败
+	}
+
+	return true // 所有条件都满足
+}
+
+func step3(list []string) (r []string) {
+	fpy := ""
+	if len(list) > 0 {
+		fpy = list[0][0:1]
+	}
+
+	pattern := strings.Join(list, "%")
+	if targets, find := FuzzyPy2Words[fpy]; find {
+		//fmt.Println("targets:", targets)
+		for _, target := range targets {
+			//if fuzzyMatchManual(pattern, strings.Replace(target.py, "'", "", -1)) {
+			if fuzzyMatchWithQuote(pattern, target.py) {
+				//fmt.Printf("'%s' matches the pattern '%s'\n", target, pattern)
+				r = append(r, target.word)
+			}
+		}
+	}
+
+	return
 }
 
 func step4(pinyin string) (r []string) {
@@ -155,7 +249,17 @@ func step4(pinyin string) (r []string) {
 }
 
 func find(input string) {
-	matches, _ := py2pys(input)
+	sourceMatches, _ := py2pys(input)
+	fmt.Println(sourceMatches)
+
+	matches := []string{}
+	for _, py := range sourceMatches {
+		py = cleanString(py)
+		if len(py) > 0 {
+			matches = append(matches, py)
+		}
+	}
+
 	if len(matches) > 0 {
 		// 输出结果
 		fmt.Println(matches)
@@ -177,6 +281,7 @@ func find(input string) {
 func init() {
 	MulPy2Words = make(map[string][]string)
 	SiglePy2Words = make(map[string][]string)
+	FuzzyPy2Words = make(map[string][]pyword)
 
 	readFile("./daily.txt")
 	//fmt.Println("test:", MulPy2Words["wo'shi"])
@@ -197,7 +302,9 @@ func main() {
 			break
 		}
 
-		find(input)
+		if len(input) > 0 {
+			find(input)
+		}
 	}
 
 	// 输入字符串
