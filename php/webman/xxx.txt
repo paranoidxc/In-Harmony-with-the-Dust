@@ -1,0 +1,278 @@
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":105}]}
+{"pid":20,"tip":"config info","listen":false,"event_loop":""}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":148}]}
+{"pid":20,"tip":"[main] ----- info","windowsWithoutServerListen":false,"count process":1}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":158}]}
+{"pid":20,"tip":"[main] ----- is linux"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":162}]}
+{"pid":20,"tip":"[main] ----- start process","processName":"webman"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"worker_start","line":166},{"file":"~/webman-framework/src/support/helpers.php","func":"put_log","line":528}]}
+{"pid":20,"tips":"[main] ----- process worker_start","pocessName":"webman","config":{"handler":"app\\process\\Http","listen":"http://0.0.0.0:8787","count":1,"user":"","group":"","reusePort":false,"eventLoop":"","context":[],"constructor":{"requestClass":"support\\Request","logger":{},"appPath":"/app/app","publicPath":"/app/public"}}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":779}]}
+{"pid":20,"tip":"[main] ----- init info","pidFile":"/app/runtime/webman.pid","statusFile":"/app/runtime/webman.status","statisticsFile":"/app/runtime/webman.status","connectionsFile":"/app/runtime/webman.status.connection","logFile":"/app/runtime/logs/workerman.log"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":802}]}
+{"pid":20,"tip":"[main] ----- after call initGlobalEvent","globalEvent":null}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":813}]}
+{"pid":20,"tip":"[main] ----- before Init data for worker id","count_workers":1,"idMap":[]}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":820}]}
+{"pid":20,"tip":"[main] ----- after Init data for worker id","count_workers":1,"idMap":{"00000000000000040000000000000000":[0]}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":904}]}
+{"pid":20,"tip":"[main] ----- initWorker 初始化 process 下的主worker","worker name":"webman"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":943}]}
+{"pid":20,"tip":"[main] ----- initWorker info","reusePort":false,"listen":"called"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tip":"[----] ----- listen","scokerName":"http://0.0.0.0:8787","mainSocket":"-----------"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tip":"[----] ----- after"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tip":"[worker] ----- create mainSocket"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tip":"[worker] ----- create socker server","localSocket":"tcp://0.0.0.0:8787","errNo":0,"errMsg":"","flags":12,"transport":"tcp"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tip":"[worker] ----- Try to open keepalive for tcp and disable Nagle algorithm"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}
+{"pid":20,"tips":"[worker] ----- resumeAccept not real call"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":20,"tip":"[worker] ----- before fork","pidMap":{"00000000000000040000000000000000":[]}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":20,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0}
+-------------------
+{"pid":0,"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"[thread] ----- globalEvent","globalEvent":"Workerman\\Events\\Event"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- now run(), globalEvent->run()"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- run listen","socketName":"http://0.0.0.0:8787"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[----] ----- listen","scokerName":"http://0.0.0.0:8787","mainSocket":"-----------"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[----] ----- after"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[worker] ----- resumeAccept call","globalEvent":{}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"event.onReadable":"called","callable":{},"className":"\\Event"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- has onWorkerStart callback"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- eventLoopClass type","eventLoopClass":"Workerman\\Events\\Event"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- Fiber(callback)->start()"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[thread] ----- callback called , now call onWorkerStart(this)"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"[worker] ----- worker->onWorkerStart"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"[worker] ----- worker handler","handler":"app\\process\\Http"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"[worker] ------ bind instance","instance":{}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"-------- worker_bind","worker":{"id":0,"name":"webman","count":1,"user":"root","group":"","reloadable":true,"reusePort":false,"onWorkerStart":{},"onConnect":null,"onWebSocketConnect":null,"onWebSocketConnected":null,"onMessage":{},"onClose":null,"onError":null,"onBufferFull":null,"onBufferDrain":null,"onWorkerStop":null,"onWorkerReload":null,"transport":"tcp","connections":[],"protocol":"Workerman\\Protocols\\Http","stopping":false,"eventLoop":""},"class":{}}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"-------- instance onWorkerStart call"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":" -----------webman:onWorkerStart -------"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tips":"------ http::requestClass -------- ","className":"support\\Request"}
+-------------------
+{"dt":"2025-05-15 16:42:50","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[event] ----- run"}
+-------------------
+{"dt":"2025-05-15 16:54:06","pid":21,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}
+{"pid":21,"tip":"[worker] ----- pauseAccept set true"}
+-------------------
+{"pid":24,"tip":"config info","listen":false,"event_loop":"","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":105}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- info","windowsWithoutServerListen":false,"count process":1,"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":148}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- is linux","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":158}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- start process","processName":"webman","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":162}]}}
+ -------------------****************-------------------
+{"pid":24,"tips":"[main] ----- process worker_start","pocessName":"webman","config":{"handler":"app\\process\\Http","listen":"http://0.0.0.0:8787","count":1,"user":"","group":"","reusePort":false,"eventLoop":"","context":[],"constructor":{"requestClass":"support\\Request","logger":{},"appPath":"/app/app","publicPath":"/app/public"}},"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"worker_start","line":166},{"file":"~/webman-framework/src/support/helpers.php","func":"put_log","line":528}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- init info","pidFile":"/app/runtime/webman.pid","statusFile":"/app/runtime/webman.status","statisticsFile":"/app/runtime/webman.status","connectionsFile":"/app/runtime/webman.status.connection","logFile":"/app/runtime/logs/workerman.log","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":779}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- after call initGlobalEvent","globalEvent":null,"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":802}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- before Init data for worker id","count_workers":1,"idMap":[],"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":813}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- after Init data for worker id","count_workers":1,"idMap":{"00000000000000040000000000000000":[0]},"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":820}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- initWorker 初始化 process 下的主worker","worker name":"webman","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":904}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[main] ----- initWorker info","reusePort":false,"listen":"called","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":943}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[listen] ----- call","scokerName":"http://0.0.0.0:8787","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[listen] ----- has socketName","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[worker/listen] ----- create mainSocket","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[worker] ----- create socker server","localSocket":"tcp://0.0.0.0:8787","errNo":0,"errMsg":"","flags":12,"transport":"tcp","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[worker] ----- Try to open keepalive for tcp and disable Nagle algorithm","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tips":"[worker] ----- resumeAccept not real call","trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":24,"tip":"[worker] ----- before fork","pidMap":{"00000000000000040000000000000000":[]},"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0,"trace":{"dt":"2025-05-15 16:55:02","pid":24,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":0,"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0,"trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"[thread] ----- globalEvent","globalEvent":"Workerman\\Events\\Event","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- now run(), globalEvent->run()","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- run listen","socketName":"http://0.0.0.0:8787","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[listen] ----- call","scokerName":"http://0.0.0.0:8787","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[listen] ----- has socketName","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[worker] ----- resumeAccept call","globalEvent":{},"trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"event.onReadable":"called","callable":{},"className":"\\Event","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- has onWorkerStart callback","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- eventLoopClass type","eventLoopClass":"Workerman\\Events\\Event","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- Fiber(callback)->start()","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[thread] ----- callback called , now call onWorkerStart(this)","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"[worker] ----- worker->onWorkerStart","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"[worker] ----- worker handler","handler":"app\\process\\Http","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"[worker] ------ bind instance","instance":{},"trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"-------- worker_bind","worker":{"id":0,"name":"webman","count":1,"user":"root","group":"","reloadable":true,"reusePort":false,"onWorkerStart":{},"onConnect":null,"onWebSocketConnect":null,"onWebSocketConnected":null,"onMessage":{},"onClose":null,"onError":null,"onBufferFull":null,"onBufferDrain":null,"onWorkerStop":null,"onWorkerReload":null,"transport":"tcp","connections":[],"protocol":"Workerman\\Protocols\\Http","stopping":false,"eventLoop":""},"class":{},"trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"-------- instance onWorkerStart call","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":" -----------webman:onWorkerStart -------","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tips":"------ http::requestClass -------- ","className":"support\\Request","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[event] ----- run","trace":{"dt":"2025-05-15 16:55:02","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":25,"tip":"[worker] ----- pauseAccept set true","trace":{"dt":"2025-05-15 16:56:41","pid":25,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"config info","listen":false,"event_loop":""},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":105}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- info","windowsWithoutServerListen":false,"count process":1},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":148}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- is linux"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":158}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- start process","processName":"webman"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"put_log","line":162}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tips":"[main] ----- process worker_start","pocessName":"webman","config":{"handler":"app\\process\\Http","listen":"http://0.0.0.0:8787","count":1,"user":"","group":"","reusePort":false,"eventLoop":"","context":[],"constructor":{"requestClass":"support\\Request","logger":{},"appPath":"/app/app","publicPath":"/app/public"}}},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"worker_start","line":166},{"file":"~/webman-framework/src/support/helpers.php","func":"put_log","line":528}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- init info","pidFile":"/app/runtime/webman.pid","statusFile":"/app/runtime/webman.status","statisticsFile":"/app/runtime/webman.status","connectionsFile":"/app/runtime/webman.status.connection","logFile":"/app/runtime/logs/workerman.log"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":779}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- after call initGlobalEvent","globalEvent":null},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":802}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- before Init data for worker id","count_workers":1,"idMap":[]},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":813}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- after Init data for worker id","count_workers":1,"idMap":{"00000000000000040000000000000000":[0]}},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"init","line":603},{"file":"~/workerman/src/Worker.php","func":"put_log","line":820}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- initWorker 初始化 process 下的主worker","worker name":"webman"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":904}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[main] ----- initWorker info","reusePort":false,"listen":"called"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"put_log","line":943}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[listen] ----- call","scokerName":"http://0.0.0.0:8787"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[listen] ----- has socketName"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[worker/listen] ----- create mainSocket"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[worker] ----- create socker server","localSocket":"tcp://0.0.0.0:8787","errNo":0,"errMsg":"","flags":12,"transport":"tcp"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[worker] ----- Try to open keepalive for tcp and disable Nagle algorithm"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tips":"[worker] ----- resumeAccept not real call"},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"initWorkers","line":616},{"file":"~/workerman/src/Worker.php","func":"listen","line":950}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tip":"[worker] ----- before fork","pidMap":{"00000000000000040000000000000000":[]}},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":26,"out":{"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0,"pid":27},"trace":{"dt":"2025-05-15 16:56:42","pid":26,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"[worker] ----- forkOne ","workerId":"00000000000000040000000000000000","id":0,"pid":0},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"[thread] ----- globalEvent","globalEvent":"Workerman\\Events\\Event"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- now run(), globalEvent->run()"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- run listen","socketName":"http://0.0.0.0:8787"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[listen] ----- call","scokerName":"http://0.0.0.0:8787"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[listen] ----- has socketName"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[worker] ----- resumeAccept call","globalEvent":{}},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"event.onReadable":"called","callable":{},"className":"\\Event"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- has onWorkerStart callback"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- eventLoopClass type","eventLoopClass":"Workerman\\Events\\Event"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- Fiber(callback)->start()"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[thread] ----- callback called , now call onWorkerStart(this)"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"[worker] ----- worker->onWorkerStart"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"[worker] ----- worker handler","handler":"app\\process\\Http"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"[worker] ------ bind instance","instance":{}},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"-------- worker_bind","worker":{"id":0,"name":"webman","count":1,"user":"root","group":"","reloadable":true,"reusePort":false,"onWorkerStart":{},"onConnect":null,"onWebSocketConnect":null,"onWebSocketConnected":null,"onMessage":{},"onClose":null,"onError":null,"onBufferFull":null,"onBufferDrain":null,"onWorkerStop":null,"onWorkerReload":null,"transport":"tcp","connections":[],"protocol":"Workerman\\Protocols\\Http","stopping":false,"eventLoop":""},"class":{}},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"-------- instance onWorkerStart call"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":" -----------webman:onWorkerStart -------"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tips":"------ http::requestClass -------- ","className":"support\\Request"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------
+{"pid":27,"out":{"tip":"[event] ----- run"},"trace":{"dt":"2025-05-15 16:56:42","pid":27,"call":[{"file":"/app/start.php","func":"run","line":5},{"file":"~/webman-framework/src/support/App.php","func":"runAll","line":184},{"file":"~/workerman/src/Worker.php","func":"forkWorkers","line":626},{"file":"~/workerman/src/Worker.php","func":"forkWorkersForLinux","line":1602}]}}
+ -------------------****************-------------------

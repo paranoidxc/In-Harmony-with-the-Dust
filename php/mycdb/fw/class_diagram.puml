@@ -1,0 +1,162 @@
+@startuml MyCDB类关系图
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam classFontSize 14
+skinparam classBackgroundColor LightBlue
+skinparam classBorderColor DarkBlue
+skinparam arrowColor DarkBlue
+skinparam arrowThickness 1.5
+skinparam packageBackgroundColor LightGray
+skinparam packageBorderColor Gray
+
+title MyCDB框架类关系图
+
+package "核心类" {
+  abstract class CModel {
+    #_errors: array
+    #_validators: array
+    #_scenario: string
+    +getScenario(): string
+    +setScenario(value: string): void
+    +setAttributes(values: array, safeOnly: bool): void
+  }
+  
+  abstract class CActiveRecord {
+    +{static} $db: CDbConnection
+    -_new: bool
+    -_attributes: array
+    -_pk: mixed
+    -_alias: string
+    +{abstract} tableName(): string
+    +{static} model(className: string): CActiveRecord
+    +primaryKey(): mixed
+    +getIsNewRecord(): bool
+    +setIsNewRecord(value: bool): void
+    +getDbConnection(): CDbConnection
+    +getCommandBuilder(): CDbCommandBuilder
+    +count(condition: mixed, params: array): int
+    +find(condition: mixed, params: array): CActiveRecord
+    +findAll(condition: mixed, params: array): array
+  }
+  
+  class CDbConnection {
+    +connectionString: string
+    +username: string
+    +password: string
+    +driverMap: array
+    +pdoClass: string
+    -_attributes: array
+    -_active: bool
+    -_pdo: PDO
+    -_schema: CDbSchema
+    +init(): void
+    +setActive(value: bool): void
+    #open(): void
+    +getPdoInstance(): PDO
+    #createPdoInstance(): PDO
+    #initConnection(pdo: PDO): void
+    +getSchema(): CDbSchema
+    +createCommand(query: string): CDbCommand
+    +getPdoType(type: string): int
+  }
+  
+  class CDbCommand {
+    +params: array
+    -_connection: CDbConnection
+    -_text: string
+    -_statement: PDOStatement
+    -_paramLog: array
+    -_query: string
+    -_fetchMode: array
+    +__construct(connection: CDbConnection, query: string)
+    +getConnection(): CDbConnection
+    +queryScalar(params: array): mixed
+    +queryAll(fetchAssociative: bool, params: array): array
+    +queryRow(fetchAssociative: bool, params: array): array
+  }
+  
+  class CDbSchema {
+    +columnTypes: array
+    -_tableNames: array
+    -_tables: array
+    -_connection: CDbConnection
+    -_builder: CDbCommandBuilder
+    -_cacheExclude: array
+    +__construct(conn: CDbConnection)
+    +getDbConnection(): CDbConnection
+    +getCommandBuilder(): CDbCommandBuilder
+    #createCommandBuilder(): CDbCommandBuilder
+    +quoteTableName(name: string): string
+    +quoteSimpleTableName(name: string): string
+  }
+  
+  class CDbCommandBuilder {
+    -_schema: CDbSchema
+    -_connection: CDbConnection
+    +__construct(schema: CDbSchema)
+    +createCriteria(condition: mixed, params: array): CDbCriteria
+    +createPkCriteria(table: mixed, pk: mixed, condition: string, params: array, prefix: string): CDbCriteria
+    +createInCondition(table: mixed, columnName: mixed, values: array, prefix: string): string
+  }
+  
+  class CDbCriteria {
+    +select: string
+    +distinct: bool
+    +condition: string
+    +params: array
+    +limit: int
+    +offset: int
+    +order: string
+    +group: string
+    +join: string
+    +having: string
+    +with: mixed
+    +alias: string
+    +addCondition(condition: mixed, operator: string): CDbCriteria
+    +addSearchCondition(column: string, keyword: string, escape: bool, operator: string, like: string): CDbCriteria
+  }
+  
+  class CMysqlSchema {
+    +quoteSimpleTableName(name: string): string
+  }
+  
+  class YiiBase {
+    -_app: CApplication
+    +{static} app(): CApplication
+    +{static} createComponent(config: mixed): object
+  }
+}
+
+package "应用类" {
+  class Student {
+    +primaryKey: string
+    +rawName: string
+    +primaryKey(): string
+    +tableName(): string
+    +getColumnsName(): array
+    +getColumn(name: string): string
+  }
+  
+  class YzgUser {
+  }
+  
+  class CApplication {
+  }
+}
+
+' CModel <|-- CActiveRecord
+CActiveRecord <|-- Student
+CActiveRecord <|-- YzgUser
+CDbSchema <|-- CMysqlSchema
+
+CDbConnection "1" *-- "1" CDbSchema : contains >
+CDbConnection "1" o-- "*" CDbCommand : creates >
+CDbSchema "1" *-- "1" CDbCommandBuilder : contains >
+CActiveRecord "*" o-- "1" CDbConnection : uses >
+CActiveRecord ..> CDbCommandBuilder : uses >
+CDbCommandBuilder ..> CDbCriteria : creates >
+CDbCommand "*" o-- "1" CDbConnection : belongs to >
+YiiBase "1" *-- "1" CApplication : contains >
+
+@enduml

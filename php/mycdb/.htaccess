@@ -1,0 +1,19 @@
+# rewrite
+<IfModule mod_rewrite.c>
+RewriteEngine On
+#RewriteBase /
+RewriteRule ^index\.php$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.php [L]
+</IfModule>
+# gzip
+<ifmodule mod_deflate.c>
+AddOutputFilter DEFLATE html xml php js css
+</ifmodule>
+# cache
+<ifmodule mod_headers.c>
+  <FilesMatch ".(js|css|txt|jpg|jpeg|png|gif|swf|woff2|woff)$">
+    Header set Cache-Control "max-age=259200"
+  </FilesMatch>
+</ifmodule>
