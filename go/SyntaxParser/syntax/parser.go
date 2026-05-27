@@ -1,13 +1,10 @@
 package syntax
 
-import (
-	"log/slog"
-)
-
 type Func func(TrackingRuneIter, State) Result
 
 type Result struct {
 	NumConsumed    uint64
+	ReadLength     uint64
 	ComputedTokens []ComputedToken
 	NextState      State
 }
@@ -19,204 +16,248 @@ type Pos struct {
 
 var FailedResult = Result{}
 
-// IsSuccess returns whether the parse succeeded.
 func (r Result) IsSuccess() bool {
 	return r.NumConsumed > 0
 }
 
-// IsFailure returns whether the parse failed.
 func (r Result) IsFailure() bool {
 	return !r.IsSuccess()
 }
 
-// ShiftForward shifts the result offsets forward by the specified number of positions.
 func (r Result) ShiftForward(n uint64) Result {
-	//slog.Info(">>>> ShiftForward", slog.Any("n", n))
 	if n > 0 {
 		r.NumConsumed += n
 		for i := 0; i < len(r.ComputedTokens); i++ {
 			r.ComputedTokens[i].Offset += n
 		}
 	}
-
-	//slog.Info(">>>> ShiftForward", slog.Any("shiftNum", n), slog.Any("result", r))
 	return r
 }
 
+type computation struct {
+	readLength     uint64
+	consumedLength uint64
+	startState     State
+	endState       State
+	tokens         []ComputedToken
+}
+
+type Edit struct {
+	Offset      uint64
+	NumInserted uint64
+	NumDeleted  uint64
+}
+
 type P struct {
-	parseFunc Func
-	//lastComputation *computation
+	parseFunc    Func
+	computations []computation
 }
 
 func New(f Func) *P {
-	// This ensures that the parse func always makes progress.
 	f = f.recoverFromFailure()
 	return &P{parseFunc: f}
 }
 
-// ParseAll parses the entire document.
-// func (p *P) ParseAll(buf *mgr.Buf) {
+const minInitialConsumedLen = 1024
+
 func (p *P) ParseAll(buf *Buf) {
-	// var prevComputation *computation
 	state := State(EmptyState{})
-	// leafComputations := make([]*computation, 0)
-	// n := tree.NumChars()
-	slog.Info("ParseAll", slog.Any("line_count", len(buf.runes)))
-	pos := Pos{}
+	var totalOffset uint64
+	pos := Pos{Row: 0, Col: 0}
+	n := totalChars(buf)
 
-	for pos.Row < len(buf.runes) {
-		for pos.Col < len(buf.runes[pos.Row]) {
-			result := p.runParseFunc(pos, buf, state)
+	p.computations = p.computations[:0]
 
-			// slog.Info(">>>>>>>>>>>>>>>>>>> runParseFunc result <<<<<<<<<<<<<<<<<<<",
-			// 	slog.Any("source pos", pos),
-			// 	slog.Any("result", result),
-			// )
-
-			offset := 0
-			if result.ComputedTokens != nil {
-				offset = int(result.ComputedTokens[0].Offset)
-				_, tmpNewStart := SkipNumConsumed(buf, pos, offset)
-				pos = tmpNewStart
-			}
-
-			startPos := pos
-			endPos := pos
-
-			numConsumed := int(result.NumConsumed) - offset
-			tmpNumConsumedEnd, tmpNumConsumedNewStart := SkipNumConsumed(buf, startPos, numConsumed)
-			endPos = tmpNumConsumedEnd
-			pos = tmpNumConsumedNewStart
-
-			//numConsumed := int(result.NumConsumed) - offset
-			// leftNum := -1
-			// for leftNum == -1 {
-			// 	line := buf.runes[pos.Row]
-			// 	lineLen := len(line)
-			// 	newLineCol := (pos.Col + numConsumed)
-			// 	if lineLen-newLineCol == 0 {
-			// 		endPos.Col = lineLen - 1
-			// 		pos.Col = 0
-			// 		pos.Row += 1
-			// 		break
-			// 	} else if lineLen-newLineCol > 0 {
-			// 		pos.Col += numConsumed
-			// 		endPos.Col = pos.Col - 1
-			// 		break
-			// 	} else {
-			// 		numConsumed -= (lineLen - pos.Col)
-			// 		pos.Row += 1
-			// 		pos.Col = 0
-			// 		endPos.Row = pos.Row
-			// 		if numConsumed <= 0 {
-			// 			endPos.Row = pos.Row - 1
-			// 			endPos.Col = newLineCol - 1
-			// 			break
-			// 		}
-			// 	}
-			// }
-
-			if result.ComputedTokens != nil {
-				slog.Info(">>>>>>>>>>>> Syntax Found <<<<<<<<<<<<",
-					slog.Any("result", result),
-					slog.Any("start pos", startPos),
-					slog.Any("end pos", endPos),
-					slog.Any("string", getBufString(buf, startPos, endPos)),
-					slog.Any("new pos", pos),
-				)
-			}
-
-			//slog.Info("runParseFunc new pos >>>>> ", slog.Any("new pos", pos))
-			if pos.Col == 0 {
-				break
-			}
-		}
-
-		if pos.Row < len(buf.runes) && len(buf.runes[pos.Row]) == 0 {
-			pos.Row += 1
-		}
-	}
-	//p.runParseFunc(tree, pos, state)
-	//slog.Info("break")
-	//break
-	//}
-	//break
-	// 	pos += c.ConsumedLength()
-	// 	state = c.EndState()
-	//
-	// 	if prevComputation != nil && prevComputation.ConsumedLength() < minInitialConsumedLen {
-	// 		// For the initial parse, combine small leaves. This saves memory by reducing both
-	// 		// the number of leaves and parent nodes we need to allocate.
-	// 		combineLeaves(prevComputation, c)
-	// 	} else {
-	// 		leafComputations = append(leafComputations, c)
-	// 		prevComputation = c
-	// 	}
-	//}
-	// c := concatLeafComputations(leafComputations)
-	// p.lastComputation = c
-}
-
-func SkipNumConsumed(buf *Buf, startPos Pos, numConsumed int) (endPos Pos, newStartPos Pos) {
-	leftNum := -1
-	pos := startPos
-	endPos = startPos
-	for leftNum == -1 {
-		line := buf.runes[pos.Row]
-		lineLen := len(line)
-		newLineCol := (pos.Col + numConsumed)
-		if lineLen-newLineCol == 0 {
-			endPos.Col = lineLen - 1
-			pos.Col = 0
-			pos.Row += 1
+	for totalOffset < n {
+		result := p.runParseFunc(pos, buf, state)
+		if result.NumConsumed == 0 {
 			break
-		} else if lineLen-newLineCol > 0 {
-			pos.Col += numConsumed
-			endPos.Col = pos.Col - 1
-			break
-		} else {
-			numConsumed -= (lineLen - pos.Col)
-			pos.Row += 1
-			pos.Col = 0
-			endPos.Row = pos.Row
-			if numConsumed <= 0 {
-				endPos.Row = pos.Row - 1
-				endPos.Col = newLineCol - 1
-				break
-			}
 		}
-	}
 
-	newStartPos = pos
-	return
-}
+		c := computation{
+			readLength:     result.ReadLength,
+			consumedLength: result.NumConsumed,
+			startState:     state,
+			endState:       result.NextState,
+			tokens:         result.ComputedTokens,
+		}
 
-func getBufString(buf *Buf, startPos Pos, endPos Pos) string {
-	s := ""
-	startCol := startPos.Col
-	endCol := endPos.Col
-	for row := startPos.Row; row <= endPos.Row; row++ {
-		line := buf.runes[row]
-		tmp := ""
-		if row == startPos.Row && row == endPos.Row {
-			if endCol >= startCol {
-				tmp = string(line[startCol : endCol+1])
+		if len(p.computations) > 0 {
+			last := &p.computations[len(p.computations)-1]
+			if last.consumedLength < minInitialConsumedLen {
+				for _, tok := range c.tokens {
+					last.tokens = append(last.tokens, ComputedToken{
+						Offset: last.consumedLength + tok.Offset,
+						Length: tok.Length,
+						Role:   tok.Role,
+					})
+				}
+				readLength := last.consumedLength + c.readLength
+				if readLength > last.readLength {
+					last.readLength = readLength
+				}
+				last.consumedLength += c.consumedLength
+				last.endState = c.endState
 			} else {
-				tmp = string(line[startCol:]) + "\n"
+				p.computations = append(p.computations, c)
 			}
-		} else if row == startPos.Row {
-			tmp = string(line[startCol:])
-		} else if row == endPos.Row {
-			tmp = string(line[0 : endCol+1])
+		} else {
+			p.computations = append(p.computations, c)
 		}
-		s += tmp
+
+		totalOffset += result.NumConsumed
+		state = result.NextState
+		pos = advancePos(buf, pos, result.NumConsumed)
+	}
+}
+
+// Tokens returns all tokens with absolute offsets from the document start.
+func (p *P) Tokens() []ComputedToken {
+	var tokens []ComputedToken
+	var offset uint64
+	for _, c := range p.computations {
+		for _, tok := range c.tokens {
+			tokens = append(tokens, ComputedToken{
+				Offset: offset + tok.Offset,
+				Length: tok.Length,
+				Role:   tok.Role,
+			})
+		}
+		offset += c.consumedLength
+	}
+	return tokens
+}
+
+func (p *P) ParseAfterEdit(buf *Buf, edit Edit) {
+	oldComputations := append([]computation(nil), p.computations...)
+	oldOffsetByIndex := make([]uint64, len(oldComputations))
+	var oldOffset uint64
+	for i, c := range oldComputations {
+		oldOffsetByIndex[i] = oldOffset
+		oldOffset += c.consumedLength
 	}
 
-	return s
+	p.computations = p.computations[:0]
+	state := State(EmptyState{})
+	pos := Pos{Row: 0, Col: 0}
+	var totalOffset uint64
+	n := totalChars(buf)
+
+	for totalOffset < n {
+		if c, ok := reusableComputation(oldComputations, oldOffsetByIndex, edit, totalOffset, state); ok {
+			p.computations = append(p.computations, c)
+			totalOffset += c.consumedLength
+			state = c.endState
+			pos = advancePos(buf, pos, c.consumedLength)
+			continue
+		}
+
+		result := p.runParseFunc(pos, buf, state)
+		if result.NumConsumed == 0 {
+			break
+		}
+
+		c := computation{
+			readLength:     result.ReadLength,
+			consumedLength: result.NumConsumed,
+			startState:     state,
+			endState:       result.NextState,
+			tokens:         result.ComputedTokens,
+		}
+		p.computations = append(p.computations, c)
+		totalOffset += result.NumConsumed
+		state = result.NextState
+		pos = advancePos(buf, pos, result.NumConsumed)
+	}
+}
+
+func reusableComputation(computations []computation, offsets []uint64, edit Edit, newOffset uint64, state State) (computation, bool) {
+	oldOffset, ok := oldOffsetAfterEdit(edit, newOffset)
+	if !ok {
+		return computation{}, false
+	}
+
+	for i, c := range computations {
+		if offsets[i] != oldOffset || c.startState != state {
+			continue
+		}
+		if computationOverlapsEdit(offsets[i], c, edit) {
+			return computation{}, false
+		}
+		return c, true
+	}
+	return computation{}, false
+}
+
+func oldOffsetAfterEdit(edit Edit, newOffset uint64) (uint64, bool) {
+	if newOffset < edit.Offset {
+		return newOffset, true
+	}
+	if newOffset < edit.Offset+edit.NumInserted {
+		return 0, false
+	}
+	return newOffset - edit.NumInserted + edit.NumDeleted, true
+}
+
+func computationOverlapsEdit(offset uint64, c computation, edit Edit) bool {
+	readEnd := offset + c.readLength
+	deleteEnd := edit.Offset + edit.NumDeleted
+	if edit.NumDeleted > 0 && offset < deleteEnd && readEnd > edit.Offset {
+		return true
+	}
+	if edit.NumInserted > 0 && offset < edit.Offset && readEnd > edit.Offset {
+		return true
+	}
+	return false
 }
 
 func (p *P) runParseFunc(pos Pos, buf *Buf, state State) Result {
 	trackingIter := NewTrackingRuneIter(pos, buf)
 	result := p.parseFunc(trackingIter, state)
+	result.ReadLength = trackingIter.MaxRead()
+	if result.ReadLength < result.NumConsumed {
+		result.ReadLength = result.NumConsumed
+	}
 	return result
+}
+
+func totalChars(buf *Buf) uint64 {
+	if len(buf.runes) == 0 {
+		return 0
+	}
+
+	var n uint64
+	for _, line := range buf.runes {
+		n += uint64(len(line))
+	}
+	return n + uint64(len(buf.runes)-1)
+}
+
+func advancePos(buf *Buf, pos Pos, n uint64) Pos {
+	row := pos.Row
+	col := pos.Col
+	remaining := n
+
+	for remaining > 0 && row < len(buf.runes) {
+		lineLen := len(buf.runes[row])
+		if col < lineLen {
+			available := uint64(lineLen - col)
+			if remaining <= available {
+				col += int(remaining)
+				break
+			}
+			remaining -= available
+			col = lineLen
+		}
+
+		if remaining > 0 {
+			if row >= len(buf.runes)-1 {
+				break
+			}
+			remaining--
+			row++
+			col = 0
+		}
+	}
+	return Pos{Row: row, Col: col}
 }

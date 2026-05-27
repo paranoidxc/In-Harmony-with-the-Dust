@@ -2,15 +2,12 @@ package syntax
 
 import (
 	"errors"
-	//"log/slog"
 	"math"
 )
 
 type TrackingRuneIter struct {
 	buf     *Buf
-	pos     Pos
 	curPos  Pos
-	eof     bool
 	limit   uint64
 	numRead uint64
 	maxRead *uint64
@@ -19,7 +16,6 @@ type TrackingRuneIter struct {
 func NewTrackingRuneIter(pos Pos, buf *Buf) TrackingRuneIter {
 	var maxRead uint64
 	return TrackingRuneIter{
-		pos:     pos,
 		curPos:  pos,
 		buf:     buf,
 		limit:   math.MaxUint64,
@@ -28,31 +24,28 @@ func NewTrackingRuneIter(pos Pos, buf *Buf) TrackingRuneIter {
 }
 
 func (iter *TrackingRuneIter) NextRune() (a rune, e error) {
-	//slog.Info("iter NextRune ==========")
-	if iter.curPos.Row < len(iter.buf.runes) {
-		line := iter.buf.runes[iter.curPos.Row]
-		if iter.curPos.Col < len(line) {
-		} else {
-			e = errors.New("eof1")
-		}
-	} else {
-		e = errors.New("eof2")
+	if iter.numRead >= iter.limit || iter.curPos.Row >= len(iter.buf.runes) {
+		return 0, errors.New("eof")
 	}
 
-	if e == nil {
-		a := iter.buf.runes[iter.curPos.Row][iter.curPos.Col]
-		//slog.Info("iter NextRune", slog.Any("rune", string(a)))
-		if iter.curPos.Col+1 == len(iter.buf.runes[iter.curPos.Row]) {
-			iter.curPos.Col = 0
-			iter.curPos.Row += 1
-		} else {
-			iter.curPos.Col += 1
-		}
-		return a, nil
+	line := iter.buf.runes[iter.curPos.Row]
+	switch {
+	case iter.curPos.Col < len(line):
+		a = line[iter.curPos.Col]
+		iter.curPos.Col++
+	case iter.curPos.Col == len(line) && iter.curPos.Row < len(iter.buf.runes)-1:
+		a = '\n'
+		iter.curPos.Row++
+		iter.curPos.Col = 0
+	default:
+		return 0, errors.New("eof")
 	}
 
-	e = errors.New("eof")
-	return
+	iter.numRead++
+	if iter.maxRead != nil && iter.numRead > *iter.maxRead {
+		*iter.maxRead = iter.numRead
+	}
+	return a, nil
 }
 
 func (iter *TrackingRuneIter) Skip(n uint64) uint64 {
@@ -65,7 +58,14 @@ func (iter *TrackingRuneIter) Skip(n uint64) uint64 {
 	return n
 }
 
+func (iter *TrackingRuneIter) MaxRead() uint64 {
+	if iter.maxRead == nil {
+		return iter.numRead
+	}
+	return *iter.maxRead
+}
+
 // Limit sets the maximum number of runes this reader can produce.
 func (iter *TrackingRuneIter) Limit(n uint64) {
-	iter.limit = n
+	iter.limit = iter.numRead + n
 }

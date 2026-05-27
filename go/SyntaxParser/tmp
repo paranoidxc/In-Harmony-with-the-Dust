@@ -1,0 +1,21 @@
+参考 sytax_doc.md syntax_all.md,
+todo list
+    1.已完成 （请把 parser.go 中的 ParseAll 写完，ParseAll 是对整个文件进行文档高亮分析的操作,可以用更简单的方式 需要合并节点，但是不需要用到 leftChild，rightChild，prevComputation 这种方式（用切片的方式），
+并写好测试用例）
+    2. 追加 编辑，删除，添加文档的情况下，写一个新的 ParseXXX 函数来分析增量的高亮分析功能（需要复用ParseAll原来分析出来的结果）
+
+
+
+
+参考 sytax_doc.md syntax_all.md, 请把 parser.go 中的 ParseAll 写完 （你已经调整过了，请继续 parser_test.go 的测试）
+
+
+claude --resume fae1dfa4-518a-4590-bc28-17f33784bb9a
+
+# test
+cd /Users/xc/projects/In-Harmony-with-the-Dust/go/SyntaxParser
+go test ./...
+如果只跑 syntax 包：
+go test ./syntax
+如果想看每个测试名：
+go test -v ./syntax

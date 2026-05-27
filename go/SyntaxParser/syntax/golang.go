@@ -58,6 +58,7 @@ func golangOperatorParseFunc() Func {
 		"/", "<<", "/=", "<<=", "++", "=", ":=",
 		"%", ">>", "%=", ">>=", "--", "!",
 		"&^", "&^=", "~",
+		"(", ")", "[", "]", "{", "}", ",", ";", ":",
 	}).Map(recognizeToken(TokenRoleOperator))
 }
 

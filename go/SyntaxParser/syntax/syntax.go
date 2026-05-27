@@ -28,7 +28,6 @@ func init() {
 	languageToParseFunc = map[Language]Func{
 		LanguagePlaintext: nil,
 		LanguageGo:        GolangParseFunc(),
-		//LanguagePHP:       languages.PHPParseFunc(),
 	}
 
 	for language := range languageToParseFunc {
@@ -37,7 +36,6 @@ func init() {
 }
 
 func ParserForLanguage(language Language) *P {
-	//parseFunc := languageToParseFunc[language]
 	parseFunc := languageToParseFunc[LanguageGo]
 	if parseFunc == nil {
 		return nil
