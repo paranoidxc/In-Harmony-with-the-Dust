@@ -11,25 +11,27 @@ import (
 
 type Edit struct {
 	widget.BaseWidget
-	text        string
-	readOnly    bool
-	focused     bool
-	selecting   bool
-	caret       int
-	anchor      int
-	scrollX     int
-	caretOn     bool
-	lastBlink   time.Time
-	composition string
-	compStart   int
-	compLength  int
-	onChange    func(string)
+	text         string
+	readOnly     bool
+	frameVisible bool
+	focused      bool
+	selecting    bool
+	caret        int
+	anchor       int
+	scrollX      int
+	caretOn      bool
+	lastBlink    time.Time
+	composition  string
+	compStart    int
+	compLength   int
+	onChange     func(string)
 }
 
 func NewEdit(id string, bounds geom.Rect) *Edit {
 	return &Edit{
-		BaseWidget: widget.NewBase(id, bounds),
-		caretOn:    true,
+		BaseWidget:   widget.NewBase(id, bounds),
+		caretOn:      true,
+		frameVisible: true,
 	}
 }
 
@@ -53,14 +55,20 @@ func (e *Edit) OnChange(fn func(string)) {
 	e.onChange = fn
 }
 
+func (e *Edit) SetFrameVisible(visible bool) {
+	e.frameVisible = visible
+}
+
 func (e *Edit) Paint(ctx PaintContext) error {
 	if !e.Visible() {
 		return nil
 	}
 
 	rect := ctx.BoundsFor(e)
-	ctx.Canvas.FillRect(rect, ctx.Theme.Colors.Face)
-	ctx.Canvas.DrawDoubleBevel(rect, ctx.Theme.Colors.Shadow, ctx.Theme.Colors.Lightest, ctx.Theme.Colors.DarkShadow, ctx.Theme.Colors.Light)
+	if e.frameVisible {
+		ctx.Canvas.FillRect(rect, ctx.Theme.Colors.Face)
+		ctx.Canvas.DrawDoubleBevel(rect, ctx.Theme.Colors.Shadow, ctx.Theme.Colors.Lightest, ctx.Theme.Colors.DarkShadow, ctx.Theme.Colors.Light)
+	}
 
 	content := e.contentRect(rect)
 	ctx.Canvas.FillRect(content, ctx.Theme.Colors.Window)
@@ -347,6 +355,9 @@ func (e *Edit) localCaretRect(measure func(string) geom.Size, lineHeight int) ge
 }
 
 func (e *Edit) contentRect(rect geom.Rect) geom.Rect {
+	if !e.frameVisible {
+		return rect
+	}
 	return geom.Rect{
 		X: rect.X + 2,
 		Y: rect.Y + 2,

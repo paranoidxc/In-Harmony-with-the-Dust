@@ -40,6 +40,37 @@ type WheelHandler interface {
 	MouseWheel(EventContext, event.MouseWheel, geom.Point) bool
 }
 
+type OverlayPlacement int
+
+const (
+	OverlayBelowStart OverlayPlacement = iota
+	OverlayRightTop
+)
+
+type OverlayRequest struct {
+	Owner          Control
+	Content        Control
+	Anchor         geom.Rect
+	Placement      OverlayPlacement
+	CloseOnOutside bool
+	OnClose        func()
+}
+
+type OverlayContext interface {
+	ShowOverlay(OverlayRequest) bool
+	HideOverlay(Control) bool
+	OverlayVisible(Control) bool
+}
+
+type TooltipInfo struct {
+	Text   string
+	Anchor geom.Rect
+}
+
+type TooltipProvider interface {
+	TooltipAt(local geom.Point, measure func(string) geom.Size) TooltipInfo
+}
+
 type FocusHandler interface {
 	FocusGained(EventContext)
 	FocusLost(EventContext)

@@ -11,17 +11,20 @@ type ListBox struct {
 	items         []string
 	selected      int
 	topIndex      int
+	pressedIndex  int
 	focused       bool
 	rowHeight     int
 	scrollbarSize int
 	scrollbar     *ScrollBar
 	onChange      func(int, string)
+	onActivate    func(int, string)
 }
 
 func NewListBox(id string, bounds geom.Rect) *ListBox {
 	list := &ListBox{
 		BaseWidget:    widget.NewBase(id, bounds),
 		selected:      -1,
+		pressedIndex:  -1,
 		rowHeight:     16,
 		scrollbarSize: 16,
 	}
@@ -54,8 +57,20 @@ func (l *ListBox) SelectedIndex() int {
 	return l.selected
 }
 
+func (l *ListBox) SetSelectedIndex(index int) {
+	l.setSelectedIndex(index, true)
+}
+
+func (l *ListBox) SetSelectedIndexSilent(index int) {
+	l.setSelectedIndex(index, false)
+}
+
 func (l *ListBox) OnChange(fn func(int, string)) {
 	l.onChange = fn
+}
+
+func (l *ListBox) OnActivate(fn func(int, string)) {
+	l.onActivate = fn
 }
 
 func (l *ListBox) Paint(ctx PaintContext) error {
@@ -63,7 +78,11 @@ func (l *ListBox) Paint(ctx PaintContext) error {
 		return nil
 	}
 
-	l.rowHeight = maxInt(ctx.Text.LineHeight()+2, 16)
+	lineHeight := 14
+	if ctx.Text != nil {
+		lineHeight = ctx.Text.LineHeight()
+	}
+	l.rowHeight = maxInt(lineHeight+2, 16)
 	l.scrollbarSize = maxInt(ctx.Theme.Metrics.ScrollbarSize, 16)
 	l.syncScrollBar()
 
@@ -87,11 +106,13 @@ func (l *ListBox) Paint(ctx PaintContext) error {
 		}
 		if index == l.selected {
 			ctx.Canvas.FillRect(itemRect, ctx.Theme.Colors.Highlight)
-			if err := ctx.Text.DrawString(ctx.Canvas, geom.Point{X: itemRect.X + 2, Y: itemRect.Y + 1}, l.items[index], ctx.Theme.Colors.HighlightText); err != nil {
-				ctx.Canvas.PopClip()
-				return err
+			if ctx.Text != nil {
+				if err := ctx.Text.DrawString(ctx.Canvas, geom.Point{X: itemRect.X + 2, Y: itemRect.Y + 1}, l.items[index], ctx.Theme.Colors.HighlightText); err != nil {
+					ctx.Canvas.PopClip()
+					return err
+				}
 			}
-		} else {
+		} else if ctx.Text != nil {
 			if err := ctx.Text.DrawString(ctx.Canvas, geom.Point{X: itemRect.X + 2, Y: itemRect.Y + 1}, l.items[index], ctx.Theme.Colors.WindowText); err != nil {
 				ctx.Canvas.PopClip()
 				return err
@@ -131,7 +152,8 @@ func (l *ListBox) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local g
 	}
 	row := (local.Y - itemsRect.Y) / l.rowHeight
 	index := l.topIndex + row
-	l.selectIndex(index)
+	l.pressedIndex = index
+	l.setSelectedIndex(index, true)
 	ctx.Invalidate(l)
 }
 
@@ -140,7 +162,18 @@ func (l *ListBox) MouseUp(ctx EventContext, ev event.MouseButtonEvent, local geo
 		l.scrollbar.MouseUp(ctx, ev, geom.Point{X: local.X - l.scrollbar.Bounds().X, Y: local.Y - l.scrollbar.Bounds().Y})
 		l.topIndex = l.scrollbar.Value()
 		ctx.Invalidate(l)
+		l.pressedIndex = -1
+		return
 	}
+	itemsRect := l.itemsRect(LocalRect(l))
+	if itemsRect.Contains(local) {
+		row := (local.Y - itemsRect.Y) / l.rowHeight
+		index := l.topIndex + row
+		if index == l.pressedIndex && index >= 0 && index < len(l.items) && l.onActivate != nil {
+			l.onActivate(index, l.items[index])
+		}
+	}
+	l.pressedIndex = -1
 }
 
 func (l *ListBox) MouseWheel(ctx EventContext, ev event.MouseWheel, _ geom.Point) bool {
@@ -190,7 +223,7 @@ func (l *ListBox) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 		return false
 	}
 
-	l.selectIndex(next)
+	l.setSelectedIndex(next, true)
 	l.ensureVisible(l.selected)
 	l.scrollbar.SetValue(l.topIndex)
 	ctx.Invalidate(l)
@@ -253,8 +286,15 @@ func (l *ListBox) ensureVisible(index int) {
 	l.topIndex = clampInt(l.topIndex, 0, l.maxTopIndex())
 }
 
-func (l *ListBox) selectIndex(index int) {
+func (l *ListBox) setSelectedIndex(index int, notify bool) {
 	if len(l.items) == 0 {
+		l.selected = -1
+		return
+	}
+	if index < 0 {
+		if l.selected == -1 {
+			return
+		}
 		l.selected = -1
 		return
 	}
@@ -264,7 +304,7 @@ func (l *ListBox) selectIndex(index int) {
 	}
 	l.selected = index
 	l.ensureVisible(index)
-	if l.onChange != nil {
+	if notify && l.onChange != nil {
 		l.onChange(index, l.items[index])
 	}
 }

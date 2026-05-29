@@ -10,6 +10,7 @@ import (
 type Button struct {
 	widget.BaseWidget
 	text      string
+	tooltip   string
 	focused   bool
 	hot       bool
 	pressed   bool
@@ -31,6 +32,10 @@ func (b *Button) SetText(text string) {
 
 func (b *Button) Text() string {
 	return b.text
+}
+
+func (b *Button) SetTooltip(text string) {
+	b.tooltip = text
 }
 
 func (b *Button) SetDefault(isDefault bool) {
@@ -172,6 +177,13 @@ func (b *Button) SetFocused(focused bool) {
 
 func (b *Button) Focused() bool {
 	return b.focused
+}
+
+func (b *Button) TooltipAt(geom.Point, func(string) geom.Size) TooltipInfo {
+	return TooltipInfo{
+		Text:   b.tooltip,
+		Anchor: LocalRect(b),
+	}
 }
 
 func (b *Button) fireClick() {

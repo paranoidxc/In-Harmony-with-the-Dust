@@ -9,6 +9,7 @@ import (
 type ToolbarItem struct {
 	ID        CommandID
 	Text      string
+	Tooltip   string
 	Checked   bool
 	Disabled  bool
 	Separator bool
@@ -224,6 +225,25 @@ func (t *Toolbar) KeyDown(EventContext, event.KeyEvent) bool { return false }
 func (t *Toolbar) CanFocus() bool                            { return false }
 func (t *Toolbar) SetFocused(bool)                           {}
 func (t *Toolbar) Focused() bool                             { return false }
+
+func (t *Toolbar) TooltipAt(local geom.Point, measure func(string) geom.Size) TooltipInfo {
+	index := t.hitIndex(local, measure)
+	if index < 0 || index >= len(t.items) {
+		return TooltipInfo{}
+	}
+	item := t.items[index]
+	if item == nil || item.Separator {
+		return TooltipInfo{}
+	}
+	text := item.Tooltip
+	if text == "" {
+		text = item.Text
+	}
+	return TooltipInfo{
+		Text:   text,
+		Anchor: t.itemRect(index, measure),
+	}
+}
 
 func (t *Toolbar) isPressed(index int) bool {
 	if index < 0 || index >= len(t.items) {

@@ -32,6 +32,7 @@ type Desktop struct {
 
 	hoveredWindow  *Window
 	hoveredControl widgets.Control
+	pointerPos     geom.Point
 
 	focusedWindow  *Window
 	focusedControl widgets.Control
@@ -39,9 +40,24 @@ type Desktop struct {
 	captureWindow  *Window
 	captureControl widgets.Control
 
+	hoveredOverlay        *controlOverlayState
+	hoveredOverlayControl widgets.Control
+	focusedOverlay        *controlOverlayState
+	focusedOverlayControl widgets.Control
+	captureOverlay        *controlOverlayState
+	captureOverlayControl widgets.Control
+
+	overlays       []desktopOverlay
 	menuWindow     *Window
 	menuPopups     []*popupMenuState
 	commandHandler func(*Window, widgets.CommandID)
+
+	tooltipWindow  *Window
+	tooltipControl widgets.Control
+	tooltipText    string
+	tooltipAnchor  geom.Rect
+	tooltipDue     time.Time
+	tooltipOverlay *tooltipOverlayState
 }
 
 type dragState struct {
@@ -140,10 +156,11 @@ func (d *Desktop) Paint(canvas *paint.Canvas, tr *uitext.Renderer) error {
 			return err
 		}
 	}
-	return d.paintMenuOverlays(canvas)
+	return d.paintOverlays(canvas)
 }
 
 func (d *Desktop) Update(now time.Time) {
+	d.updateTooltip(now)
 	if d.focusedControl == nil || d.focusedWindow == nil {
 		d.syncTextInputState()
 		return
@@ -191,11 +208,19 @@ func (d *Desktop) HandleEvent(evt event.Event) {
 }
 
 func (d *Desktop) handleMouseMove(p geom.Point) {
+	d.pointerPos = p
 	if d.handleMenuMouseMove(p) {
+		d.clearTooltip()
+		return
+	}
+	if d.handleControlOverlayMouseMove(p) {
+		d.setHoveredControl(nil, nil)
+		d.clearTooltip()
 		return
 	}
 
 	if d.drag != nil {
+		d.clearTooltip()
 		oldBounds := d.drag.window.Bounds()
 		next := d.drag.startBounds.Move(p.X-d.drag.startPointer.X, p.Y-d.drag.startPointer.Y)
 		if next != oldBounds {
@@ -207,11 +232,13 @@ func (d *Desktop) handleMouseMove(p geom.Point) {
 	}
 
 	if d.captureControl != nil && d.captureWindow != nil {
+		d.clearTooltip()
 		d.captureControl.MouseMove(d.contextFor(d.captureWindow), d.captureWindow.ControlLocalPoint(d.captureControl, p, d.theme))
 		return
 	}
 
 	if d.anyClosePressed() {
+		d.clearTooltip()
 		d.updateCloseHotState(p)
 		return
 	}
@@ -219,19 +246,39 @@ func (d *Desktop) handleMouseMove(p geom.Point) {
 	win, _ := d.windowAt(p)
 	if win == nil || win.HitTest(p, d.theme) != HitClient {
 		d.setHoveredControl(nil, nil)
+		d.clearTooltip()
 		return
 	}
 
 	control := win.ControlAt(p, d.theme)
 	d.setHoveredControl(win, control)
 	if control != nil {
-		control.MouseMove(d.contextFor(win), win.ControlLocalPoint(control, p, d.theme))
+		local := win.ControlLocalPoint(control, p, d.theme)
+		control.MouseMove(d.contextFor(win), local)
+		d.noteTooltipTarget(win, control, local, time.Now())
+		return
 	}
+	d.clearTooltip()
 }
 
 func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
+	d.pointerPos = e.Position
+	d.clearTooltip()
 	if d.handleMenuMouseDown(e.Position) {
 		return
+	}
+	if closed, handled := d.handleControlOverlayMouseDown(e); handled {
+		d.setHoveredControl(nil, nil)
+		return
+	} else if closed != nil {
+		win, _ := d.windowAt(e.Position)
+		if win != nil && win.HitTest(e.Position, d.theme) == HitClient {
+			control := win.ControlAt(e.Position, d.theme)
+			if control == closed.owner {
+				d.setHoveredControl(nil, nil)
+				return
+			}
+		}
 	}
 
 	win, _ := d.windowAt(e.Position)
@@ -276,7 +323,13 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 }
 
 func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
+	d.pointerPos = e.Position
+	d.clearTooltip()
 	if d.handleMenuMouseUp(e.Position) {
+		return
+	}
+	if d.handleControlOverlayMouseUp(e) {
+		d.setHoveredControl(nil, nil)
 		return
 	}
 
@@ -309,6 +362,11 @@ func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 }
 
 func (d *Desktop) handleMouseWheel(e event.MouseWheel) {
+	d.pointerPos = e.Position
+	d.clearTooltip()
+	if d.handleControlOverlayMouseWheel(e) {
+		return
+	}
 	win, _ := d.windowAt(e.Position)
 	if win == nil || win.HitTest(e.Position, d.theme) != HitClient {
 		return
@@ -325,6 +383,7 @@ func (d *Desktop) handleMouseWheel(e event.MouseWheel) {
 }
 
 func (d *Desktop) handleKeyDown(e event.KeyEvent) {
+	d.clearTooltip()
 	active := d.activeWindow()
 	if active == nil {
 		return
@@ -333,9 +392,7 @@ func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 	if d.handleMenuKeyDown(active, e) {
 		return
 	}
-
-	if e.Key == event.KeyTab && !e.Repeat {
-		d.cycleFocus(active, e.Modifiers&event.ModShift != 0)
+	if d.handleControlOverlayKeyDown(e) {
 		return
 	}
 
@@ -343,6 +400,11 @@ func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 		if d.focusedControl.KeyDown(d.contextFor(active), e) {
 			return
 		}
+	}
+
+	if e.Key == event.KeyTab && !e.Repeat {
+		d.cycleFocus(active, e.Modifiers&event.ModShift != 0)
+		return
 	}
 
 	if d.dispatchAccelerator(active, e) {
@@ -537,6 +599,12 @@ func (d *Desktop) clearStateForWindow(win *Window) {
 	if d.menuWindow == win {
 		d.closeMenus()
 	}
+	for i := len(d.overlays) - 1; i >= 0; i-- {
+		overlay, ok := d.overlays[i].(*controlOverlayState)
+		if ok && overlay.ownerWindow == win {
+			d.dismissControlOverlay(overlay, true)
+		}
+	}
 	if d.drag != nil && d.drag.window == win {
 		d.drag = nil
 	}
@@ -549,6 +617,9 @@ func (d *Desktop) clearStateForWindow(win *Window) {
 	if d.captureWindow == win {
 		d.captureWindow = nil
 		d.captureControl = nil
+	}
+	if d.tooltipWindow == win {
+		d.clearTooltip()
 	}
 }
 
@@ -645,4 +716,19 @@ func (c controlContext) LineHeight() int {
 		return 0
 	}
 	return c.desktop.text.LineHeight()
+}
+
+func (c controlContext) ShowOverlay(request widgets.OverlayRequest) bool {
+	if c.window == nil {
+		return false
+	}
+	return c.desktop.showControlOverlay(c.window, request)
+}
+
+func (c controlContext) HideOverlay(owner widgets.Control) bool {
+	return c.desktop.hideControlOverlay(owner, true)
+}
+
+func (c controlContext) OverlayVisible(owner widgets.Control) bool {
+	return c.desktop.overlayVisible(owner)
 }

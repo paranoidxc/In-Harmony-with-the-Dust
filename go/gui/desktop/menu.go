@@ -37,17 +37,16 @@ func (p *popupMenuState) itemAt(point geom.Point) int {
 	return -1
 }
 
-func (d *Desktop) BindCommandHandler(handler func(*Window, widgets.CommandID)) {
-	d.commandHandler = handler
+func (p *popupMenuState) Bounds() geom.Rect {
+	return p.rect
 }
 
-func (d *Desktop) paintMenuOverlays(canvas *paint.Canvas) error {
-	for _, popup := range d.menuPopups {
-		if err := d.paintPopupMenu(canvas, popup); err != nil {
-			return err
-		}
-	}
-	return nil
+func (p *popupMenuState) Paint(d *Desktop, canvas *paint.Canvas) error {
+	return d.paintPopupMenu(canvas, p)
+}
+
+func (d *Desktop) BindCommandHandler(handler func(*Window, widgets.CommandID)) {
+	d.commandHandler = handler
 }
 
 func (d *Desktop) handleMenuMouseMove(point geom.Point) bool {
@@ -319,7 +318,7 @@ func (d *Desktop) openCurrentTopLevelPopup() {
 
 	popup := d.buildPopupMenu(item.Submenu, d.menuWindow.MenuBarItemRect(index, d.theme, d.text), false)
 	d.menuPopups = append(d.menuPopups, popup)
-	d.InvalidateRect(popup.rect)
+	d.pushOverlay(popup)
 }
 
 func (d *Desktop) openSubmenu(level int, anchorRect geom.Rect, menu *widgets.Menu) {
@@ -338,7 +337,7 @@ func (d *Desktop) openSubmenu(level int, anchorRect geom.Rect, menu *widgets.Men
 
 	d.trimPopupStack(level + 1)
 	d.menuPopups = append(d.menuPopups, popup)
-	d.InvalidateRect(popup.rect)
+	d.pushOverlay(popup)
 }
 
 func (d *Desktop) movePopupSelection(delta int) {
@@ -427,7 +426,7 @@ func (d *Desktop) closeMenus() {
 	}
 
 	for _, popup := range d.menuPopups {
-		d.InvalidateRect(popup.rect)
+		d.removeOverlay(popup)
 	}
 
 	d.menuWindow = nil
@@ -444,7 +443,7 @@ func (d *Desktop) trimPopupStack(keep int) {
 	}
 
 	for _, popup := range d.menuPopups[keep:] {
-		d.InvalidateRect(popup.rect)
+		d.removeOverlay(popup)
 	}
 	d.menuPopups = d.menuPopups[:keep]
 }
@@ -523,7 +522,11 @@ func (d *Desktop) buildPopupMenu(menu *widgets.Menu, anchorRect geom.Rect, subme
 	width = max(width, 96)
 	height = max(height+2, rowHeight+4)
 
-	origin := d.fitPopupOrigin(anchorRect, geom.Size{W: width, H: height}, submenu)
+	placement := widgets.OverlayBelowStart
+	if submenu {
+		placement = widgets.OverlayRightTop
+	}
+	origin := d.fitOverlayOrigin(anchorRect, geom.Size{W: width, H: height}, placement)
 	popup := &popupMenuState{
 		menu:     menu,
 		rect:     geom.Rect{X: origin.X, Y: origin.Y, W: width, H: height},
@@ -549,33 +552,6 @@ func (d *Desktop) buildPopupMenu(menu *widgets.Menu, anchorRect geom.Rect, subme
 	}
 
 	return popup
-}
-
-func (d *Desktop) fitPopupOrigin(anchorRect geom.Rect, size geom.Size, submenu bool) geom.Point {
-	x := anchorRect.X
-	y := anchorRect.Bottom() - 1
-	if submenu {
-		x = anchorRect.Right() - 3
-		y = anchorRect.Y - 3
-	}
-
-	if submenu && x+size.W > d.bounds.Right() {
-		x = anchorRect.X - size.W + 3
-	}
-	if x+size.W > d.bounds.Right() {
-		x = d.bounds.Right() - size.W
-	}
-	if y+size.H > d.bounds.Bottom() {
-		y = d.bounds.Bottom() - size.H
-	}
-	if x < d.bounds.X {
-		x = d.bounds.X
-	}
-	if y < d.bounds.Y {
-		y = d.bounds.Y
-	}
-
-	return geom.Point{X: x, Y: y}
 }
 
 func (d *Desktop) paintPopupMenu(canvas *paint.Canvas, popup *popupMenuState) error {

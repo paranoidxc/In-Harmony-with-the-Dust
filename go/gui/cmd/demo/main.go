@@ -41,19 +41,25 @@ func main() {
 
 	toolbarSortByName := widgets.NewToolbarButton(cmdSortByName, "By Name")
 	toolbarSortByName.Checked = true
+	toolbarSortByName.Tooltip = "按名称排序"
 	toolbarSortByLength := widgets.NewToolbarButton(cmdSortByLength, "By Length")
+	toolbarSortByLength.Tooltip = "按名称长度排序"
+	toolbarAddPath := widgets.NewToolbarButton(cmdAddPath, "Add Path")
+	toolbarAddPath.Tooltip = "把输入框内容添加到列表"
+	toolbarAbout := widgets.NewToolbarButton(cmdAbout, "About")
+	toolbarAbout.Tooltip = "查看当前阶段说明"
 	toolbar := widgets.NewToolbar("toolbar", classicui.Rect{
 		X: 14,
 		Y: 12,
 		W: 392,
 		H: 28,
 	},
-		widgets.NewToolbarButton(cmdAddPath, "Add Path"),
+		toolbarAddPath,
 		widgets.NewToolbarSeparator(),
 		toolbarSortByName,
 		toolbarSortByLength,
 		widgets.NewToolbarSeparator(),
-		widgets.NewToolbarButton(cmdAbout, "About"),
+		toolbarAbout,
 	)
 
 	title := widgets.NewLabel("intro", "菜单、工具栏和状态栏共用同一套命令。", classicui.Rect{
@@ -103,34 +109,43 @@ func main() {
 
 	add := widgets.NewButton("add", "添加", classicui.Rect{
 		X: 208,
-		Y: 154,
+		Y: 146,
 		W: 76,
 		H: 24,
 	})
 	closeBtn := widgets.NewButton("cancel", "关闭", classicui.Rect{
 		X: 292,
-		Y: 154,
+		Y: 146,
 		W: 76,
 		H: 24,
 	})
 	sortNameBtn := widgets.NewButton("sortName", "按名称", classicui.Rect{
 		X: 10,
-		Y: 44,
-		W: 88,
-		H: 24,
-	})
-	sortLengthBtn := widgets.NewButton("sortLength", "按长度", classicui.Rect{
-		X: 104,
-		Y: 44,
-		W: 88,
-		H: 24,
-	})
-	aboutBtn := widgets.NewButton("about", "关于", classicui.Rect{
-		X: 10,
 		Y: 78,
 		W: 88,
 		H: 24,
 	})
+	aboutBtn := widgets.NewButton("about", "关于", classicui.Rect{
+		X: 104,
+		Y: 78,
+		W: 88,
+		H: 24,
+	})
+	sortModeLabel := widgets.NewLabel("sortModeLabel", "排序方式：", classicui.Rect{
+		X: 10,
+		Y: 44,
+		W: 72,
+		H: 18,
+	})
+	sortCombo := widgets.NewComboBox("sortCombo", classicui.Rect{
+		X: 76,
+		Y: 40,
+		W: 146,
+		H: 24,
+	})
+	sortCombo.SetItems([]string{"按名称", "按长度"})
+	sortCombo.SetEditable(true)
+	sortCombo.SetTooltip("用下拉框切换排序命令")
 	info1 := widgets.NewLabel("info1", "TabControl 是 Phase 4 的下一步。", classicui.Rect{
 		X: 10,
 		Y: 12,
@@ -157,8 +172,9 @@ func main() {
 	browsePage.Add(closeBtn)
 	commandsPage := widgets.NewPanel("commandsPage", classicui.Rect{})
 	commandsPage.Add(info1)
+	commandsPage.Add(sortModeLabel)
+	commandsPage.Add(sortCombo)
 	commandsPage.Add(sortNameBtn)
-	commandsPage.Add(sortLengthBtn)
 	commandsPage.Add(aboutBtn)
 	commandsPage.Add(info2)
 	commandsPage.Add(info3)
@@ -227,6 +243,11 @@ func main() {
 		sortByLengthItem.Checked = cmd == cmdSortByLength
 		toolbar.SetChecked(cmdSortByName, cmd == cmdSortByName)
 		toolbar.SetChecked(cmdSortByLength, cmd == cmdSortByLength)
+		if cmd == cmdSortByLength {
+			sortCombo.SetSelectedIndexSilent(1)
+		} else {
+			sortCombo.SetSelectedIndexSilent(0)
+		}
 		switch cmd {
 		case cmdSortByLength:
 			sort.SliceStable(items, func(i, j int) bool {
@@ -296,12 +317,24 @@ func main() {
 	sortNameBtn.OnClick(func() {
 		runCommand(cmdSortByName)
 	})
-	sortLengthBtn.OnClick(func() {
-		runCommand(cmdSortByLength)
-	})
 	aboutBtn.OnClick(func() {
 		runCommand(cmdAbout)
 	})
+	sortCombo.OnCommit(func(index int, _ string) {
+		if index < 0 {
+			updateStatus("请输入“按名称”或“按长度”后再提交。")
+			return
+		}
+		if index == 1 {
+			runCommand(cmdSortByLength)
+			return
+		}
+		runCommand(cmdSortByName)
+	})
+	add.SetTooltip("把当前路径加入列表")
+	closeBtn.SetTooltip("关闭当前演示窗口")
+	sortNameBtn.SetTooltip("触发按名称排序命令")
+	aboutBtn.SetTooltip("在状态栏显示阶段说明")
 
 	win.Content().Add(title)
 	win.Content().Add(toolbar)

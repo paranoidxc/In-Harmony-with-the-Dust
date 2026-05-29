@@ -14,6 +14,8 @@ type fakeContext struct {
 	releaseCapture int
 	clipboard      string
 	commands       []CommandID
+	overlay        *OverlayRequest
+	overlayOwner   Control
 }
 
 func (f *fakeContext) Invalidate(Control) {
@@ -53,6 +55,28 @@ func (f *fakeContext) MeasureText(text string) geom.Size {
 
 func (f *fakeContext) LineHeight() int {
 	return 14
+}
+
+func (f *fakeContext) ShowOverlay(request OverlayRequest) bool {
+	f.overlay = &request
+	f.overlayOwner = request.Owner
+	return true
+}
+
+func (f *fakeContext) HideOverlay(owner Control) bool {
+	if f.overlayOwner != owner {
+		return false
+	}
+	if f.overlay != nil && f.overlay.OnClose != nil {
+		f.overlay.OnClose()
+	}
+	f.overlay = nil
+	f.overlayOwner = nil
+	return true
+}
+
+func (f *fakeContext) OverlayVisible(owner Control) bool {
+	return f.overlayOwner == owner && f.overlay != nil
 }
 
 func TestButtonMouseCaptureAndClick(t *testing.T) {
