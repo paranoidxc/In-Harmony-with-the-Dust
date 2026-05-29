@@ -65,6 +65,62 @@ func TestTreeViewMouseToggleExpanderAndSelection(t *testing.T) {
 	}
 }
 
+func TestTreeViewCtrlClickTogglesMultiSelection(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	child1Rect := geom.Rect{X: 3, Y: 18, W: 160, H: tree.rowHeight}
+	child1Click := geom.Point{X: tree.iconRect(child1Rect, 1).Right() + 6, Y: child1Rect.Y + child1Rect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, child1Click)
+
+	child2Rect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	child2Click := geom.Point{X: tree.iconRect(child2Rect, 1).Right() + 6, Y: child2Rect.Y + child2Rect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, child2Click)
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 {
+		t.Fatalf("selected nodes = %d, want 3", len(selected))
+	}
+	if selected[1].Text != "Child 1" || selected[2].Text != "Child 2" {
+		t.Fatalf("selected order = [%s %s %s], want Root/Child 1/Child 2", selected[0].Text, selected[1].Text, selected[2].Text)
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 2" {
+		t.Fatalf("lead selection = %#v, want Child 2", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewShiftClickSelectsVisibleRange(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	firstRect := geom.Rect{X: 3, Y: 18, W: 160, H: tree.rowHeight}
+	firstClick := geom.Point{X: tree.iconRect(firstRect, 1).Right() + 6, Y: firstRect.Y + firstRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, firstClick)
+
+	lastRect := geom.Rect{X: 3, Y: 50, W: 160, H: tree.rowHeight}
+	lastClick := geom.Point{X: tree.iconRect(lastRect, 1).Right() + 6, Y: lastRect.Y + lastRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModShift}, lastClick)
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 {
+		t.Fatalf("selected nodes = %d, want 3", len(selected))
+	}
+	if selected[0].Text != "Child 1" || selected[1].Text != "Child 2" || selected[2].Text != "Child 3" {
+		t.Fatalf("selected order = [%s %s %s], want Child 1..3", selected[0].Text, selected[1].Text, selected[2].Text)
+	}
+}
+
 func TestTreeViewCollapseMovesSelectionToCollapsedAncestor(t *testing.T) {
 	child := NewTreeNode("Child")
 	root := NewTreeNode("Root", child)
@@ -91,6 +147,74 @@ func TestTreeViewSelectingHiddenNodeExpandsAncestors(t *testing.T) {
 	}
 	if !root.Expanded {
 		t.Fatal("selecting hidden descendant should expand its ancestors")
+	}
+}
+
+func TestTreeViewKeyboardShiftExtendsSelection(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	tree.SetSelectedNode(root.Children[0])
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyDown, Modifiers: event.ModShift}) {
+		t.Fatal("shift+down should be handled")
+	}
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyDown, Modifiers: event.ModShift}) {
+		t.Fatal("second shift+down should be handled")
+	}
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 {
+		t.Fatalf("selected nodes = %d, want 3", len(selected))
+	}
+	if selected[0].Text != "Child 1" || selected[2].Text != "Child 3" {
+		t.Fatalf("selected range = [%s ... %s], want Child 1..3", selected[0].Text, selected[2].Text)
+	}
+}
+
+func TestTreeViewCtrlSpaceTogglesLeadSelection(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	tree.toggleSelection(root.Children[0])
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeySpace, Modifiers: event.ModCtrl}) {
+		t.Fatal("ctrl+space should be handled")
+	}
+	selected := tree.SelectedNodes()
+	if len(selected) != 1 || selected[0] != root {
+		t.Fatalf("selected after ctrl+space = %#v, want only root", selected)
+	}
+}
+
+func TestTreeViewCtrlASelectsAllVisibleNodes(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFolderNode("Collapsed", NewFileNode("Hidden.txt")),
+		NewFileNode("Visible.txt"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyA, Modifiers: event.ModCtrl}) {
+		t.Fatal("ctrl+a should be handled")
+	}
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 {
+		t.Fatalf("selected nodes = %d, want 3 visible nodes", len(selected))
+	}
+	if selected[0].Text != "Root" || selected[1].Text != "Collapsed" || selected[2].Text != "Visible.txt" {
+		t.Fatalf("selected order = [%s %s %s], want only visible nodes", selected[0].Text, selected[1].Text, selected[2].Text)
 	}
 }
 
@@ -314,7 +438,7 @@ func TestTreeViewInlineRenameCommit(t *testing.T) {
 		t.Fatal("begin rename should show inline edit")
 	}
 
-	if !tree.TextInput(ctx, event.TextInput{Text: "Notes.txt"}) {
+	if !tree.TextInput(ctx, event.TextInput{Text: "Notes"}) {
 		t.Fatal("text input should be forwarded to inline edit")
 	}
 	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyEnter}) {
@@ -352,6 +476,57 @@ func TestTreeViewInlineRenameCancel(t *testing.T) {
 	}
 }
 
+func TestTreeViewInlineRenameSelectsFileStemOnly(t *testing.T) {
+	root := NewFileNode("archive.tar.gz")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 220, H: 120}, root)
+	ctx := &fakeContext{}
+	tree.SetFocused(true)
+
+	if !tree.beginRenameWithContext(ctx, root) {
+		t.Fatal("begin rename should succeed")
+	}
+	if tree.renameEdit == nil {
+		t.Fatal("rename edit should be created")
+	}
+	start, end, ok := tree.renameEdit.selectionRange()
+	if !ok {
+		t.Fatal("file rename should start with a selection")
+	}
+	if start != 0 || end != len([]rune("archive.tar")) {
+		t.Fatalf("selection = (%d, %d), want (0, %d)", start, end, len([]rune("archive.tar")))
+	}
+}
+
+func TestTreeViewInlineRenameSelectsWholeFolderName(t *testing.T) {
+	root := NewFolderNode("Documents")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 220, H: 120}, root)
+	ctx := &fakeContext{}
+	tree.SetFocused(true)
+
+	if !tree.beginRenameWithContext(ctx, root) {
+		t.Fatal("begin rename should succeed")
+	}
+	start, end, ok := tree.renameEdit.selectionRange()
+	if !ok {
+		t.Fatal("folder rename should start with a selection")
+	}
+	if start != 0 || end != len([]rune("Documents")) {
+		t.Fatalf("selection = (%d, %d), want full folder name", start, end)
+	}
+}
+
+func TestFileStemEndKeepsDotfilesAndExtensionlessNamesWhole(t *testing.T) {
+	if got := fileStemEnd(".gitignore"); got != len([]rune(".gitignore")) {
+		t.Fatalf("stem for dotfile = %d, want full length", got)
+	}
+	if got := fileStemEnd("README"); got != len([]rune("README")) {
+		t.Fatalf("stem for extensionless file = %d, want full length", got)
+	}
+	if got := fileStemEnd("name."); got != len([]rune("name.")) {
+		t.Fatalf("stem for trailing-dot name = %d, want full length", got)
+	}
+}
+
 func TestTreeViewSelectedExpanderKeepsGlyphVisible(t *testing.T) {
 	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, NewFolderNode("Root"))
 	canvas := paint.NewCanvas(24, 24)
@@ -367,5 +542,27 @@ func TestTreeViewSelectedExpanderKeepsGlyphVisible(t *testing.T) {
 	want := [4]byte{th.Colors.DarkShadow.R, th.Colors.DarkShadow.G, th.Colors.DarkShadow.B, th.Colors.DarkShadow.A}
 	if got != want {
 		t.Fatalf("selected expander glyph pixel = %#v, want %#v", got, want)
+	}
+}
+
+func TestTreeViewMultiSelectedRowsUseHighlightText(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 220, H: 120}, root)
+	tree.toggleSelection(root.Children[0])
+	tree.toggleSelection(root.Children[1])
+
+	entry := tree.visibleNodes()[1]
+	rowRect := geom.Rect{X: 3, Y: 18, W: 180, H: 16}
+	canvas := paint.NewCanvas(240, 80)
+	err := tree.paintEntry(PaintContext{
+		Canvas: canvas,
+		Theme:  theme.DefaultClassic(),
+	}, entry, rowRect, 14)
+	if err != nil {
+		t.Fatalf("paint entry failed: %v", err)
 	}
 }

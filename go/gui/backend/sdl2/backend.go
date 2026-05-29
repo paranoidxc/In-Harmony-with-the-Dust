@@ -198,9 +198,10 @@ func (b *Backend) translate(raw sdl.Event) event.Event {
 		return event.MouseMove{Position: b.toLogical(int(e.X), int(e.Y))}
 	case *sdl.MouseButtonEvent:
 		return event.MouseButtonEvent{
-			Down:     e.State == sdl.PRESSED,
-			Button:   translateMouseButton(e.Button),
-			Position: b.toLogical(int(e.X), int(e.Y)),
+			Down:      e.State == sdl.PRESSED,
+			Button:    translateMouseButton(e.Button),
+			Position:  b.toLogical(int(e.X), int(e.Y)),
+			Modifiers: translateModifiers(sdl.GetModState()),
 		}
 	case *sdl.MouseWheelEvent:
 		x, y, _ := sdl.GetMouseState()

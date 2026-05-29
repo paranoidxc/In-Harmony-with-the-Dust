@@ -367,6 +367,11 @@ func main() {
 	})
 	treeView.OnChange(func(node *widgets.TreeNode) {
 		if node != nil {
+			count := len(treeView.SelectedNodes())
+			if count > 1 {
+				updateStatus(fmt.Sprintf("当前树节点：%s（已选 %d 项）", node.Text, count))
+				return
+			}
 			updateStatus(fmt.Sprintf("当前树节点：%s", node.Text))
 		}
 	})

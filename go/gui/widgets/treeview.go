@@ -5,6 +5,7 @@ import (
 	"classicui/geom"
 	"classicui/uicolor"
 	"classicui/widget"
+	"strings"
 	"time"
 )
 
@@ -106,6 +107,8 @@ type TreeView struct {
 	widget.BaseWidget
 	roots          []*TreeNode
 	selected       *TreeNode
+	anchor         *TreeNode
+	selectedSet    map[*TreeNode]struct{}
 	hotNode        *TreeNode
 	hotPart        treeHotPart
 	pressedNode    *TreeNode
@@ -139,6 +142,7 @@ func NewTreeView(id string, bounds geom.Rect, roots ...*TreeNode) *TreeView {
 		rowHeight:     16,
 		indentWidth:   18,
 		scrollbarSize: 16,
+		selectedSet:   make(map[*TreeNode]struct{}),
 		now:           time.Now,
 		doubleClick:   500 * time.Millisecond,
 		renameDelay:   500 * time.Millisecond,
@@ -176,6 +180,10 @@ func (t *TreeView) SetRoots(roots ...*TreeNode) {
 	}
 	if !t.containsNode(t.selected) {
 		t.selected = visible[0].node
+		t.anchor = t.selected
+		t.selectOnly(t.selected)
+	} else if !t.isSelected(t.selected) {
+		t.selectOnly(t.selected)
 	}
 	t.ensureSelectedVisible()
 	t.syncScrollBar(len(visible))
@@ -187,6 +195,19 @@ func (t *TreeView) Roots() []*TreeNode {
 
 func (t *TreeView) SelectedNode() *TreeNode {
 	return t.selected
+}
+
+func (t *TreeView) SelectedNodes() []*TreeNode {
+	if len(t.selectedSet) == 0 {
+		return nil
+	}
+	var out []*TreeNode
+	for _, entry := range t.visibleNodesAll() {
+		if _, ok := t.selectedSet[entry.node]; ok {
+			out = append(out, entry.node)
+		}
+	}
+	return out
 }
 
 func (t *TreeView) SetSelectedNode(node *TreeNode) bool {
@@ -201,6 +222,8 @@ func (t *TreeView) SetSelectedNode(node *TreeNode) bool {
 		t.discardRenameEdit()
 	}
 	t.selected = node
+	t.anchor = node
+	t.selectOnly(node)
 	t.cancelRename()
 	t.ensureSelectedVisible()
 	if t.onChange != nil {
@@ -272,7 +295,7 @@ func (t *TreeView) Paint(ctx PaintContext) error {
 			W: itemsRect.W - 2,
 			H: t.rowHeight,
 		}
-		if entry.node == t.selected {
+		if t.isSelected(entry.node) {
 			ctx.Canvas.FillRect(rowRect, ctx.Theme.Colors.Highlight)
 		} else if entry.node == t.hotNode && t.hotPart != treeHotPartNone {
 			ctx.Canvas.FillRect(rowRect, blendColor(ctx.Theme.Colors.Window, ctx.Theme.Colors.Lightest))
@@ -378,11 +401,19 @@ func (t *TreeView) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local 
 		ctx.Invalidate(t)
 		return
 	}
-	wasSelected := entry.node == t.selected
+	wasSelected := t.isSelected(entry.node)
 	t.pressedNode = entry.node
 	t.pressedPart = treeHotPartRow
 	t.pressedSelect = wasSelected
-	needsInvalidate := t.SetSelectedNode(entry.node)
+	needsInvalidate := false
+	switch {
+	case ev.Modifiers&event.ModShift != 0:
+		needsInvalidate = t.selectRangeTo(entry.node)
+	case ev.Modifiers&event.ModCtrl != 0:
+		needsInvalidate = t.toggleSelection(entry.node)
+	default:
+		needsInvalidate = t.SetSelectedNode(entry.node)
+	}
 	if t.isDoubleClick(entry.node) {
 		t.cancelRename()
 		t.clearPressed()
@@ -392,7 +423,7 @@ func (t *TreeView) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local 
 		} else if t.onActivate != nil {
 			t.onActivate(entry.node)
 		}
-	} else if !wasSelected {
+	} else if !wasSelected || ev.Modifiers != 0 {
 		t.cancelRename()
 	}
 	if needsInvalidate {
@@ -468,6 +499,12 @@ func (t *TreeView) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 			return false
 		}
 	}
+	if ev.Modifiers&event.ModCtrl != 0 && ev.Key == event.KeyA {
+		if t.selectAllVisible() {
+			ctx.Invalidate(t)
+		}
+		return true
+	}
 	t.cancelRename()
 
 	selectedIndex := t.selectedIndex(visible, t.selected)
@@ -509,7 +546,21 @@ func (t *TreeView) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 			}
 			changed = t.SetSelectedNode(t.selected.Children[0])
 		}
-	case event.KeyEnter, event.KeySpace:
+	case event.KeySpace:
+		if ev.Modifiers&event.ModCtrl != 0 {
+			changed = t.toggleSelection(t.selected)
+			break
+		}
+		if len(t.selected.Children) > 0 {
+			t.toggleExpanded(t.selected)
+			ctx.Invalidate(t)
+			return true
+		}
+		if t.onActivate != nil {
+			t.onActivate(t.selected)
+		}
+		return true
+	case event.KeyEnter:
 		if len(t.selected.Children) > 0 {
 			t.toggleExpanded(t.selected)
 			ctx.Invalidate(t)
@@ -527,7 +578,12 @@ func (t *TreeView) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 
 	if nextIndex != selectedIndex && (ev.Key == event.KeyUp || ev.Key == event.KeyDown || ev.Key == event.KeyHome || ev.Key == event.KeyEnd || ev.Key == event.KeyPageUp || ev.Key == event.KeyPageDown) {
 		nextIndex = clampInt(nextIndex, 0, len(visible)-1)
-		changed = t.SetSelectedNode(visible[nextIndex].node)
+		target := visible[nextIndex].node
+		if ev.Modifiers&event.ModShift != 0 {
+			changed = t.selectRangeTo(target)
+		} else {
+			changed = t.SetSelectedNode(target)
+		}
 	}
 	if changed {
 		ctx.Invalidate(t)
@@ -621,19 +677,20 @@ func (t *TreeView) paintEntry(ctx PaintContext, entry treeEntry, rowRect geom.Re
 		}
 	}
 	layout := t.layoutEntry(rowRect, entry.depth, textHeight)
+	selected := t.isSelected(entry.node)
 
 	textColor := ctx.Theme.Colors.WindowText
 	guideColor := ctx.Theme.Colors.Shadow
-	if entry.node == t.selected {
+	if selected {
 		textColor = ctx.Theme.Colors.HighlightText
 		guideColor = ctx.Theme.Colors.HighlightText
 	}
 	t.paintGuides(ctx, entry, rowRect, layout, guideColor)
 
 	if len(entry.node.Children) > 0 {
-		t.paintExpander(ctx, layout.expander, entry.node.Expanded, entry.node == t.selected, entry.node == t.hotNode && t.hotPart == treeHotPartExpander)
+		t.paintExpander(ctx, layout.expander, entry.node.Expanded, selected, entry.node == t.hotNode && t.hotPart == treeHotPartExpander)
 	}
-	t.paintIcon(ctx, layout.icon, entry.node.EffectiveKind(), entry.node == t.selected)
+	t.paintIcon(ctx, layout.icon, entry.node.EffectiveKind(), selected)
 	if ctx.Text == nil || entry.node.Text == "" {
 		return nil
 	}
@@ -942,14 +999,43 @@ func (t *TreeView) startRename(node *TreeNode) {
 	t.renameText = node.Text
 	edit.SetVisible(true)
 	edit.SetText(node.Text)
-	edit.anchor = 0
-	edit.caret = len([]rune(node.Text))
+	anchor, caret := t.renameSelection(node)
+	edit.anchor = anchor
+	edit.caret = caret
 	edit.selecting = false
 	edit.composition = ""
 	if t.focused {
 		edit.SetFocused(true)
 		edit.resetCaretBlink()
 	}
+}
+
+func (t *TreeView) renameSelection(node *TreeNode) (int, int) {
+	text := ""
+	if node != nil {
+		text = node.Text
+	}
+	runes := []rune(text)
+	end := len(runes)
+	if node == nil || node.EffectiveKind() != TreeNodeFile {
+		return 0, end
+	}
+	stemEnd := fileStemEnd(text)
+	if stemEnd <= 0 || stemEnd >= end {
+		return 0, end
+	}
+	return 0, stemEnd
+}
+
+func fileStemEnd(text string) int {
+	if text == "" {
+		return 0
+	}
+	lastDot := strings.LastIndex(text, ".")
+	if lastDot <= 0 || lastDot == len(text)-1 {
+		return len([]rune(text))
+	}
+	return len([]rune(text[:lastDot]))
 }
 
 func (t *TreeView) beginRenameWithContext(ctx EventContext, node *TreeNode) bool {
@@ -1099,6 +1185,128 @@ func (t *TreeView) visibleNodesAll() []treeEntry {
 	return out
 }
 
+func (t *TreeView) selectOnly(node *TreeNode) {
+	clear(t.selectedSet)
+	if node != nil {
+		t.selectedSet[node] = struct{}{}
+	}
+}
+
+func (t *TreeView) isSelected(node *TreeNode) bool {
+	if node == nil {
+		return false
+	}
+	_, ok := t.selectedSet[node]
+	return ok
+}
+
+func (t *TreeView) toggleSelection(node *TreeNode) bool {
+	if node == nil || !t.containsNode(node) {
+		return false
+	}
+	if t.isSelected(node) {
+		if len(t.selectedSet) == 1 && t.selected == node {
+			return false
+		}
+		delete(t.selectedSet, node)
+		if t.selected == node {
+			if replacement := t.firstSelectedVisible(); replacement != nil {
+				t.selected = replacement
+			} else {
+				t.selected = node
+				t.selectedSet[node] = struct{}{}
+				return false
+			}
+		}
+	} else {
+		t.selectedSet[node] = struct{}{}
+		t.selected = node
+	}
+	t.anchor = node
+	t.ensureSelectedVisible()
+	if t.onChange != nil && t.selected != nil {
+		t.onChange(t.selected)
+	}
+	return true
+}
+
+func (t *TreeView) selectRangeTo(node *TreeNode) bool {
+	if node == nil || !t.containsNode(node) {
+		return false
+	}
+	t.expandAncestors(node)
+	visible := t.visibleNodes()
+	if len(visible) == 0 {
+		return false
+	}
+	anchor := t.anchor
+	if anchor == nil || !t.containsNode(anchor) {
+		anchor = t.selected
+	}
+	if anchor == nil || !t.containsNode(anchor) {
+		anchor = node
+	}
+	start := t.selectedIndex(visible, anchor)
+	end := t.selectedIndex(visible, node)
+	if start < 0 || end < 0 {
+		return false
+	}
+	if start > end {
+		start, end = end, start
+	}
+	clear(t.selectedSet)
+	for i := start; i <= end; i++ {
+		t.selectedSet[visible[i].node] = struct{}{}
+	}
+	changed := t.selected != node
+	t.selected = node
+	t.ensureSelectedVisible()
+	if changed && t.onChange != nil {
+		t.onChange(node)
+	}
+	return true
+}
+
+func (t *TreeView) selectAllVisible() bool {
+	visible := t.visibleNodes()
+	if len(visible) == 0 {
+		return false
+	}
+	lead := t.selected
+	if lead == nil || t.selectedIndex(visible, lead) < 0 {
+		lead = visible[0].node
+	}
+	changed := t.selected != lead || len(t.selectedSet) != len(visible)
+	if !changed {
+		for _, entry := range visible {
+			if !t.isSelected(entry.node) {
+				changed = true
+				break
+			}
+		}
+	}
+	clear(t.selectedSet)
+	for _, entry := range visible {
+		t.selectedSet[entry.node] = struct{}{}
+	}
+	t.selected = lead
+	t.anchor = lead
+	t.ensureSelectedVisible()
+	if changed && t.onChange != nil && t.selected != nil {
+		t.onChange(t.selected)
+	}
+	return changed
+}
+
+func (t *TreeView) firstSelectedVisible() *TreeNode {
+	for _, entry := range t.visibleNodes() {
+		if t.isSelected(entry.node) {
+			return entry.node
+		}
+	}
+	return nil
+}
+
 func (t *TreeView) appendAll(out *[]treeEntry, node *TreeNode, depth int) {
 	if node == nil {
 		return
@@ -1145,6 +1353,8 @@ func (t *TreeView) toggleExpanded(node *TreeNode) {
 	t.cancelRename()
 	if !node.Expanded && t.selected != nil && t.isDescendant(node, t.selected) {
 		t.selected = node
+		t.anchor = node
+		t.selectOnly(node)
 		if t.onChange != nil {
 			t.onChange(node)
 		}

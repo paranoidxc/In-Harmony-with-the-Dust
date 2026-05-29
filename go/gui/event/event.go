@@ -52,9 +52,10 @@ const (
 )
 
 type MouseButtonEvent struct {
-	Down     bool
-	Button   MouseButton
-	Position geom.Point
+	Down      bool
+	Button    MouseButton
+	Position  geom.Point
+	Modifiers Modifiers
 }
 
 func (e MouseButtonEvent) Type() Type {
