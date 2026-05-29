@@ -89,6 +89,7 @@ const (
 	KeyEnd
 	KeyPageUp
 	KeyPageDown
+	KeyF2
 	KeyA
 	KeyB
 	KeyC

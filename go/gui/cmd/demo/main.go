@@ -164,6 +164,60 @@ func main() {
 		W: 340,
 		H: 18,
 	})
+	treeHint := widgets.NewLabel("treeHint", "TreeView 已支持双击、hover 热区，以及 F2 / 慢单击的 inline rename。", classicui.Rect{
+		X: 10,
+		Y: 12,
+		W: 350,
+		H: 18,
+	})
+	treeView := widgets.NewTreeView("tree", classicui.Rect{
+		X: 10,
+		Y: 40,
+		W: 358,
+		H: 138,
+	},
+		func() *widgets.TreeNode {
+			root := widgets.NewFolderNode("桌面",
+				widgets.NewFolderNode("我的电脑",
+					widgets.NewFolderNode("Program Files",
+						widgets.NewFolderNode("InHarmony",
+							widgets.NewFileNode("dust.exe"),
+							widgets.NewFileNode("readme.txt"),
+						),
+					),
+					widgets.NewFolderNode("Windows",
+						widgets.NewFileNode("explorer.exe"),
+						widgets.NewFileNode("notepad.exe"),
+					),
+					widgets.NewFolderNode("Temp",
+						widgets.NewFileNode("session.log"),
+					),
+				),
+				widgets.NewFolderNode("文档",
+					widgets.NewFolderNode("项目",
+						widgets.NewFileNode("main.go"),
+						widgets.NewFileNode("ui_spec.md"),
+					),
+					widgets.NewFolderNode("归档",
+						widgets.NewFileNode("phase3-notes.txt"),
+					),
+				),
+				widgets.NewFolderNode("下载",
+					widgets.NewFolderNode("安装包",
+						widgets.NewFileNode("classicui-setup.exe"),
+					),
+					widgets.NewFolderNode("压缩包",
+						widgets.NewFileNode("assets.zip"),
+					),
+				),
+				widgets.NewFileNode("README.txt"),
+			)
+			root.Expanded = true
+			root.Children[0].Expanded = true
+			root.Children[0].Children[0].Expanded = true
+			return root
+		}(),
+	)
 	browsePage := widgets.NewPanel("browsePage", classicui.Rect{})
 	browsePage.Add(pathLabel)
 	browsePage.Add(pathEdit)
@@ -178,6 +232,9 @@ func main() {
 	commandsPage.Add(aboutBtn)
 	commandsPage.Add(info2)
 	commandsPage.Add(info3)
+	treePage := widgets.NewPanel("treePage", classicui.Rect{})
+	treePage.Add(treeHint)
+	treePage.Add(treeView)
 	tabs := widgets.NewTabControl("tabs", classicui.Rect{
 		X: 14,
 		Y: 72,
@@ -186,6 +243,7 @@ func main() {
 	},
 		widgets.NewTabPage("文件列表", browsePage),
 		widgets.NewTabPage("命令演示", commandsPage),
+		widgets.NewTabPage("目录树", treePage),
 	)
 	statusBar := widgets.NewStatusBar("status", classicui.Rect{
 		X: 14,
@@ -271,6 +329,10 @@ func main() {
 			win.SetDefaultButton(aboutBtn)
 			return
 		}
+		if tabs.SelectedIndex() == 2 {
+			win.SetDefaultButton(nil)
+			return
+		}
 		win.SetDefaultButton(add)
 	}
 
@@ -302,6 +364,26 @@ func main() {
 
 	list.OnChange(func(index int, value string) {
 		updateStatus(fmt.Sprintf("当前选中：%s", value))
+	})
+	treeView.OnChange(func(node *widgets.TreeNode) {
+		if node != nil {
+			updateStatus(fmt.Sprintf("当前树节点：%s", node.Text))
+		}
+	})
+	treeView.OnActivate(func(node *widgets.TreeNode) {
+		if node != nil {
+			updateStatus(fmt.Sprintf("已激活树节点：%s", node.Text))
+		}
+	})
+	treeView.OnBeginRename(func(node *widgets.TreeNode) {
+		if node != nil {
+			updateStatus(fmt.Sprintf("重命名预留接口：%s", node.Text))
+		}
+	})
+	treeView.OnRenameCommit(func(node *widgets.TreeNode, oldText, newText string) {
+		if node != nil {
+			updateStatus(fmt.Sprintf("树节点已重命名：%s -> %s", oldText, newText))
+		}
 	})
 	tabs.OnSelectionChange(func(index int, page *widgets.TabPage) {
 		syncDefaultButton()

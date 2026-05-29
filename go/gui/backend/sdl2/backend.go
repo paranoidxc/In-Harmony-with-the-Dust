@@ -281,6 +281,8 @@ func translateKey(key sdl.Keycode) event.Key {
 		return event.KeyPageUp
 	case sdl.K_PAGEDOWN:
 		return event.KeyPageDown
+	case sdl.K_F2:
+		return event.KeyF2
 	case sdl.K_a:
 		return event.KeyA
 	case sdl.K_b:

@@ -1,0 +1,371 @@
+package widgets
+
+import (
+	"testing"
+	"time"
+
+	"classicui/event"
+	"classicui/geom"
+	"classicui/paint"
+	"classicui/theme"
+)
+
+func TestTreeViewKeyboardNavigationAndCollapse(t *testing.T) {
+	root := NewTreeNode("Root",
+		NewTreeNode("Child 1"),
+		NewTreeNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	if tree.SelectedNode() != root {
+		t.Fatal("tree should select the first visible node by default")
+	}
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyRight}) {
+		t.Fatal("right key should be handled")
+	}
+	if got := tree.SelectedNode(); got == nil || got.Text != "Child 1" {
+		t.Fatalf("selected after right = %#v, want Child 1", got)
+	}
+
+	tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyLeft})
+	if tree.SelectedNode() != root {
+		t.Fatal("left key should move selection back to parent")
+	}
+
+	tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyLeft})
+	if root.Expanded {
+		t.Fatal("left key on expanded node should collapse it")
+	}
+	if len(tree.visibleNodes()) != 1 {
+		t.Fatalf("visible node count after collapse = %d, want 1", len(tree.visibleNodes()))
+	}
+}
+
+func TestTreeViewMouseToggleExpanderAndSelection(t *testing.T) {
+	root := NewTreeNode("Root", NewTreeNode("Child"))
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	rootRect := geom.Rect{X: 3, Y: 2, W: 160, H: tree.rowHeight}
+	expander := tree.expanderRect(rootRect, 0)
+	click := geom.Point{X: expander.X + 1, Y: expander.Y + 1}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+
+	if !root.Expanded {
+		t.Fatal("clicking expander should expand the node")
+	}
+
+	rowClick := geom.Point{X: expander.Right() + 12, Y: expander.Y + 1}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, rowClick)
+	if tree.SelectedNode() != root {
+		t.Fatal("clicking a row should select that node")
+	}
+}
+
+func TestTreeViewCollapseMovesSelectionToCollapsedAncestor(t *testing.T) {
+	child := NewTreeNode("Child")
+	root := NewTreeNode("Root", child)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	tree.SetSelectedNode(child)
+	ctx := &fakeContext{}
+
+	tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyLeft})
+	tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyLeft})
+
+	if tree.SelectedNode() != root {
+		t.Fatal("collapsing the parent should move selection back to that parent")
+	}
+}
+
+func TestTreeViewSelectingHiddenNodeExpandsAncestors(t *testing.T) {
+	child := NewTreeNode("Child")
+	root := NewTreeNode("Root", child)
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+
+	if !tree.SetSelectedNode(child) {
+		t.Fatal("selecting hidden descendant should succeed")
+	}
+	if !root.Expanded {
+		t.Fatal("selecting hidden descendant should expand its ancestors")
+	}
+}
+
+func TestTreeViewMouseDoubleClickTogglesExpanded(t *testing.T) {
+	root := NewFolderNode("Root", NewFileNode("Readme.txt"))
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	now := time.Date(2026, time.May, 29, 12, 0, 0, 0, time.UTC)
+	tree.now = func() time.Time {
+		return now
+	}
+
+	rootRect := geom.Rect{X: 3, Y: 2, W: 160, H: tree.rowHeight}
+	click := geom.Point{X: tree.iconRect(rootRect, 0).Right() + 6, Y: rootRect.Y + rootRect.H/2}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+	now = now.Add(200 * time.Millisecond)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+
+	if !root.Expanded {
+		t.Fatal("double-clicking a branch row should expand it")
+	}
+
+	now = now.Add(700 * time.Millisecond)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+	now = now.Add(200 * time.Millisecond)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+
+	if root.Expanded {
+		t.Fatal("double-clicking an expanded branch row should collapse it")
+	}
+	if ctx.focused != tree {
+		t.Fatal("tree should request focus on mouse interaction")
+	}
+}
+
+func TestTreeNodeEffectiveKind(t *testing.T) {
+	if got := NewTreeNode("folder", NewTreeNode("child")).EffectiveKind(); got != TreeNodeFolder {
+		t.Fatalf("kind for node with children = %v, want folder", got)
+	}
+	if got := NewTreeNode("file.txt").EffectiveKind(); got != TreeNodeFile {
+		t.Fatalf("kind for leaf node = %v, want file", got)
+	}
+	if got := NewFolderNode("empty").EffectiveKind(); got != TreeNodeFolder {
+		t.Fatalf("kind for explicit folder = %v, want folder", got)
+	}
+}
+
+func TestTreeViewVisibleNodesCarryGuideState(t *testing.T) {
+	leaf := NewFileNode("main.go")
+	folderA := NewFolderNode("src", leaf)
+	folderA.Expanded = true
+	folderB := NewFolderNode("assets")
+	root := NewFolderNode("project", folderA, folderB)
+	root.Expanded = true
+
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	visible := tree.visibleNodes()
+	if len(visible) != 4 {
+		t.Fatalf("visible nodes = %d, want 4", len(visible))
+	}
+
+	entry := visible[2]
+	if entry.node != leaf {
+		t.Fatalf("visible[2] = %q, want %q", entry.node.Text, leaf.Text)
+	}
+	if entry.depth != 2 {
+		t.Fatalf("leaf depth = %d, want 2", entry.depth)
+	}
+	if len(entry.guides) != 2 || entry.guides[0] || !entry.guides[1] {
+		t.Fatalf("leaf guides = %#v, want [false true]", entry.guides)
+	}
+}
+
+func TestTreeViewMouseMoveTracksHotPart(t *testing.T) {
+	root := NewFolderNode("Root", NewFileNode("Child"))
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	rowRect := geom.Rect{X: 3, Y: 2, W: 160, H: tree.rowHeight}
+	expander := tree.expanderRect(rowRect, 0)
+	tree.MouseMove(ctx, geom.Point{X: expander.X + 1, Y: expander.Y + 1})
+	if tree.hotNode != root || tree.hotPart != treeHotPartExpander {
+		t.Fatalf("hot state = (%v, %v), want expander hot on root", tree.hotNode, tree.hotPart)
+	}
+
+	icon := tree.iconRect(rowRect, 0)
+	tree.MouseMove(ctx, geom.Point{X: icon.Right() + 10, Y: rowRect.Y + rowRect.H/2})
+	if tree.hotNode != root || tree.hotPart != treeHotPartRow {
+		t.Fatalf("hot state = (%v, %v), want row hot on root", tree.hotNode, tree.hotPart)
+	}
+
+	tree.MouseLeave(ctx)
+	if tree.hotNode != nil || tree.hotPart != treeHotPartNone {
+		t.Fatal("mouse leave should clear hot state")
+	}
+}
+
+func TestTreeViewF2BeginsRename(t *testing.T) {
+	root := NewFileNode("Readme.txt")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	var renamed *TreeNode
+	tree.OnBeginRename(func(node *TreeNode) {
+		renamed = node
+	})
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyF2}) {
+		t.Fatal("F2 should be handled by treeview")
+	}
+	if renamed != root {
+		t.Fatalf("renamed node = %#v, want root", renamed)
+	}
+}
+
+func TestTreeViewDelayedRenameAfterClickOnSelectedNode(t *testing.T) {
+	root := NewFileNode("Readme.txt")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	now := time.Date(2026, time.May, 29, 12, 0, 0, 0, time.UTC)
+	tree.now = func() time.Time {
+		return now
+	}
+
+	var renamed *TreeNode
+	tree.OnBeginRename(func(node *TreeNode) {
+		renamed = node
+	})
+
+	rowRect := geom.Rect{X: 3, Y: 2, W: 160, H: tree.rowHeight}
+	click := geom.Point{X: tree.iconRect(rowRect, 0).Right() + 6, Y: rowRect.Y + rowRect.H/2}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+	tree.MouseUp(ctx, event.MouseButtonEvent{Button: event.MouseButtonLeft}, click)
+	if tree.renameNode != root {
+		t.Fatal("clicking an already selected node should arm delayed rename")
+	}
+
+	tree.Tick(ctx, now.Add(300*time.Millisecond))
+	if renamed != nil {
+		t.Fatal("rename should not fire before delay elapses")
+	}
+
+	tree.Tick(ctx, now.Add(600*time.Millisecond))
+	if renamed != root {
+		t.Fatalf("renamed node = %#v, want root after delay", renamed)
+	}
+}
+
+func TestTreeViewDoubleClickCancelsDelayedRename(t *testing.T) {
+	root := NewFolderNode("Root", NewFileNode("Child.txt"))
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	now := time.Date(2026, time.May, 29, 12, 0, 0, 0, time.UTC)
+	tree.now = func() time.Time {
+		return now
+	}
+
+	renamed := false
+	tree.OnBeginRename(func(*TreeNode) {
+		renamed = true
+	})
+
+	rowRect := geom.Rect{X: 3, Y: 2, W: 160, H: tree.rowHeight}
+	click := geom.Point{X: tree.iconRect(rowRect, 0).Right() + 6, Y: rowRect.Y + rowRect.H/2}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+	tree.MouseUp(ctx, event.MouseButtonEvent{Button: event.MouseButtonLeft}, click)
+	if tree.renameNode != root {
+		t.Fatal("first click should arm delayed rename")
+	}
+
+	now = now.Add(200 * time.Millisecond)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, click)
+	tree.MouseUp(ctx, event.MouseButtonEvent{Button: event.MouseButtonLeft}, click)
+
+	if tree.renameNode != nil {
+		t.Fatal("double-click should cancel delayed rename")
+	}
+	tree.Tick(ctx, now.Add(600*time.Millisecond))
+	if renamed {
+		t.Fatal("rename should not fire after double-click")
+	}
+	if !root.Expanded {
+		t.Fatal("double-click should still perform branch activation behavior")
+	}
+}
+
+func TestTreeViewLayoutKeepsTextAndIconVerticallyAligned(t *testing.T) {
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, NewFileNode("Readme.txt"))
+	rowRect := geom.Rect{X: 3, Y: 2, W: 160, H: 16}
+	layout := tree.layoutEntry(rowRect, 0, 14)
+
+	iconCenter := layout.icon.Y + layout.icon.H/2
+	textCenter := layout.textY + 14/2
+	if delta := iconCenter - textCenter; delta < -1 || delta > 1 {
+		t.Fatalf("icon/text centers differ too much: icon=%d text=%d", iconCenter, textCenter)
+	}
+}
+
+func TestTreeViewInlineRenameCommit(t *testing.T) {
+	root := NewFileNode("Readme.txt")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 220, H: 120}, root)
+	ctx := &fakeContext{}
+	tree.SetFocused(true)
+
+	var oldName, newName string
+	tree.OnRenameCommit(func(_ *TreeNode, oldText, newText string) {
+		oldName = oldText
+		newName = newText
+	})
+
+	if !tree.beginRenameWithContext(ctx, root) {
+		t.Fatal("begin rename should succeed")
+	}
+	if tree.renamingNode != root || tree.renameEdit == nil || !tree.renameEdit.Visible() {
+		t.Fatal("begin rename should show inline edit")
+	}
+
+	if !tree.TextInput(ctx, event.TextInput{Text: "Notes.txt"}) {
+		t.Fatal("text input should be forwarded to inline edit")
+	}
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyEnter}) {
+		t.Fatal("enter should commit inline rename")
+	}
+	if got := root.Text; got != "Notes.txt" {
+		t.Fatalf("text after commit = %q, want %q", got, "Notes.txt")
+	}
+	if oldName != "Readme.txt" || newName != "Notes.txt" {
+		t.Fatalf("rename callback = (%q, %q), want (%q, %q)", oldName, newName, "Readme.txt", "Notes.txt")
+	}
+	if tree.renamingNode != nil {
+		t.Fatal("renaming state should clear after commit")
+	}
+}
+
+func TestTreeViewInlineRenameCancel(t *testing.T) {
+	root := NewFileNode("Readme.txt")
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 220, H: 120}, root)
+	ctx := &fakeContext{}
+	tree.SetFocused(true)
+
+	if !tree.beginRenameWithContext(ctx, root) {
+		t.Fatal("begin rename should succeed")
+	}
+	tree.TextInput(ctx, event.TextInput{Text: "Draft.txt"})
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyEscape}) {
+		t.Fatal("escape should cancel inline rename")
+	}
+	if got := root.Text; got != "Readme.txt" {
+		t.Fatalf("text after cancel = %q, want original", got)
+	}
+	if tree.renamingNode != nil {
+		t.Fatal("renaming state should clear after cancel")
+	}
+}
+
+func TestTreeViewSelectedExpanderKeepsGlyphVisible(t *testing.T) {
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, NewFolderNode("Root"))
+	canvas := paint.NewCanvas(24, 24)
+	th := theme.DefaultClassic()
+	rect := geom.Rect{X: 5, Y: 5, W: 9, H: 9}
+
+	tree.paintExpander(PaintContext{Canvas: canvas, Theme: th}, rect, false, true, false)
+
+	midX := rect.X + rect.W/2
+	midY := rect.Y + rect.H/2
+	idx := (midY*canvas.Width + midX) * 4
+	got := [4]byte{canvas.Pix[idx], canvas.Pix[idx+1], canvas.Pix[idx+2], canvas.Pix[idx+3]}
+	want := [4]byte{th.Colors.DarkShadow.R, th.Colors.DarkShadow.G, th.Colors.DarkShadow.B, th.Colors.DarkShadow.A}
+	if got != want {
+		t.Fatalf("selected expander glyph pixel = %#v, want %#v", got, want)
+	}
+}
