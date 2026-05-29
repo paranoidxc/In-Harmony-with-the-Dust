@@ -35,7 +35,7 @@ func main() {
 		X: 64,
 		Y: 40,
 		W: 436,
-		H: 350,
+		H: 362,
 	})
 	win.SetTitle("Phase 4 - Windows Classic")
 
@@ -63,24 +63,24 @@ func main() {
 		H: 18,
 	})
 	pathLabel := widgets.NewLabel("pathLabel", "路径：", classicui.Rect{
-		X: 14,
-		Y: 74,
+		X: 10,
+		Y: 12,
 		W: 50,
 		H: 18,
 	})
 	pathEdit := widgets.NewEdit("path", classicui.Rect{
-		X: 56,
-		Y: 70,
-		W: 350,
+		X: 52,
+		Y: 8,
+		W: 316,
 		H: 24,
 	})
 	pathEdit.SetText(`C:\我的文档\新建文件夹`)
 
 	list := widgets.NewListBox("files", classicui.Rect{
-		X: 14,
-		Y: 106,
-		W: 392,
-		H: 114,
+		X: 10,
+		Y: 42,
+		W: 358,
+		H: 104,
 	})
 	items := []string{
 		`桌面`,
@@ -102,20 +102,78 @@ func main() {
 	list.SetItems(items)
 
 	add := widgets.NewButton("add", "添加", classicui.Rect{
-		X: 236,
-		Y: 234,
+		X: 208,
+		Y: 154,
 		W: 76,
 		H: 24,
 	})
 	closeBtn := widgets.NewButton("cancel", "关闭", classicui.Rect{
-		X: 320,
-		Y: 234,
+		X: 292,
+		Y: 154,
 		W: 76,
 		H: 24,
 	})
+	sortNameBtn := widgets.NewButton("sortName", "按名称", classicui.Rect{
+		X: 10,
+		Y: 44,
+		W: 88,
+		H: 24,
+	})
+	sortLengthBtn := widgets.NewButton("sortLength", "按长度", classicui.Rect{
+		X: 104,
+		Y: 44,
+		W: 88,
+		H: 24,
+	})
+	aboutBtn := widgets.NewButton("about", "关于", classicui.Rect{
+		X: 10,
+		Y: 78,
+		W: 88,
+		H: 24,
+	})
+	info1 := widgets.NewLabel("info1", "TabControl 是 Phase 4 的下一步。", classicui.Rect{
+		X: 10,
+		Y: 12,
+		W: 320,
+		H: 18,
+	})
+	info2 := widgets.NewLabel("info2", "切换页签后，隐藏页不会再参与焦点循环。", classicui.Rect{
+		X: 10,
+		Y: 112,
+		W: 340,
+		H: 18,
+	})
+	info3 := widgets.NewLabel("info3", "当前排序仍然复用菜单和工具栏命令。", classicui.Rect{
+		X: 10,
+		Y: 136,
+		W: 340,
+		H: 18,
+	})
+	browsePage := widgets.NewPanel("browsePage", classicui.Rect{})
+	browsePage.Add(pathLabel)
+	browsePage.Add(pathEdit)
+	browsePage.Add(list)
+	browsePage.Add(add)
+	browsePage.Add(closeBtn)
+	commandsPage := widgets.NewPanel("commandsPage", classicui.Rect{})
+	commandsPage.Add(info1)
+	commandsPage.Add(sortNameBtn)
+	commandsPage.Add(sortLengthBtn)
+	commandsPage.Add(aboutBtn)
+	commandsPage.Add(info2)
+	commandsPage.Add(info3)
+	tabs := widgets.NewTabControl("tabs", classicui.Rect{
+		X: 14,
+		Y: 72,
+		W: 392,
+		H: 204,
+	},
+		widgets.NewTabPage("文件列表", browsePage),
+		widgets.NewTabPage("命令演示", commandsPage),
+	)
 	statusBar := widgets.NewStatusBar("status", classicui.Rect{
 		X: 14,
-		Y: 274,
+		Y: 286,
 		W: 392,
 		H: 22,
 	})
@@ -187,6 +245,13 @@ func main() {
 		list.SetItems(items)
 		updateStatus(message)
 	}
+	syncDefaultButton := func() {
+		if tabs.SelectedIndex() == 1 {
+			win.SetDefaultButton(aboutBtn)
+			return
+		}
+		win.SetDefaultButton(add)
+	}
 
 	runCommand := func(cmd classicui.CommandID) {
 		switch cmd {
@@ -208,7 +273,7 @@ func main() {
 			}
 			applySort(cmd, message)
 		case cmdAbout:
-			updateStatus("Phase 4: Toolbar 和 StatusBar 已就位。")
+			updateStatus("Phase 4: TabControl 已接上现有命令流。")
 		}
 		app.Desktop().InvalidateRect(win.Bounds())
 	}
@@ -217,6 +282,10 @@ func main() {
 	list.OnChange(func(index int, value string) {
 		updateStatus(fmt.Sprintf("当前选中：%s", value))
 	})
+	tabs.OnSelectionChange(func(index int, page *widgets.TabPage) {
+		syncDefaultButton()
+		updateStatus(fmt.Sprintf("当前页签：%s", page.Title))
+	})
 
 	add.OnClick(func() {
 		runCommand(cmdAddPath)
@@ -224,18 +293,23 @@ func main() {
 	closeBtn.OnClick(func() {
 		runCommand(cmdExit)
 	})
+	sortNameBtn.OnClick(func() {
+		runCommand(cmdSortByName)
+	})
+	sortLengthBtn.OnClick(func() {
+		runCommand(cmdSortByLength)
+	})
+	aboutBtn.OnClick(func() {
+		runCommand(cmdAbout)
+	})
 
 	win.Content().Add(title)
 	win.Content().Add(toolbar)
-	win.Content().Add(pathLabel)
-	win.Content().Add(pathEdit)
-	win.Content().Add(list)
-	win.Content().Add(add)
-	win.Content().Add(closeBtn)
+	win.Content().Add(tabs)
 	win.Content().Add(statusBar)
-	win.SetDefaultButton(add)
+	syncDefaultButton()
 	app.Desktop().AddWindow(win)
-	applySort(currentSort, "试试 Alt、方向键、Ctrl+N 和 Ctrl+Q。")
+	applySort(currentSort, "试试页签、Alt、方向键、Ctrl+N 和 Ctrl+Q。")
 
 	if *autoQuit > 0 {
 		time.AfterFunc(*autoQuit, func() {

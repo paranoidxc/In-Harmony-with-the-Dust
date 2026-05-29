@@ -125,6 +125,9 @@ func hitTest(control Control, point geom.Point) Control {
 }
 
 func walkFocusable(control Control, out *[]Control) {
+	if !control.Visible() {
+		return
+	}
 	if control.CanFocus() {
 		*out = append(*out, control)
 	}
