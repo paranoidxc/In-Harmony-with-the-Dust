@@ -15,6 +15,7 @@ type EventContext interface {
 	SetFocus(Control)
 	Capture(Control)
 	ReleaseCapture(Control)
+	DispatchCommand(CommandID)
 	ClipboardText() string
 	SetClipboardText(string)
 	MeasureText(string) geom.Size

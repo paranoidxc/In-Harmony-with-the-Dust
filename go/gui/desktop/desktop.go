@@ -615,6 +615,10 @@ func (c controlContext) ReleaseCapture(control widgets.Control) {
 	c.desktop.captureWindow = nil
 }
 
+func (c controlContext) DispatchCommand(cmd widgets.CommandID) {
+	c.desktop.dispatchCommand(c.window, cmd)
+}
+
 func (c controlContext) ClipboardText() string {
 	if c.desktop.platform == nil {
 		return ""

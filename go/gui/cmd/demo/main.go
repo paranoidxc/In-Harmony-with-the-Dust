@@ -25,7 +25,7 @@ func main() {
 	flag.Parse()
 
 	app := classicui.NewApp(classicui.Config{
-		Title:        "Classic UI Phase 3",
+		Title:        "Classic UI Phase 4",
 		LogicalSize:  classicui.Size{W: 640, H: 480},
 		PresentScale: 2,
 		Theme:        classicui.DefaultClassicTheme(),
@@ -37,29 +37,40 @@ func main() {
 		W: 436,
 		H: 350,
 	})
-	win.SetTitle("Phase 3 - Windows Classic")
+	win.SetTitle("Phase 4 - Windows Classic")
 
-	title := widgets.NewLabel("intro", "菜单栏、命令、快捷键和子菜单已经接进来了。", classicui.Rect{
+	toolbarSortByName := widgets.NewToolbarButton(cmdSortByName, "By Name")
+	toolbarSortByName.Checked = true
+	toolbarSortByLength := widgets.NewToolbarButton(cmdSortByLength, "By Length")
+	toolbar := widgets.NewToolbar("toolbar", classicui.Rect{
 		X: 14,
-		Y: 16,
+		Y: 12,
 		W: 392,
-		H: 18,
-	})
-	status := widgets.NewLabel("status", "试试 Alt、方向键、Ctrl+N 和 Ctrl+Q。", classicui.Rect{
+		H: 28,
+	},
+		widgets.NewToolbarButton(cmdAddPath, "Add Path"),
+		widgets.NewToolbarSeparator(),
+		toolbarSortByName,
+		toolbarSortByLength,
+		widgets.NewToolbarSeparator(),
+		widgets.NewToolbarButton(cmdAbout, "About"),
+	)
+
+	title := widgets.NewLabel("intro", "菜单、工具栏和状态栏共用同一套命令。", classicui.Rect{
 		X: 14,
-		Y: 244,
+		Y: 48,
 		W: 392,
 		H: 18,
 	})
 	pathLabel := widgets.NewLabel("pathLabel", "路径：", classicui.Rect{
 		X: 14,
-		Y: 48,
+		Y: 74,
 		W: 50,
 		H: 18,
 	})
 	pathEdit := widgets.NewEdit("path", classicui.Rect{
 		X: 56,
-		Y: 44,
+		Y: 70,
 		W: 350,
 		H: 24,
 	})
@@ -67,9 +78,9 @@ func main() {
 
 	list := widgets.NewListBox("files", classicui.Rect{
 		X: 14,
-		Y: 80,
+		Y: 106,
 		W: 392,
-		H: 148,
+		H: 114,
 	})
 	items := []string{
 		`桌面`,
@@ -92,15 +103,21 @@ func main() {
 
 	add := widgets.NewButton("add", "添加", classicui.Rect{
 		X: 236,
-		Y: 274,
+		Y: 234,
 		W: 76,
 		H: 24,
 	})
 	closeBtn := widgets.NewButton("cancel", "关闭", classicui.Rect{
 		X: 320,
-		Y: 274,
+		Y: 234,
 		W: 76,
 		H: 24,
+	})
+	statusBar := widgets.NewStatusBar("status", classicui.Rect{
+		X: 14,
+		Y: 274,
+		W: 392,
+		H: 22,
 	})
 
 	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
@@ -130,10 +147,28 @@ func main() {
 	))
 
 	currentSort := cmdSortByName
-	applySort := func(cmd classicui.CommandID) {
+	sortLabel := func(cmd classicui.CommandID) string {
+		switch cmd {
+		case cmdSortByLength:
+			return "Length"
+		default:
+			return "Name"
+		}
+	}
+	updateStatus := func(message string) {
+		statusBar.SetPanes([]widgets.StatusPane{
+			{Text: message},
+			{Text: fmt.Sprintf("%d items", len(items)), Width: 74},
+			{Text: "Sort: " + sortLabel(currentSort), Width: 92},
+		})
+		app.Desktop().InvalidateRect(win.Bounds())
+	}
+	applySort := func(cmd classicui.CommandID, message string) {
 		currentSort = cmd
 		sortByNameItem.Checked = cmd == cmdSortByName
 		sortByLengthItem.Checked = cmd == cmdSortByLength
+		toolbar.SetChecked(cmdSortByName, cmd == cmdSortByName)
+		toolbar.SetChecked(cmdSortByLength, cmd == cmdSortByLength)
 		switch cmd {
 		case cmdSortByLength:
 			sort.SliceStable(items, func(i, j int) bool {
@@ -144,15 +179,13 @@ func main() {
 				}
 				return left < right
 			})
-			status.SetText("已切换为按名称长度排序。")
 		default:
 			sort.SliceStable(items, func(i, j int) bool {
 				return items[i] < items[j]
 			})
-			status.SetText("已切换为按名称排序。")
 		}
 		list.SetItems(items)
-		app.Desktop().InvalidateRect(win.Bounds())
+		updateStatus(message)
 	}
 
 	runCommand := func(cmd classicui.CommandID) {
@@ -160,28 +193,29 @@ func main() {
 		case cmdAddPath:
 			next := pathEdit.Text()
 			if next == "" {
-				status.SetText("输入框不能为空。")
-				app.Desktop().InvalidateRect(win.Bounds())
+				updateStatus("输入框不能为空。")
 				return
 			}
 			items = append(items, next)
-			applySort(currentSort)
-			status.SetText(fmt.Sprintf("已添加：%s", next))
-			win.SetTitle(fmt.Sprintf("Phase 3 - 共 %d 项", len(items)))
+			applySort(currentSort, fmt.Sprintf("已添加：%s", next))
+			win.SetTitle(fmt.Sprintf("Phase 4 - 共 %d 项", len(items)))
 		case cmdExit:
 			app.Quit()
 		case cmdSortByName, cmdSortByLength:
-			applySort(cmd)
+			message := "已切换为按名称排序。"
+			if cmd == cmdSortByLength {
+				message = "已切换为按名称长度排序。"
+			}
+			applySort(cmd, message)
 		case cmdAbout:
-			status.SetText("Phase 3: MenuBar、PopupMenu、快捷键和命令路由已就位。")
+			updateStatus("Phase 4: Toolbar 和 StatusBar 已就位。")
 		}
 		app.Desktop().InvalidateRect(win.Bounds())
 	}
 	app.OnCommand(runCommand)
 
 	list.OnChange(func(index int, value string) {
-		status.SetText(fmt.Sprintf("当前选中：%s", value))
-		app.Desktop().InvalidateRect(win.Bounds())
+		updateStatus(fmt.Sprintf("当前选中：%s", value))
 	})
 
 	add.OnClick(func() {
@@ -192,14 +226,16 @@ func main() {
 	})
 
 	win.Content().Add(title)
+	win.Content().Add(toolbar)
 	win.Content().Add(pathLabel)
 	win.Content().Add(pathEdit)
 	win.Content().Add(list)
-	win.Content().Add(status)
 	win.Content().Add(add)
 	win.Content().Add(closeBtn)
+	win.Content().Add(statusBar)
 	win.SetDefaultButton(add)
 	app.Desktop().AddWindow(win)
+	applySort(currentSort, "试试 Alt、方向键、Ctrl+N 和 Ctrl+Q。")
 
 	if *autoQuit > 0 {
 		time.AfterFunc(*autoQuit, func() {

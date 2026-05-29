@@ -13,6 +13,7 @@ type fakeContext struct {
 	invalidations  int
 	releaseCapture int
 	clipboard      string
+	commands       []CommandID
 }
 
 func (f *fakeContext) Invalidate(Control) {
@@ -32,6 +33,10 @@ func (f *fakeContext) ReleaseCapture(control Control) {
 		f.captured = nil
 	}
 	f.releaseCapture++
+}
+
+func (f *fakeContext) DispatchCommand(cmd CommandID) {
+	f.commands = append(f.commands, cmd)
 }
 
 func (f *fakeContext) ClipboardText() string {
