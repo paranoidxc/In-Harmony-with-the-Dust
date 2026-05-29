@@ -1,0 +1,47 @@
+{
+  "name": "windows-classic",
+  "colors": {
+    "desktop": "#3A6EA5",
+    "face": "#C0C0C0",
+    "light": "#DFDFDF",
+    "lightest": "#FFFFFF",
+    "shadow": "#808080",
+    "dark_shadow": "#000000",
+    "window": "#FFFFFF",
+    "window_text": "#000000",
+    "highlight": "#0A246A",
+    "highlight_text": "#FFFFFF",
+    "gray_text": "#808080",
+    "active_caption": "#0A246A",
+    "inactive_caption": "#808080",
+    "caption_text": "#FFFFFF"
+  },
+  "metrics": {
+    "border_width": 2,
+    "window_frame_inner": 1,
+    "caption_height": 18,
+    "menu_height": 18,
+    "icon_size_small": 16,
+    "scrollbar_size": 16,
+    "button_min_height": 21,
+    "checkbox_glyph_size": 13,
+    "radio_glyph_size": 12,
+    "edit_padding_x": 3,
+    "edit_padding_y": 2,
+    "groupbox_title_offset_x": 8,
+    "focus_rect_inset": 3
+  },
+  "fonts": {
+    "size": 12,
+    "candidates": [
+      "/System/Library/Fonts/Hiragino Sans GB.ttc",
+      "/Library/Fonts/Arial Unicode.ttf",
+      "/System/Library/Fonts/Geneva.ttf",
+      "/System/Library/Fonts/Helvetica.ttc",
+      "Tahoma.ttf",
+      "Arial.ttf",
+      "LiberationSans-Regular.ttf",
+      "DejaVuSans.ttf"
+    ]
+  }
+}
