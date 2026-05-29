@@ -23,6 +23,7 @@ type Backend struct {
 	texture      *sdl.Texture
 	logicalSize  geom.Size
 	presentScale int
+	textInputOn  bool
 }
 
 func New(cfg Config) (*Backend, error) {
@@ -43,6 +44,7 @@ func New(cfg Config) (*Backend, error) {
 		sdl.Quit()
 		return nil, fmt.Errorf("set render scale quality hint")
 	}
+	sdl.SetHint(sdl.HINT_IME_INTERNAL_EDITING, "0")
 
 	window, err := sdl.CreateWindow(
 		cfg.Title,
@@ -88,6 +90,10 @@ func New(cfg Config) (*Backend, error) {
 }
 
 func (b *Backend) Close() {
+	if b.textInputOn {
+		sdl.StopTextInput()
+		b.textInputOn = false
+	}
 	if b.texture != nil {
 		b.texture.Destroy()
 		b.texture = nil
@@ -110,6 +116,40 @@ func (b *Backend) WaitEventTimeout(timeoutMS int) (event.Event, error) {
 		return nil, nil
 	}
 	return b.translate(raw), nil
+}
+
+func (b *Backend) ClipboardText() string {
+	text, err := sdl.GetClipboardText()
+	if err != nil {
+		return ""
+	}
+	return text
+}
+
+func (b *Backend) SetClipboardText(text string) {
+	_ = sdl.SetClipboardText(text)
+}
+
+func (b *Backend) SetTextInput(active bool, rect geom.Rect) {
+	if active {
+		inputRect := sdl.Rect{
+			X: int32(rect.X * b.presentScale),
+			Y: int32(rect.Y * b.presentScale),
+			W: int32(max(rect.W, 1) * b.presentScale),
+			H: int32(max(rect.H, 1) * b.presentScale),
+		}
+		sdl.SetTextInputRect(&inputRect)
+		if !b.textInputOn {
+			sdl.StartTextInput()
+			b.textInputOn = true
+		}
+		return
+	}
+
+	if b.textInputOn {
+		sdl.StopTextInput()
+		b.textInputOn = false
+	}
 }
 
 func (b *Backend) Present(canvas *paint.Canvas) error {
@@ -162,12 +202,30 @@ func (b *Backend) translate(raw sdl.Event) event.Event {
 			Button:   translateMouseButton(e.Button),
 			Position: b.toLogical(int(e.X), int(e.Y)),
 		}
+	case *sdl.MouseWheelEvent:
+		x, y, _ := sdl.GetMouseState()
+		delta := int(e.Y)
+		if e.Direction == sdl.MOUSEWHEEL_FLIPPED {
+			delta = -delta
+		}
+		return event.MouseWheel{
+			Position: b.toLogical(int(x), int(y)),
+			Delta:    delta,
+		}
 	case *sdl.KeyboardEvent:
 		return event.KeyEvent{
 			Down:      e.State == sdl.PRESSED,
 			Key:       translateKey(e.Keysym.Sym),
 			Modifiers: translateModifiers(sdl.Keymod(e.Keysym.Mod)),
 			Repeat:    e.Repeat != 0,
+		}
+	case *sdl.TextInputEvent:
+		return event.TextInput{Text: e.GetText()}
+	case *sdl.TextEditingEvent:
+		return event.TextEditing{
+			Text:   e.GetText(),
+			Start:  int(e.Start),
+			Length: int(e.Length),
 		}
 	}
 	return nil
@@ -203,6 +261,78 @@ func translateKey(key sdl.Keycode) event.Key {
 		return event.KeySpace
 	case sdl.K_TAB:
 		return event.KeyTab
+	case sdl.K_BACKSPACE:
+		return event.KeyBackspace
+	case sdl.K_DELETE:
+		return event.KeyDelete
+	case sdl.K_LEFT:
+		return event.KeyLeft
+	case sdl.K_RIGHT:
+		return event.KeyRight
+	case sdl.K_UP:
+		return event.KeyUp
+	case sdl.K_DOWN:
+		return event.KeyDown
+	case sdl.K_HOME:
+		return event.KeyHome
+	case sdl.K_END:
+		return event.KeyEnd
+	case sdl.K_PAGEUP:
+		return event.KeyPageUp
+	case sdl.K_PAGEDOWN:
+		return event.KeyPageDown
+	case sdl.K_a:
+		return event.KeyA
+	case sdl.K_b:
+		return event.KeyB
+	case sdl.K_c:
+		return event.KeyC
+	case sdl.K_d:
+		return event.KeyD
+	case sdl.K_e:
+		return event.KeyE
+	case sdl.K_f:
+		return event.KeyF
+	case sdl.K_g:
+		return event.KeyG
+	case sdl.K_h:
+		return event.KeyH
+	case sdl.K_i:
+		return event.KeyI
+	case sdl.K_j:
+		return event.KeyJ
+	case sdl.K_k:
+		return event.KeyK
+	case sdl.K_l:
+		return event.KeyL
+	case sdl.K_m:
+		return event.KeyM
+	case sdl.K_n:
+		return event.KeyN
+	case sdl.K_o:
+		return event.KeyO
+	case sdl.K_p:
+		return event.KeyP
+	case sdl.K_q:
+		return event.KeyQ
+	case sdl.K_r:
+		return event.KeyR
+	case sdl.K_s:
+		return event.KeyS
+	case sdl.K_t:
+		return event.KeyT
+	case sdl.K_u:
+		return event.KeyU
+	case sdl.K_v:
+		return event.KeyV
+	case sdl.K_w:
+		return event.KeyW
+	case sdl.K_x:
+		return event.KeyX
+	case sdl.K_y:
+		return event.KeyY
+	case sdl.K_z:
+		return event.KeyZ
 	case sdl.K_LALT:
 		return event.KeyLeftAlt
 	case sdl.K_RALT:
@@ -220,8 +350,18 @@ func translateModifiers(mod sdl.Keymod) event.Modifiers {
 	if mod&sdl.KMOD_CTRL != 0 {
 		out |= event.ModCtrl
 	}
+	if mod&sdl.KMOD_GUI != 0 {
+		out |= event.ModCtrl
+	}
 	if mod&sdl.KMOD_ALT != 0 {
 		out |= event.ModAlt
 	}
 	return out
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

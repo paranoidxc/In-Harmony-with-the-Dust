@@ -115,7 +115,7 @@ func (b *Button) MouseMove(ctx EventContext, local geom.Point) {
 	if !b.tracking {
 		return
 	}
-	nextPressed := b.Bounds().Contains(local)
+	nextPressed := LocalContains(b, local)
 	if nextPressed == b.pressed {
 		return
 	}
@@ -124,7 +124,7 @@ func (b *Button) MouseMove(ctx EventContext, local geom.Point) {
 }
 
 func (b *Button) MouseDown(ctx EventContext, e event.MouseButtonEvent, local geom.Point) {
-	if !b.Enabled() || e.Button != event.MouseButtonLeft || !b.Bounds().Contains(local) {
+	if !b.Enabled() || e.Button != event.MouseButtonLeft || !LocalContains(b, local) {
 		return
 	}
 	b.tracking = true
@@ -139,10 +139,10 @@ func (b *Button) MouseUp(ctx EventContext, e event.MouseButtonEvent, local geom.
 	if e.Button != event.MouseButtonLeft || !b.tracking {
 		return
 	}
-	clicked := b.Bounds().Contains(local) && b.pressed
+	clicked := LocalContains(b, local) && b.pressed
 	b.tracking = false
 	b.pressed = false
-	b.hot = b.Bounds().Contains(local)
+	b.hot = LocalContains(b, local)
 	ctx.ReleaseCapture(b)
 	ctx.Invalidate(b)
 	if clicked {

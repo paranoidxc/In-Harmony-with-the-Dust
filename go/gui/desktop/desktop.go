@@ -9,14 +9,24 @@ import (
 	"classicui/theme"
 	"classicui/widget"
 	"classicui/widgets"
+	"time"
 )
 
-type Desktop struct {
-	bounds geom.Rect
-	theme  *theme.Theme
-	dirty  invalidate.Region
+type Platform interface {
+	ClipboardText() string
+	SetClipboardText(string)
+	SetTextInput(bool, geom.Rect)
+}
 
-	windows []*Window
+type Desktop struct {
+	bounds   geom.Rect
+	theme    *theme.Theme
+	text     *uitext.Renderer
+	platform Platform
+	dirty    invalidate.Region
+
+	windows  []*Window
+	menuMode bool
 
 	drag *dragState
 
@@ -28,6 +38,10 @@ type Desktop struct {
 
 	captureWindow  *Window
 	captureControl widgets.Control
+
+	menuWindow     *Window
+	menuPopups     []*popupMenuState
+	commandHandler func(*Window, widgets.CommandID)
 }
 
 type dragState struct {
@@ -48,6 +62,16 @@ func New(size geom.Size, th *theme.Theme) *Desktop {
 	}
 	d.InvalidateAll()
 	return d
+}
+
+func (d *Desktop) BindPlatform(platform Platform) {
+	d.platform = platform
+	d.syncTextInputState()
+}
+
+func (d *Desktop) BindTextRenderer(renderer *uitext.Renderer) {
+	d.text = renderer
+	d.syncTextInputState()
 }
 
 func (d *Desktop) Theme() *theme.Theme {
@@ -83,6 +107,7 @@ func (d *Desktop) RemoveWindow(win *Window) {
 		if len(d.windows) > 0 {
 			d.activateWindow(d.windows[len(d.windows)-1])
 		}
+		d.syncTextInputState()
 		return
 	}
 }
@@ -115,10 +140,24 @@ func (d *Desktop) Paint(canvas *paint.Canvas, tr *uitext.Renderer) error {
 			return err
 		}
 	}
-	return nil
+	return d.paintMenuOverlays(canvas)
+}
+
+func (d *Desktop) Update(now time.Time) {
+	if d.focusedControl == nil || d.focusedWindow == nil {
+		d.syncTextInputState()
+		return
+	}
+	tickable, ok := d.focusedControl.(widgets.TickHandler)
+	if ok {
+		tickable.Tick(d.contextFor(d.focusedWindow), now)
+	}
+	d.syncTextInputState()
 }
 
 func (d *Desktop) HandleEvent(evt event.Event) {
+	defer d.syncTextInputState()
+
 	switch e := evt.(type) {
 	case event.WindowExposed:
 		d.InvalidateAll()
@@ -137,15 +176,25 @@ func (d *Desktop) HandleEvent(evt event.Event) {
 			return
 		}
 		d.handleMouseUp(e)
+	case event.MouseWheel:
+		d.handleMouseWheel(e)
 	case event.KeyEvent:
-		if !e.Down || e.Repeat {
+		if !e.Down {
 			return
 		}
 		d.handleKeyDown(e)
+	case event.TextInput:
+		d.handleTextInput(e)
+	case event.TextEditing:
+		d.handleTextEditing(e)
 	}
 }
 
 func (d *Desktop) handleMouseMove(p geom.Point) {
+	if d.handleMenuMouseMove(p) {
+		return
+	}
+
 	if d.drag != nil {
 		oldBounds := d.drag.window.Bounds()
 		next := d.drag.startBounds.Move(p.X-d.drag.startPointer.X, p.Y-d.drag.startPointer.Y)
@@ -181,6 +230,10 @@ func (d *Desktop) handleMouseMove(p geom.Point) {
 }
 
 func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
+	if d.handleMenuMouseDown(e.Position) {
+		return
+	}
+
 	win, _ := d.windowAt(e.Position)
 	if win == nil {
 		d.setFocus(nil, nil)
@@ -223,6 +276,10 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 }
 
 func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
+	if d.handleMenuMouseUp(e.Position) {
+		return
+	}
+
 	if d.drag != nil {
 		d.drag = nil
 	}
@@ -251,13 +308,33 @@ func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 	}
 }
 
+func (d *Desktop) handleMouseWheel(e event.MouseWheel) {
+	win, _ := d.windowAt(e.Position)
+	if win == nil || win.HitTest(e.Position, d.theme) != HitClient {
+		return
+	}
+	control := win.ControlAt(e.Position, d.theme)
+	if control == nil {
+		return
+	}
+	handler, ok := control.(widgets.WheelHandler)
+	if !ok {
+		return
+	}
+	handler.MouseWheel(d.contextFor(win), e, win.ControlLocalPoint(control, e.Position, d.theme))
+}
+
 func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 	active := d.activeWindow()
 	if active == nil {
 		return
 	}
 
-	if e.Key == event.KeyTab {
+	if d.handleMenuKeyDown(active, e) {
+		return
+	}
+
+	if e.Key == event.KeyTab && !e.Repeat {
 		d.cycleFocus(active, e.Modifiers&event.ModShift != 0)
 		return
 	}
@@ -268,10 +345,36 @@ func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 		}
 	}
 
-	if e.Key == event.KeyEnter && active.DefaultButton() != nil && active.DefaultButton().Enabled() {
+	if d.dispatchAccelerator(active, e) {
+		return
+	}
+
+	if !e.Repeat && e.Key == event.KeyEnter && active.DefaultButton() != nil && active.DefaultButton().Enabled() {
 		active.DefaultButton().KeyDown(d.contextFor(active), e)
 		d.InvalidateRect(d.controlScreenRect(active, active.DefaultButton()))
 	}
+}
+
+func (d *Desktop) handleTextInput(e event.TextInput) {
+	if d.focusedControl == nil || d.focusedWindow == nil {
+		return
+	}
+	handler, ok := d.focusedControl.(widgets.TextInputHandler)
+	if !ok {
+		return
+	}
+	handler.TextInput(d.contextFor(d.focusedWindow), e)
+}
+
+func (d *Desktop) handleTextEditing(e event.TextEditing) {
+	if d.focusedControl == nil || d.focusedWindow == nil {
+		return
+	}
+	handler, ok := d.focusedControl.(widgets.TextInputHandler)
+	if !ok {
+		return
+	}
+	handler.TextEditing(d.contextFor(d.focusedWindow), e)
 }
 
 func (d *Desktop) cycleFocus(win *Window, reverse bool) {
@@ -343,6 +446,9 @@ func (d *Desktop) activateWindow(target *Window) {
 	if target == nil {
 		return
 	}
+	if d.menuWindow != nil && d.menuWindow != target {
+		d.closeMenus()
+	}
 
 	idx := -1
 	for i, win := range d.windows {
@@ -410,6 +516,9 @@ func (d *Desktop) setFocus(win *Window, control widgets.Control) {
 		oldControl := d.focusedControl
 		oldWindow := d.focusedWindow
 		oldControl.SetFocused(false)
+		if handler, ok := oldControl.(widgets.FocusHandler); ok {
+			handler.FocusLost(d.contextFor(oldWindow))
+		}
 		d.InvalidateRect(d.controlScreenRect(oldWindow, oldControl))
 	}
 
@@ -417,11 +526,17 @@ func (d *Desktop) setFocus(win *Window, control widgets.Control) {
 	d.focusedControl = control
 	if d.focusedControl != nil && d.focusedWindow != nil {
 		d.focusedControl.SetFocused(true)
+		if handler, ok := d.focusedControl.(widgets.FocusHandler); ok {
+			handler.FocusGained(d.contextFor(d.focusedWindow))
+		}
 		d.InvalidateRect(d.controlScreenRect(d.focusedWindow, d.focusedControl))
 	}
 }
 
 func (d *Desktop) clearStateForWindow(win *Window) {
+	if d.menuWindow == win {
+		d.closeMenus()
+	}
 	if d.drag != nil && d.drag.window == win {
 		d.drag = nil
 	}
@@ -435,6 +550,29 @@ func (d *Desktop) clearStateForWindow(win *Window) {
 		d.captureWindow = nil
 		d.captureControl = nil
 	}
+}
+
+func (d *Desktop) syncTextInputState() {
+	if d.platform == nil {
+		return
+	}
+	if d.menuMode {
+		d.platform.SetTextInput(false, geom.Rect{})
+		return
+	}
+	if d.focusedWindow == nil || d.focusedControl == nil {
+		d.platform.SetTextInput(false, geom.Rect{})
+		return
+	}
+	handler, ok := d.focusedControl.(widgets.TextInputHandler)
+	if !ok {
+		d.platform.SetTextInput(false, geom.Rect{})
+		return
+	}
+
+	controlRect := d.controlScreenRect(d.focusedWindow, d.focusedControl)
+	inputRect := handler.TextInputRect(d.contextFor(d.focusedWindow)).Move(controlRect.X, controlRect.Y)
+	d.platform.SetTextInput(true, inputRect)
 }
 
 func (d *Desktop) controlScreenRect(win *Window, control widgets.Control) geom.Rect {
@@ -475,4 +613,32 @@ func (c controlContext) ReleaseCapture(control widgets.Control) {
 	}
 	c.desktop.captureControl = nil
 	c.desktop.captureWindow = nil
+}
+
+func (c controlContext) ClipboardText() string {
+	if c.desktop.platform == nil {
+		return ""
+	}
+	return c.desktop.platform.ClipboardText()
+}
+
+func (c controlContext) SetClipboardText(text string) {
+	if c.desktop.platform == nil {
+		return
+	}
+	c.desktop.platform.SetClipboardText(text)
+}
+
+func (c controlContext) MeasureText(text string) geom.Size {
+	if c.desktop.text == nil {
+		return geom.Size{}
+	}
+	return c.desktop.text.MeasureString(text)
+}
+
+func (c controlContext) LineHeight() int {
+	if c.desktop.text == nil {
+		return 0
+	}
+	return c.desktop.text.LineHeight()
 }

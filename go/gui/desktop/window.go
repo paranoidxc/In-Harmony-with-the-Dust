@@ -16,24 +16,28 @@ const (
 	HitNowhere HitPart = iota
 	HitClient
 	HitCaption
+	HitMenuBar
 	HitClose
 )
 
 type Window struct {
 	widget.BaseWidget
-	title         string
-	active        bool
-	closeHot      bool
-	closePressed  bool
-	content       *widgets.Panel
-	defaultButton *widgets.Button
+	title           string
+	active          bool
+	closeHot        bool
+	closePressed    bool
+	menuBar         *widgets.MenuBar
+	menuActiveIndex int
+	content         *widgets.Panel
+	defaultButton   *widgets.Button
 }
 
 func NewWindow(id string, bounds geom.Rect) *Window {
 	return &Window{
-		BaseWidget: widget.NewBase(id, bounds),
-		active:     true,
-		content:    widgets.NewPanel(id+".content", geom.Rect{}),
+		BaseWidget:      widget.NewBase(id, bounds),
+		active:          true,
+		menuActiveIndex: -1,
+		content:         widgets.NewPanel(id+".content", geom.Rect{}),
 	}
 }
 
@@ -92,11 +96,17 @@ func (w *Window) CaptionRect(th *theme.Theme) geom.Rect {
 func (w *Window) ClientRect(th *theme.Theme) geom.Rect {
 	frame := th.Metrics.BorderWidth + th.Metrics.WindowFrameInner
 	caption := w.CaptionRect(th)
+	top := caption.Bottom() + 1
+	height := w.Bounds().H - frame*2 - caption.H - 1
+	if menu := w.MenuBarRect(th); !menu.Empty() {
+		top = menu.Bottom() + 1
+		height -= menu.H + 1
+	}
 	return geom.Rect{
 		X: w.Bounds().X + frame,
-		Y: caption.Bottom() + 1,
-		W: w.Bounds().W - frame*2,
-		H: w.Bounds().H - frame*2 - caption.H - 1,
+		Y: top,
+		W: max(w.Bounds().W-frame*2, 0),
+		H: max(height, 0),
 	}
 }
 
@@ -123,6 +133,9 @@ func (w *Window) HitTest(p geom.Point, th *theme.Theme) HitPart {
 	}
 	if w.CaptionRect(th).Contains(p) {
 		return HitCaption
+	}
+	if !w.MenuBarRect(th).Empty() && w.MenuBarRect(th).Contains(p) {
+		return HitMenuBar
 	}
 	return HitClient
 }
@@ -179,6 +192,9 @@ func (w *Window) Paint(canvas *paint.Canvas, th *theme.Theme, tr *uitext.Rendere
 	closeRect := w.CloseButtonRect(th)
 	drawCaptionButton(canvas, closeRect, th, w.closePressed, w.closeHot)
 	if err := w.paintTitle(canvas, caption, closeRect, th, tr); err != nil {
+		return err
+	}
+	if err := w.paintMenuBar(canvas, th, tr); err != nil {
 		return err
 	}
 

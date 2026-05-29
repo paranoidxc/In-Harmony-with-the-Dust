@@ -11,8 +11,11 @@ const (
 	TypeMouseMove
 	TypeMouseDown
 	TypeMouseUp
+	TypeMouseWheel
 	TypeKeyDown
 	TypeKeyUp
+	TypeTextInput
+	TypeTextEditing
 )
 
 type Event interface {
@@ -61,6 +64,13 @@ func (e MouseButtonEvent) Type() Type {
 	return TypeMouseUp
 }
 
+type MouseWheel struct {
+	Position geom.Point
+	Delta    int
+}
+
+func (MouseWheel) Type() Type { return TypeMouseWheel }
+
 type Key int
 
 const (
@@ -69,6 +79,42 @@ const (
 	KeyEnter
 	KeySpace
 	KeyTab
+	KeyBackspace
+	KeyDelete
+	KeyLeft
+	KeyRight
+	KeyUp
+	KeyDown
+	KeyHome
+	KeyEnd
+	KeyPageUp
+	KeyPageDown
+	KeyA
+	KeyB
+	KeyC
+	KeyD
+	KeyE
+	KeyF
+	KeyG
+	KeyH
+	KeyI
+	KeyJ
+	KeyK
+	KeyL
+	KeyM
+	KeyN
+	KeyO
+	KeyP
+	KeyQ
+	KeyR
+	KeyS
+	KeyT
+	KeyU
+	KeyV
+	KeyW
+	KeyX
+	KeyY
+	KeyZ
 	KeyLeftAlt
 	KeyRightAlt
 )
@@ -94,3 +140,17 @@ func (e KeyEvent) Type() Type {
 	}
 	return TypeKeyUp
 }
+
+type TextInput struct {
+	Text string
+}
+
+func (TextInput) Type() Type { return TypeTextInput }
+
+type TextEditing struct {
+	Text   string
+	Start  int
+	Length int
+}
+
+func (TextEditing) Type() Type { return TypeTextEditing }

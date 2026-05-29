@@ -12,6 +12,7 @@ type fakeContext struct {
 	captured       Control
 	invalidations  int
 	releaseCapture int
+	clipboard      string
 }
 
 func (f *fakeContext) Invalidate(Control) {
@@ -31,6 +32,22 @@ func (f *fakeContext) ReleaseCapture(control Control) {
 		f.captured = nil
 	}
 	f.releaseCapture++
+}
+
+func (f *fakeContext) ClipboardText() string {
+	return f.clipboard
+}
+
+func (f *fakeContext) SetClipboardText(text string) {
+	f.clipboard = text
+}
+
+func (f *fakeContext) MeasureText(text string) geom.Size {
+	return geom.Size{W: len([]rune(text)) * 8, H: 14}
+}
+
+func (f *fakeContext) LineHeight() int {
+	return 14
 }
 
 func TestButtonMouseCaptureAndClick(t *testing.T) {

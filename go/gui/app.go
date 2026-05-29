@@ -3,6 +3,7 @@ package classicui
 import (
 	"runtime"
 	"sync"
+	"time"
 
 	"classicui/backend/sdl2"
 	"classicui/desktop"
@@ -11,6 +12,7 @@ import (
 	"classicui/paint"
 	uitext "classicui/text"
 	"classicui/theme"
+	"classicui/widgets"
 )
 
 type Config struct {
@@ -66,6 +68,17 @@ func (a *App) Quit() {
 	a.running = false
 }
 
+func (a *App) OnCommand(fn func(CommandID)) {
+	if fn == nil {
+		a.desktop.BindCommandHandler(nil)
+		return
+	}
+
+	a.desktop.BindCommandHandler(func(_ *desktop.Window, cmd widgets.CommandID) {
+		fn(CommandID(cmd))
+	})
+}
+
 func (a *App) Run() error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
@@ -80,6 +93,7 @@ func (a *App) Run() error {
 	}
 	defer backend.Close()
 	a.backend = backend
+	a.desktop.BindPlatform(backend)
 
 	textRenderer, err := uitext.NewRenderer(a.desktop.Theme().Fonts)
 	if err != nil {
@@ -87,6 +101,7 @@ func (a *App) Run() error {
 	}
 	defer textRenderer.Close()
 	a.text = textRenderer
+	a.desktop.BindTextRenderer(textRenderer)
 
 	a.running = true
 	a.desktop.InvalidateAll()
@@ -107,6 +122,7 @@ func (a *App) Run() error {
 		}
 
 		a.runPostedTasks()
+		a.desktop.Update(time.Now())
 
 		if a.desktop.HasDirtyRegion() {
 			if err := a.desktop.Paint(a.canvas, a.text); err != nil {

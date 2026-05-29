@@ -7,6 +7,7 @@ import (
 	uitext "classicui/text"
 	"classicui/theme"
 	"classicui/widget"
+	"time"
 )
 
 type EventContext interface {
@@ -14,6 +15,10 @@ type EventContext interface {
 	SetFocus(Control)
 	Capture(Control)
 	ReleaseCapture(Control)
+	ClipboardText() string
+	SetClipboardText(string)
+	MeasureText(string) geom.Size
+	LineHeight() int
 }
 
 type Control interface {
@@ -28,6 +33,25 @@ type Control interface {
 	CanFocus() bool
 	SetFocused(bool)
 	Focused() bool
+}
+
+type WheelHandler interface {
+	MouseWheel(EventContext, event.MouseWheel, geom.Point) bool
+}
+
+type FocusHandler interface {
+	FocusGained(EventContext)
+	FocusLost(EventContext)
+}
+
+type TickHandler interface {
+	Tick(EventContext, time.Time) bool
+}
+
+type TextInputHandler interface {
+	TextInput(EventContext, event.TextInput) bool
+	TextEditing(EventContext, event.TextEditing) bool
+	TextInputRect(EventContext) geom.Rect
 }
 
 type PaintContext struct {
@@ -106,4 +130,16 @@ func walkFocusable(control Control, out *[]Control) {
 	for _, child := range ControlsOf(control) {
 		walkFocusable(child, out)
 	}
+}
+
+func LocalRect(w widget.Widget) geom.Rect {
+	if w == nil {
+		return geom.Rect{}
+	}
+	bounds := w.Bounds()
+	return geom.Rect{X: 0, Y: 0, W: bounds.W, H: bounds.H}
+}
+
+func LocalContains(w widget.Widget, point geom.Point) bool {
+	return LocalRect(w).Contains(point)
 }
