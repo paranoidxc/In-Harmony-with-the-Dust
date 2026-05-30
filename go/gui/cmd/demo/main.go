@@ -15,10 +15,12 @@ import (
 
 const (
 	cmdAddPath            classicui.CommandID = "cmd.file.add_path"
+	cmdOpenSelection      classicui.CommandID = "cmd.file.open_selection"
 	cmdNavigateUp         classicui.CommandID = "cmd.file.navigate_up"
 	cmdExit               classicui.CommandID = "cmd.file.exit"
 	cmdSortByName         classicui.CommandID = "cmd.view.sort.name"
-	cmdSortByLength       classicui.CommandID = "cmd.view.sort.length"
+	cmdSortBySize         classicui.CommandID = "cmd.view.sort.size"
+	cmdSortByType         classicui.CommandID = "cmd.view.sort.type"
 	cmdToggleSingleSelect classicui.CommandID = "cmd.view.single_select"
 	cmdAbout              classicui.CommandID = "cmd.help.about"
 )
@@ -146,25 +148,45 @@ func buildDemoRoot() (*demoEntry, map[*widgets.TreeNode]*demoEntry) {
 	return root, treeIndex
 }
 
-func sortDemoFolder(folder *demoEntry, mode classicui.CommandID) {
+func sortDemoFolder(folder *demoEntry, mode classicui.CommandID, descending bool) {
 	if folder == nil || !folder.IsFolder() {
 		return
 	}
 	sort.SliceStable(folder.Children, func(i, j int) bool {
 		left := folder.Children[i]
 		right := folder.Children[j]
+		if left.IsFolder() != right.IsFolder() {
+			return left.IsFolder()
+		}
 		switch mode {
-		case cmdSortByLength:
-			leftLen := len([]rune(left.Name))
-			rightLen := len([]rune(right.Name))
-			if leftLen == rightLen {
+		case cmdSortBySize:
+			if left.IsFolder() {
 				return left.Name < right.Name
 			}
-			return leftLen < rightLen
+			if left.Size == right.Size {
+				return left.Name < right.Name
+			}
+			return left.Size < right.Size
+		case cmdSortByType:
+			leftType := demoTypeText(left)
+			rightType := demoTypeText(right)
+			if leftType == rightType {
+				return left.Name < right.Name
+			}
+			return leftType < rightType
 		default:
 			return left.Name < right.Name
 		}
 	})
+	if descending {
+		firstFile := firstDemoFileIndex(folder.Children)
+		for i, j := 0, firstFile-1; i < j; i, j = i+1, j-1 {
+			folder.Children[i], folder.Children[j] = folder.Children[j], folder.Children[i]
+		}
+		for i, j := firstFile, len(folder.Children)-1; i < j; i, j = i+1, j-1 {
+			folder.Children[i], folder.Children[j] = folder.Children[j], folder.Children[i]
+		}
+	}
 	if folder.TreeNode != nil {
 		folder.TreeNode.Children = folder.TreeNode.Children[:0]
 		for _, child := range folder.Children {
@@ -246,6 +268,104 @@ func applyDemoSelectionMode(list *widgets.ListBox, tree *widgets.TreeView, singl
 	}
 }
 
+func applyDemoListViewSelectionMode(list *widgets.ListView, tree *widgets.TreeView, single bool) {
+	if list != nil {
+		options := list.SelectionOptions()
+		options.MultiSelect = !single
+		list.SetSelectionOptions(options)
+	}
+	if tree != nil {
+		options := tree.SelectionOptions()
+		options.MultiSelect = !single
+		tree.SetSelectionOptions(options)
+	}
+}
+
+func demoSizeText(entry *demoEntry) string {
+	if entry == nil || entry.IsFolder() {
+		return ""
+	}
+	return fmt.Sprintf("%d KB", entry.Size)
+}
+
+func demoTypeText(entry *demoEntry) string {
+	if entry == nil {
+		return ""
+	}
+	if entry.IsFolder() {
+		return "文件夹"
+	}
+	dot := strings.LastIndex(entry.Name, ".")
+	if dot < 0 || dot == len(entry.Name)-1 {
+		return "文件"
+	}
+	return strings.ToUpper(entry.Name[dot+1:]) + " 文件"
+}
+
+func demoListViewItem(entry *demoEntry) widgets.ListViewItem {
+	return widgets.ListViewItem{
+		Texts: []string{entry.DisplayName(), demoSizeText(entry), demoTypeText(entry)},
+		Data:  entry,
+	}
+}
+
+func demoListViewRows(entries []*demoEntry) []widgets.ListViewItem {
+	rows := make([]widgets.ListViewItem, len(entries))
+	for i, entry := range entries {
+		rows[i] = demoListViewItem(entry)
+	}
+	return rows
+}
+
+func buildDemoContextMenu(
+	hasEntry bool,
+	entry *demoEntry,
+	sortByNameItem *widgets.MenuItem,
+	sortBySizeItem *widgets.MenuItem,
+	sortByTypeItem *widgets.MenuItem,
+) *widgets.Menu {
+	if !hasEntry || entry == nil {
+		return widgets.NewMenu(
+			widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
+			widgets.NewSeparator(),
+			widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
+				sortByNameItem,
+				sortBySizeItem,
+				sortByTypeItem,
+			)),
+		)
+	}
+	openText := "&Open"
+	if !entry.IsFolder() {
+		openText = "&Open File"
+	}
+	items := []*widgets.MenuItem{
+		widgets.NewMenuItem(cmdOpenSelection, openText, nil),
+	}
+	if entry.IsFolder() {
+		items = append(items, widgets.NewMenuItem(cmdNavigateUp, "Open &Parent", nil))
+	}
+	items = append(items,
+		widgets.NewSeparator(),
+		widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
+		widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
+			sortByNameItem,
+			sortBySizeItem,
+			sortByTypeItem,
+		)),
+	)
+	return widgets.NewMenu(items...)
+}
+
+func firstDemoFileIndex(entries []*demoEntry) int {
+	for i, entry := range entries {
+		if entry == nil || !entry.IsFolder() {
+			return i
+		}
+	}
+	return len(entries)
+}
+
 func main() {
 	autoQuit := flag.Duration("auto-quit", 0, "automatically exit after the given duration")
 	flag.Parse()
@@ -276,8 +396,10 @@ func main() {
 	toolbarSortByName := widgets.NewToolbarButton(cmdSortByName, "By Name")
 	toolbarSortByName.Checked = true
 	toolbarSortByName.Tooltip = "按名称排序当前目录"
-	toolbarSortByLength := widgets.NewToolbarButton(cmdSortByLength, "By Length")
-	toolbarSortByLength.Tooltip = "按名称长度排序当前目录"
+	toolbarSortBySize := widgets.NewToolbarButton(cmdSortBySize, "By Size")
+	toolbarSortBySize.Tooltip = "按大小排序当前目录"
+	toolbarSortByType := widgets.NewToolbarButton(cmdSortByType, "By Type")
+	toolbarSortByType.Tooltip = "按类型排序当前目录"
 	toolbarAbout := widgets.NewToolbarButton(cmdAbout, "About")
 	toolbarAbout.Tooltip = "显示当前 demo 的验证重点"
 	toolbar := widgets.NewToolbar("toolbar", classicui.Rect{
@@ -292,7 +414,8 @@ func main() {
 		toolbarSingle,
 		widgets.NewToolbarSeparator(),
 		toolbarSortByName,
-		toolbarSortByLength,
+		toolbarSortBySize,
+		toolbarSortByType,
 		widgets.NewToolbarSeparator(),
 		toolbarAbout,
 	)
@@ -308,12 +431,17 @@ func main() {
 	pathEdit := widgets.NewEdit("path", classicui.Rect{X: 48, Y: 8, W: 292, H: 24})
 	sortLabel := widgets.NewLabel("sortLabel", "排序：", classicui.Rect{X: 346, Y: 12, W: 36, H: 18})
 	sortCombo := widgets.NewComboBox("sortCombo", classicui.Rect{X: 382, Y: 8, W: 128, H: 24})
-	sortCombo.SetItems([]string{"按名称", "按长度"})
+	sortCombo.SetItems([]string{"按名称", "按大小", "按类型"})
 	sortCombo.SetEditable(true)
 	sortCombo.SetTooltip("切换当前目录的排序方式")
 
 	treeView := widgets.NewTreeView("tree", classicui.Rect{X: 10, Y: 42, W: 196, H: 172}, root.TreeNode)
-	list := widgets.NewListBox("files", classicui.Rect{X: 214, Y: 42, W: 296, H: 172})
+	list := widgets.NewListView("files", classicui.Rect{X: 214, Y: 42, W: 296, H: 172},
+		widgets.ListViewColumn{Title: "名称", Width: 144},
+		widgets.ListViewColumn{Title: "大小", Width: 56, Align: widgets.HeaderAlignRight},
+		widgets.ListViewColumn{Title: "类型", Width: 76},
+	)
+	list.SetSortIndicator(0, false)
 	upBtn := widgets.NewButton("up", "上级", classicui.Rect{X: 272, Y: 222, W: 72, H: 24})
 	addBtn := widgets.NewButton("add", "添加", classicui.Rect{X: 350, Y: 222, W: 72, H: 24})
 	closeBtn := widgets.NewButton("close", "关闭", classicui.Rect{X: 438, Y: 222, W: 72, H: 24})
@@ -349,10 +477,10 @@ func main() {
 	statePage.Add(stateHint3)
 
 	help1 := widgets.NewLabel("help1", "帮助：", classicui.Rect{X: 10, Y: 12, W: 80, H: 18})
-	help2 := widgets.NewLabel("help2", "1. 左侧 TreeView 选目录，右侧 ListBox 自动切换内容。", classicui.Rect{X: 10, Y: 40, W: 520, H: 18})
+	help2 := widgets.NewLabel("help2", "1. 左侧 TreeView 选目录，右侧 ListView 自动切换内容。", classicui.Rect{X: 10, Y: 40, W: 520, H: 18})
 	help3 := widgets.NewLabel("help3", "2. 双击或激活右侧目录项，会把树选择切到该目录。", classicui.Rect{X: 10, Y: 64, W: 520, H: 18})
 	help4 := widgets.NewLabel("help4", "3. 切到单选模式后，Ctrl/Shift 扩选和空白框选会被策略层统一关闭。", classicui.Rect{X: 10, Y: 88, W: 520, H: 18})
-	help5 := widgets.NewLabel("help5", "4. 排序命令只排序当前目录，但树和列表会同步看到新顺序。", classicui.Rect{X: 10, Y: 112, W: 520, H: 18})
+	help5 := widgets.NewLabel("help5", "4. 点击列头或切换排序命令，只会重排当前目录，但树和列表会同步。", classicui.Rect{X: 10, Y: 112, W: 520, H: 18})
 	help6 := widgets.NewLabel("help6", "5. Ctrl+N 添加项目，Ctrl+Q 退出，Alt 菜单、工具栏和状态栏共享状态。", classicui.Rect{X: 10, Y: 136, W: 520, H: 18})
 	helpPage := widgets.NewPanel("helpPage", classicui.Rect{})
 	helpPage.Add(help1)
@@ -382,7 +510,8 @@ func main() {
 
 	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
 	sortByNameItem.Checked = true
-	sortByLengthItem := widgets.NewMenuItem(cmdSortByLength, "By &Length", nil)
+	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
+	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
 	singleSelectItem := widgets.NewMenuItem(cmdToggleSingleSelect, "&Single Selection", nil)
 
 	appWin.SetMenuBar(widgets.NewMenuBar(
@@ -404,7 +533,8 @@ func main() {
 		widgets.NewSubmenuItem("&View", widgets.NewMenu(
 			widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
 				sortByNameItem,
-				sortByLengthItem,
+				sortBySizeItem,
+				sortByTypeItem,
 			)),
 			singleSelectItem,
 		)),
@@ -412,18 +542,44 @@ func main() {
 			widgets.NewMenuItem(cmdAbout, "&About", nil),
 		)),
 	))
+	treeView.SetContextMenuProvider(func(info widgets.TreeViewContextMenuInfo) *widgets.Menu {
+		if !info.HasNode || info.Node == nil {
+			return buildDemoContextMenu(false, nil, sortByNameItem, sortBySizeItem, sortByTypeItem)
+		}
+		return buildDemoContextMenu(true, treeIndex[info.Node], sortByNameItem, sortBySizeItem, sortByTypeItem)
+	})
+	list.SetContextMenuProvider(func(info widgets.ListViewContextMenuInfo) *widgets.Menu {
+		if !info.HasItem {
+			return buildDemoContextMenu(false, nil, sortByNameItem, sortBySizeItem, sortByTypeItem)
+		}
+		entry, _ := info.Item.Data.(*demoEntry)
+		return buildDemoContextMenu(entry != nil, entry, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	})
 
 	currentSort := cmdSortByName
+	sortDescending := false
 	currentFolder := root
 	currentEntries := []*demoEntry(nil)
 	statusMessage := ""
 
 	sortLabelText := func(cmd classicui.CommandID) string {
 		switch cmd {
-		case cmdSortByLength:
-			return "Length"
+		case cmdSortBySize:
+			return "Size"
+		case cmdSortByType:
+			return "Type"
 		default:
 			return "Name"
+		}
+	}
+	sortColumnIndex := func(cmd classicui.CommandID) int {
+		switch cmd {
+		case cmdSortBySize:
+			return 1
+		case cmdSortByType:
+			return 2
+		default:
+			return 0
 		}
 	}
 	describeNodes := func(nodes []*widgets.TreeNode) string {
@@ -481,13 +637,9 @@ func main() {
 	}
 
 	refreshCurrentFolder := func(selectEntry *demoEntry) {
-		sortDemoFolder(currentFolder, currentSort)
+		sortDemoFolder(currentFolder, currentSort, sortDescending)
 		currentEntries = append(currentEntries[:0], currentFolder.Children...)
-		names := make([]string, len(currentEntries))
-		for i, entry := range currentEntries {
-			names[i] = entry.DisplayName()
-		}
-		list.SetItems(names)
+		list.SetItems(demoListViewRows(currentEntries))
 		list.SetSelectionOptions(list.SelectionOptions())
 		list.SetSelectedIndexSilent(-1)
 		if selectEntry != nil {
@@ -499,7 +651,7 @@ func main() {
 	}
 
 	applySelectionMode := func(single bool) {
-		applyDemoSelectionMode(list, treeView, single)
+		applyDemoListViewSelectionMode(list, treeView, single)
 		toolbar.SetChecked(cmdToggleSingleSelect, single)
 		singleSelectItem.Checked = single
 		if single {
@@ -512,12 +664,18 @@ func main() {
 	applySort := func(cmd classicui.CommandID, message string) {
 		currentSort = cmd
 		sortByNameItem.Checked = cmd == cmdSortByName
-		sortByLengthItem.Checked = cmd == cmdSortByLength
+		sortBySizeItem.Checked = cmd == cmdSortBySize
+		sortByTypeItem.Checked = cmd == cmdSortByType
 		toolbar.SetChecked(cmdSortByName, cmd == cmdSortByName)
-		toolbar.SetChecked(cmdSortByLength, cmd == cmdSortByLength)
-		if cmd == cmdSortByLength {
+		toolbar.SetChecked(cmdSortBySize, cmd == cmdSortBySize)
+		toolbar.SetChecked(cmdSortByType, cmd == cmdSortByType)
+		list.SetSortIndicator(sortColumnIndex(cmd), sortDescending)
+		switch cmd {
+		case cmdSortBySize:
 			sortCombo.SetSelectedIndexSilent(1)
-		} else {
+		case cmdSortByType:
+			sortCombo.SetSelectedIndexSilent(2)
+		default:
 			sortCombo.SetSelectedIndexSilent(0)
 		}
 		refreshCurrentFolder(nil)
@@ -542,6 +700,28 @@ func main() {
 			}
 			refreshCurrentFolder(child)
 			updateStatus("已添加到当前目录: " + child.DisplayName())
+		case cmdOpenSelection:
+			if index := list.SelectedIndex(); index >= 0 && index < len(currentEntries) {
+				entry := currentEntries[index]
+				treeView.SetSelectedNode(entry.TreeNode)
+				if entry.IsFolder() {
+					updateStatus("已打开目录: " + entry.Path())
+				} else {
+					updateStatus(fmt.Sprintf("已打开文件: %s (%d KB)", entry.Path(), entry.Size))
+				}
+				return
+			}
+			if node := treeView.SelectedNode(); node != nil {
+				if entry := treeIndex[node]; entry != nil {
+					if entry.IsFolder() {
+						updateStatus("已打开目录: " + entry.Path())
+					} else {
+						updateStatus(fmt.Sprintf("已打开文件: %s (%d KB)", entry.Path(), entry.Size))
+					}
+				}
+				return
+			}
+			updateStatus("当前没有可打开的项目。")
 		case cmdNavigateUp:
 			if currentFolder.Parent == nil {
 				updateStatus("已经在根目录。")
@@ -550,9 +730,14 @@ func main() {
 			treeView.SetSelectedNode(currentFolder.Parent.TreeNode)
 			updateStatus("已切换到上级目录。")
 		case cmdSortByName:
+			sortDescending = false
 			applySort(cmd, "已切换为按名称排序。")
-		case cmdSortByLength:
-			applySort(cmd, "已切换为按名称长度排序。")
+		case cmdSortBySize:
+			sortDescending = false
+			applySort(cmd, "已切换为按大小排序。")
+		case cmdSortByType:
+			sortDescending = false
+			applySort(cmd, "已切换为按类型排序。")
 		case cmdToggleSingleSelect:
 			applySelectionMode(!list.SelectionOptions().MultiSelect)
 		case cmdAbout:
@@ -608,7 +793,7 @@ func main() {
 		updateStatus(fmt.Sprintf("已重命名: %s -> %s", oldText, newText))
 	})
 
-	list.OnChange(func(index int, value string) {
+	list.OnChange(func(index int, item widgets.ListViewItem) {
 		if index < 0 || index >= len(currentEntries) {
 			updateStatus("列表选择已清空。")
 			return
@@ -616,7 +801,7 @@ func main() {
 		entry := currentEntries[index]
 		count := len(list.SelectedIndices())
 		if count > 1 {
-			updateStatus(fmt.Sprintf("列表选择已更新：%s（已选 %d 项）", value, count))
+			updateStatus(fmt.Sprintf("列表选择已更新：%s（已选 %d 项）", item.Texts[0], count))
 			return
 		}
 		if entry.IsFolder() {
@@ -625,7 +810,7 @@ func main() {
 		}
 		updateStatus(fmt.Sprintf("准备打开文件: %s (%d KB)", entry.Path(), entry.Size))
 	})
-	list.OnActivate(func(index int, _ string) {
+	list.OnActivate(func(index int, _ widgets.ListViewItem) {
 		if index < 0 || index >= len(currentEntries) {
 			return
 		}
@@ -638,6 +823,22 @@ func main() {
 		treeView.SetSelectedNode(entry.TreeNode)
 		updateStatus(fmt.Sprintf("已打开文件: %s (%d KB)", entry.Path(), entry.Size))
 	})
+	list.OnColumnClick(func(index int) {
+		nextSort := cmdSortByName
+		switch index {
+		case 1:
+			nextSort = cmdSortBySize
+		case 2:
+			nextSort = cmdSortByType
+		}
+		if currentSort == nextSort {
+			sortDescending = !sortDescending
+			applySort(nextSort, "已切换排序方向。")
+			return
+		}
+		sortDescending = false
+		runCommand(nextSort)
+	})
 
 	tabs.OnSelectionChange(func(_ int, page *widgets.TabPage) {
 		syncDefaultButton()
@@ -645,11 +846,15 @@ func main() {
 	})
 	sortCombo.OnCommit(func(index int, _ string) {
 		if index < 0 {
-			updateStatus("请输入“按名称”或“按长度”后再提交。")
+			updateStatus("请输入“按名称”“按大小”或“按类型”后再提交。")
 			return
 		}
 		if index == 1 {
-			runCommand(cmdSortByLength)
+			runCommand(cmdSortBySize)
+			return
+		}
+		if index == 2 {
+			runCommand(cmdSortByType)
 			return
 		}
 		runCommand(cmdSortByName)

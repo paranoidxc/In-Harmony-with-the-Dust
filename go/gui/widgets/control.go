@@ -16,6 +16,7 @@ type EventContext interface {
 	Capture(Control)
 	ReleaseCapture(Control)
 	DispatchCommand(CommandID)
+	ShowContextMenu(Control, geom.Rect, *Menu) bool
 	ClipboardText() string
 	SetClipboardText(string)
 	MeasureText(string) geom.Size

@@ -422,6 +422,13 @@ func (c overlayContext) DispatchCommand(cmd widgets.CommandID) {
 	c.desktop.dispatchCommand(c.overlay.ownerWindow, cmd)
 }
 
+func (c overlayContext) ShowContextMenu(owner widgets.Control, anchor geom.Rect, menu *widgets.Menu) bool {
+	if c.overlay == nil || c.overlay.ownerWindow == nil || owner == nil || menu == nil {
+		return false
+	}
+	return c.desktop.showContextMenu(c.overlay.ownerWindow, owner, anchor, menu)
+}
+
 func (c overlayContext) ClipboardText() string {
 	if c.desktop.platform == nil {
 		return ""

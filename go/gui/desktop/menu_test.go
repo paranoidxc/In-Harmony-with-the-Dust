@@ -168,3 +168,32 @@ func TestDesktopEditableComboBoxKeepsPopupOpenWhenClickingEditArea(t *testing.T)
 		t.Fatal("combo popup should stay visible when clicking edit area")
 	}
 }
+
+func TestDesktopRightMouseUpDoesNotImmediatelyCloseContextMenu(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	list := widgets.NewListView("files", geom.Rect{X: 12, Y: 12, W: 160, H: 100},
+		widgets.ListViewColumn{Title: "Name", Width: 120},
+	)
+	list.SetItems([]widgets.ListViewItem{{Texts: []string{"One"}}})
+	list.SetContextMenu(widgets.NewMenu(
+		widgets.NewMenuItem("cmd.open", "&Open", nil),
+	))
+	win.Content().Add(list)
+	d.AddWindow(win)
+
+	client := win.ClientRect(d.theme)
+	rowPoint := geom.Point{
+		X: client.X + list.Bounds().X + 20,
+		Y: client.Y + list.Bounds().Y + 28,
+	}
+	d.HandleEvent(event.MouseButtonEvent{Down: true, Button: event.MouseButtonRight, Position: rowPoint})
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("context menu should be open after right mouse down")
+	}
+
+	d.HandleEvent(event.MouseButtonEvent{Button: event.MouseButtonRight, Position: rowPoint})
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("right mouse up should not immediately close the context menu")
+	}
+}

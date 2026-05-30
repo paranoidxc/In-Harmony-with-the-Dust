@@ -249,6 +249,64 @@ func TestTreeViewCtrlASelectsAllVisibleNodes(t *testing.T) {
 	}
 }
 
+func TestTreeViewRightClickSelectsNodeAndShowsContextMenu(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	menu := NewMenu(NewMenuItem("cmd.open", "&Open", nil))
+	tree.SetContextMenu(menu)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	click := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonRight}, click)
+
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 2" {
+		t.Fatalf("selected node = %#v, want Child 2", tree.SelectedNode())
+	}
+	if ctx.contextOwner != tree {
+		t.Fatal("context menu owner should be the tree view")
+	}
+	if ctx.contextMenu != menu {
+		t.Fatal("context menu should be shown")
+	}
+}
+
+func TestTreeViewContextMenuProviderReceivesBlankAndNodeContext(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	var gotNode, gotBlank bool
+	tree.SetContextMenuProvider(func(info TreeViewContextMenuInfo) *Menu {
+		if info.HasNode {
+			gotNode = info.Node != nil && info.Node.Text == "Child 2"
+		} else {
+			gotBlank = true
+		}
+		return NewMenu(NewMenuItem("cmd.open", "&Open", nil))
+	})
+
+	childRect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	click := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonRight}, click)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonRight}, geom.Point{X: 24, Y: 96})
+
+	if !gotNode {
+		t.Fatal("context menu provider should receive node context")
+	}
+	if !gotBlank {
+		t.Fatal("context menu provider should receive blank context")
+	}
+}
+
 func TestTreeViewBlankClickClearsSelectionAndFocuses(t *testing.T) {
 	root := NewFolderNode("Root",
 		NewFileNode("Child 1"),

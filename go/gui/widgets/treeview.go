@@ -103,42 +103,49 @@ type treeEntryLayout struct {
 	textY    int
 }
 
+type TreeViewContextMenuInfo struct {
+	Node    *TreeNode
+	HasNode bool
+}
+
 type TreeView struct {
 	widget.BaseWidget
-	roots          []*TreeNode
-	selection      selectionModel[*TreeNode]
-	selectionOpts  TreeViewSelectionOptions
-	hotNode        *TreeNode
-	hotPart        treeHotPart
-	pressedNode    *TreeNode
-	pressedPart    treeHotPart
-	pressedSelect  bool
-	pressedBlank   bool
-	pressedStart   geom.Point
-	pressedPoint   geom.Point
-	pressedMods    event.Modifiers
-	dragSelecting  bool
-	renamingNode   *TreeNode
-	renameEdit     *Edit
-	renameText     string
-	focused        bool
-	rowHeight      int
-	indentWidth    int
-	scrollbarSize  int
-	topIndex       int
-	scrollbar      *ScrollBar
-	onChange       func(*TreeNode)
-	onActivate     func(*TreeNode)
-	onBeginRename  func(*TreeNode)
-	onRenameCommit func(*TreeNode, string, string)
-	lastClickNode  *TreeNode
-	lastClickAt    time.Time
-	renameNode     *TreeNode
-	renameAt       time.Time
-	now            func() time.Time
-	doubleClick    time.Duration
-	renameDelay    time.Duration
-	lastDragTick   time.Time
+	roots               []*TreeNode
+	selection           selectionModel[*TreeNode]
+	selectionOpts       TreeViewSelectionOptions
+	hotNode             *TreeNode
+	hotPart             treeHotPart
+	pressedNode         *TreeNode
+	pressedPart         treeHotPart
+	pressedSelect       bool
+	pressedBlank        bool
+	pressedStart        geom.Point
+	pressedPoint        geom.Point
+	pressedMods         event.Modifiers
+	dragSelecting       bool
+	renamingNode        *TreeNode
+	renameEdit          *Edit
+	renameText          string
+	focused             bool
+	rowHeight           int
+	indentWidth         int
+	scrollbarSize       int
+	topIndex            int
+	scrollbar           *ScrollBar
+	onChange            func(*TreeNode)
+	onActivate          func(*TreeNode)
+	onBeginRename       func(*TreeNode)
+	onRenameCommit      func(*TreeNode, string, string)
+	contextMenu         *Menu
+	contextMenuProvider func(TreeViewContextMenuInfo) *Menu
+	lastClickNode       *TreeNode
+	lastClickAt         time.Time
+	renameNode          *TreeNode
+	renameAt            time.Time
+	now                 func() time.Time
+	doubleClick         time.Duration
+	renameDelay         time.Duration
+	lastDragTick        time.Time
 }
 
 func NewTreeView(id string, bounds geom.Rect, roots ...*TreeNode) *TreeView {
@@ -251,6 +258,14 @@ func (t *TreeView) OnBeginRename(fn func(*TreeNode)) {
 
 func (t *TreeView) OnRenameCommit(fn func(*TreeNode, string, string)) {
 	t.onRenameCommit = fn
+}
+
+func (t *TreeView) SetContextMenu(menu *Menu) {
+	t.contextMenu = menu
+}
+
+func (t *TreeView) SetContextMenuProvider(fn func(TreeViewContextMenuInfo) *Menu) {
+	t.contextMenuProvider = fn
 }
 
 func (t *TreeView) SelectionOptions() TreeViewSelectionOptions {
@@ -415,7 +430,14 @@ func (t *TreeView) MouseMove(ctx EventContext, local geom.Point) {
 }
 
 func (t *TreeView) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local geom.Point) {
-	if ev.Button != event.MouseButtonLeft || !LocalContains(t, local) {
+	if !LocalContains(t, local) {
+		return
+	}
+	if ev.Button == event.MouseButtonRight {
+		t.handleContextMenu(ctx, local)
+		return
+	}
+	if ev.Button != event.MouseButtonLeft {
 		return
 	}
 	if t.renamingNode != nil && t.renameEdit != nil && t.renameEdit.Visible() {
@@ -1619,4 +1641,34 @@ func (t *TreeView) expandAncestors(node *TreeNode) {
 	for current := node.parent; current != nil; current = current.parent {
 		current.Expanded = true
 	}
+}
+
+func (t *TreeView) handleContextMenu(ctx EventContext, local geom.Point) {
+	if t.scrollbar.Bounds().Contains(local) {
+		return
+	}
+	entry, _, ok := t.entryAt(local)
+	if ok && entry.node != nil {
+		if !t.isSelected(entry.node) {
+			t.SetSelectedNode(entry.node)
+			ctx.Invalidate(t)
+		}
+		if menu := t.contextMenuFor(TreeViewContextMenuInfo{Node: entry.node, HasNode: true}); menu != nil {
+			ctx.ShowContextMenu(t, geom.Rect{X: local.X, Y: local.Y, W: 1, H: 1}, menu)
+		}
+		return
+	}
+	if t.clearSelection() {
+		ctx.Invalidate(t)
+	}
+	if menu := t.contextMenuFor(TreeViewContextMenuInfo{}); menu != nil {
+		ctx.ShowContextMenu(t, geom.Rect{X: local.X, Y: local.Y, W: 1, H: 1}, menu)
+	}
+}
+
+func (t *TreeView) contextMenuFor(info TreeViewContextMenuInfo) *Menu {
+	if t.contextMenuProvider != nil {
+		return t.contextMenuProvider(info)
+	}
+	return t.contextMenu
 }

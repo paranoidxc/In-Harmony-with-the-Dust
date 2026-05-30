@@ -185,7 +185,7 @@ func (d *Desktop) HandleEvent(evt event.Event) {
 	case event.MouseMove:
 		d.handleMouseMove(e.Position)
 	case event.MouseButtonEvent:
-		if e.Button != event.MouseButtonLeft {
+		if e.Button != event.MouseButtonLeft && e.Button != event.MouseButtonRight {
 			return
 		}
 		if e.Down {
@@ -292,6 +292,9 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 	hit := win.HitTest(e.Position, d.theme)
 	switch hit {
 	case HitClose:
+		if e.Button != event.MouseButtonLeft {
+			return
+		}
 		if !win.closePressed {
 			win.SetClosePressed(true)
 			d.InvalidateRect(win.Bounds())
@@ -299,6 +302,9 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 		d.setFocus(nil, nil)
 		d.updateCloseHotState(e.Position)
 	case HitCaption:
+		if e.Button != event.MouseButtonLeft {
+			return
+		}
 		d.drag = &dragState{
 			window:       win,
 			startPointer: e.Position,
@@ -310,13 +316,17 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 		control := win.ControlAt(e.Position, d.theme)
 		d.setHoveredControl(win, control)
 		if control == nil || control == win.Content() {
-			d.setFocus(nil, nil)
+			if e.Button == event.MouseButtonLeft {
+				d.setFocus(nil, nil)
+			}
 			return
 		}
-		if control.CanFocus() {
-			d.setFocus(win, control)
-		} else {
-			d.setFocus(nil, nil)
+		if e.Button == event.MouseButtonLeft {
+			if control.CanFocus() {
+				d.setFocus(win, control)
+			} else {
+				d.setFocus(nil, nil)
+			}
 		}
 		control.MouseDown(d.contextFor(win), e, win.ControlLocalPoint(control, e.Position, d.theme))
 	}
@@ -325,7 +335,7 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 	d.pointerPos = e.Position
 	d.clearTooltip()
-	if d.handleMenuMouseUp(e.Position) {
+	if d.handleMenuMouseUp(e) {
 		return
 	}
 	if d.handleControlOverlayMouseUp(e) {
@@ -337,7 +347,7 @@ func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 		d.drag = nil
 	}
 
-	if d.releasePressedClose(e.Position) {
+	if e.Button == event.MouseButtonLeft && d.releasePressedClose(e.Position) {
 		return
 	}
 
@@ -688,6 +698,13 @@ func (c controlContext) ReleaseCapture(control widgets.Control) {
 
 func (c controlContext) DispatchCommand(cmd widgets.CommandID) {
 	c.desktop.dispatchCommand(c.window, cmd)
+}
+
+func (c controlContext) ShowContextMenu(owner widgets.Control, anchor geom.Rect, menu *widgets.Menu) bool {
+	if c.window == nil || owner == nil || menu == nil {
+		return false
+	}
+	return c.desktop.showContextMenu(c.window, owner, anchor, menu)
 }
 
 func (c controlContext) ClipboardText() string {

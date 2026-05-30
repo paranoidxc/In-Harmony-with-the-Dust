@@ -16,6 +16,9 @@ type fakeContext struct {
 	commands       []CommandID
 	overlay        *OverlayRequest
 	overlayOwner   Control
+	contextOwner   Control
+	contextAnchor  geom.Rect
+	contextMenu    *Menu
 }
 
 func (f *fakeContext) Invalidate(Control) {
@@ -39,6 +42,13 @@ func (f *fakeContext) ReleaseCapture(control Control) {
 
 func (f *fakeContext) DispatchCommand(cmd CommandID) {
 	f.commands = append(f.commands, cmd)
+}
+
+func (f *fakeContext) ShowContextMenu(owner Control, anchor geom.Rect, menu *Menu) bool {
+	f.contextOwner = owner
+	f.contextAnchor = anchor
+	f.contextMenu = menu
+	return true
 }
 
 func (f *fakeContext) ClipboardText() string {

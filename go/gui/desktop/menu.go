@@ -138,10 +138,14 @@ func (d *Desktop) handleMenuMouseDown(point geom.Point) bool {
 	return true
 }
 
-func (d *Desktop) handleMenuMouseUp(point geom.Point) bool {
+func (d *Desktop) handleMenuMouseUp(e event.MouseButtonEvent) bool {
 	if !d.menuMode || d.menuWindow == nil {
 		return false
 	}
+	if e.Button != event.MouseButtonLeft {
+		return true
+	}
+	point := e.Position
 
 	if d.menuWindow.HitTest(point, d.theme) == HitMenuBar {
 		return true
@@ -270,6 +274,24 @@ func (d *Desktop) dispatchAccelerator(win *Window, e event.KeyEvent) bool {
 	}
 
 	d.dispatchCommand(win, item.ID)
+	return true
+}
+
+func (d *Desktop) showContextMenu(win *Window, owner widgets.Control, anchor geom.Rect, menu *widgets.Menu) bool {
+	if win == nil || owner == nil || menu == nil {
+		return false
+	}
+	if d.menuMode {
+		d.closeMenus()
+	}
+	ownerRect := d.controlScreenRect(win, owner)
+	anchorRect := anchor.Move(ownerRect.X, ownerRect.Y)
+	d.menuWindow = win
+	d.menuMode = true
+	d.trimPopupStack(0)
+	popup := d.buildPopupMenu(menu, anchorRect, false)
+	d.menuPopups = append(d.menuPopups, popup)
+	d.pushOverlay(popup)
 	return true
 }
 

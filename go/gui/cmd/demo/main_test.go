@@ -44,18 +44,54 @@ func TestBuildDemoRootBindsTreeAndParents(t *testing.T) {
 
 func TestSortDemoFolderKeepsModelAndTreeInSync(t *testing.T) {
 	folder := newFolder("root",
-		newFile("bbb.txt", 1),
+		newFile("bbb.txt", 3),
 		newFile("a.txt", 1),
-		newFile("cc.txt", 1),
+		newFile("cc.txt", 2),
 	)
 	index := map[*widgets.TreeNode]*demoEntry{}
 	bindTree(folder, index)
 
-	sortDemoFolder(folder, cmdSortByName)
+	sortDemoFolder(folder, cmdSortByName, false)
 	assertDemoOrder(t, folder, []string{"a.txt", "bbb.txt", "cc.txt"})
 
-	sortDemoFolder(folder, cmdSortByLength)
+	sortDemoFolder(folder, cmdSortBySize, false)
 	assertDemoOrder(t, folder, []string{"a.txt", "cc.txt", "bbb.txt"})
+
+	sortDemoFolder(folder, cmdSortBySize, true)
+	assertDemoOrder(t, folder, []string{"bbb.txt", "cc.txt", "a.txt"})
+}
+
+func TestSortDemoFolderByTypeKeepsFoldersFirst(t *testing.T) {
+	folder := newFolder("root",
+		newFile("notes.md", 10),
+		newFolder("assets"),
+		newFile("data.bin", 20),
+		newFile("readme.txt", 5),
+	)
+	index := map[*widgets.TreeNode]*demoEntry{}
+	bindTree(folder, index)
+
+	sortDemoFolder(folder, cmdSortByType, false)
+	assertDemoOrder(t, folder, []string{"assets", "data.bin", "notes.md", "readme.txt"})
+
+	sortDemoFolder(folder, cmdSortByType, true)
+	assertDemoOrder(t, folder, []string{"assets", "readme.txt", "notes.md", "data.bin"})
+}
+
+func TestSortDemoFolderDescendingAlsoReordersFolderBlock(t *testing.T) {
+	folder := newFolder("root",
+		newFolder("alpha"),
+		newFolder("beta"),
+		newFolder("gamma"),
+	)
+	index := map[*widgets.TreeNode]*demoEntry{}
+	bindTree(folder, index)
+
+	sortDemoFolder(folder, cmdSortByName, false)
+	assertDemoOrder(t, folder, []string{"alpha", "beta", "gamma"})
+
+	sortDemoFolder(folder, cmdSortByName, true)
+	assertDemoOrder(t, folder, []string{"gamma", "beta", "alpha"})
 }
 
 func TestAddEntryToFolderParsesLeafAndRejectsDuplicates(t *testing.T) {
@@ -141,6 +177,44 @@ func TestFindDemoEntryIndexAndSelectionModeSync(t *testing.T) {
 	}
 	if !tree.SelectionOptions().MultiSelect {
 		t.Fatal("tree should switch back to multi-select mode")
+	}
+}
+
+func TestDemoTypeTextAndListViewRows(t *testing.T) {
+	folder := newFolder("docs")
+	file := newFile("notes.txt", 12)
+	bin := newFile("payload.bin", 64)
+	entries := []*demoEntry{folder, file, bin}
+
+	rows := demoListViewRows(entries)
+	if len(rows) != 3 {
+		t.Fatalf("row count = %d, want 3", len(rows))
+	}
+	if rows[0].Texts[2] != "文件夹" {
+		t.Fatalf("folder type = %q, want 文件夹", rows[0].Texts[2])
+	}
+	if rows[1].Texts[1] != "12 KB" {
+		t.Fatalf("size text = %q, want 12 KB", rows[1].Texts[1])
+	}
+	if rows[1].Texts[2] != "TXT 文件" {
+		t.Fatalf("txt type = %q, want TXT 文件", rows[1].Texts[2])
+	}
+	if rows[2].Texts[2] != "BIN 文件" {
+		t.Fatalf("bin type = %q, want BIN 文件", rows[2].Texts[2])
+	}
+}
+
+func TestFirstDemoFileIndex(t *testing.T) {
+	entries := []*demoEntry{
+		newFolder("docs"),
+		newFolder("assets"),
+		newFile("notes.txt", 1),
+	}
+	if index := firstDemoFileIndex(entries); index != 2 {
+		t.Fatalf("first file index = %d, want 2", index)
+	}
+	if index := firstDemoFileIndex([]*demoEntry{newFolder("only")}); index != 1 {
+		t.Fatalf("first file index for all-folders = %d, want 1", index)
 	}
 }
 
