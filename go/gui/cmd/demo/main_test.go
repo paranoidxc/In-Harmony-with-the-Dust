@@ -226,12 +226,15 @@ func TestBuildDemoContextMenuBlankIncludesRefreshAndNoRename(t *testing.T) {
 	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{Key: event.KeyF2})
 	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
 
-	menu := buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	menu := buildDemoContextMenu(nil, newFolder("桌面"), renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	if menu == nil {
 		t.Fatal("blank context menu should not be nil")
 	}
 	if !menuContainsCommand(menu, cmdViewRefresh) {
 		t.Fatal("blank context menu should include refresh")
+	}
+	if !menuContainsCommand(menu, cmdFileNewFolder) || !menuContainsCommand(menu, cmdFileNewTextFile) {
+		t.Fatal("blank context menu should include new-folder and new-text-file commands")
 	}
 	if menuContainsCommand(menu, cmdFileRename) {
 		t.Fatal("blank context menu should not include rename")
@@ -246,34 +249,97 @@ func TestBuildDemoContextMenuEntryIncludesRename(t *testing.T) {
 	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
 	entry := newFile("readme.txt", 8)
 
-	menu := buildDemoContextMenu(true, entry, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	menu := buildDemoContextMenu([]*demoEntry{entry}, newFolder("桌面"), renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	if menu == nil {
 		t.Fatal("entry context menu should not be nil")
 	}
 	if !menuContainsCommand(menu, cmdFileRename) {
 		t.Fatal("entry context menu should include rename")
 	}
+	if !menuContainsCommand(menu, cmdSelectionInfo) {
+		t.Fatal("entry context menu should include properties command")
+	}
 	if !menuContainsCommand(menu, cmdViewRefresh) {
 		t.Fatal("entry context menu should include refresh")
 	}
 }
 
-func menuContainsCommand(menu *widgets.Menu, cmd classicui.CommandID) bool {
+func TestBuildDemoContextMenuMultiSelectionEnablesOpenAndDisablesRename(t *testing.T) {
+	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
+	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
+	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
+	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{Key: event.KeyF2})
+	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
+	selection := []*demoEntry{
+		newFile("readme.txt", 8),
+		newFolder("Docs"),
+	}
+
+	menu := buildDemoContextMenu(selection, newFolder("桌面"), renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	if menu == nil {
-		return false
+		t.Fatal("multi-selection context menu should not be nil")
+	}
+	openItem := findMenuItem(menu, cmdOpenSelection)
+	if openItem == nil {
+		t.Fatal("multi-selection context menu should include open item")
+	}
+	if !openItem.Enabled {
+		t.Fatal("multi-selection open item should be enabled")
+	}
+	rename := findMenuItem(menu, cmdFileRename)
+	if rename == nil {
+		t.Fatal("multi-selection context menu should include rename item")
+	}
+	if rename.Enabled {
+		t.Fatal("multi-selection rename item should be disabled")
+	}
+	if !menuContainsCommand(menu, cmdSelectionInfo) {
+		t.Fatal("multi-selection context menu should include properties command")
+	}
+}
+
+func TestBuildDemoContextMenuCurrentFolderAddsParentCommand(t *testing.T) {
+	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
+	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
+	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
+	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{Key: event.KeyF2})
+	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
+	root := newFolder("桌面")
+	current := newFolder("文档")
+	root.AddChild(current)
+
+	menu := buildDemoContextMenu([]*demoEntry{current}, current, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	if menu == nil {
+		t.Fatal("current-folder context menu should not be nil")
+	}
+	if !menuContainsCommand(menu, cmdNavigateUp) {
+		t.Fatal("current-folder context menu should include navigate-up command")
+	}
+	if menuContainsCommand(menu, cmdOpenSelection) {
+		t.Fatal("current-folder context menu should not include open-selection command")
+	}
+}
+
+func menuContainsCommand(menu *widgets.Menu, cmd classicui.CommandID) bool {
+	return findMenuItem(menu, cmd) != nil
+}
+
+func findMenuItem(menu *widgets.Menu, cmd classicui.CommandID) *widgets.MenuItem {
+	if menu == nil {
+		return nil
 	}
 	for _, item := range menu.Items {
 		if item == nil {
 			continue
 		}
 		if item.ID == widgets.CommandID(cmd) {
-			return true
+			return item
 		}
-		if menuContainsCommand(item.Submenu, cmd) {
-			return true
+		if found := findMenuItem(item.Submenu, cmd); found != nil {
+			return found
 		}
 	}
-	return false
+	return nil
 }
 
 func assertDemoOrder(t *testing.T, folder *demoEntry, want []string) {

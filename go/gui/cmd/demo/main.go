@@ -15,8 +15,11 @@ import (
 
 const (
 	cmdAddPath            classicui.CommandID = "cmd.file.add_path"
+	cmdFileNewFolder      classicui.CommandID = "cmd.file.new_folder"
+	cmdFileNewTextFile    classicui.CommandID = "cmd.file.new_text_file"
 	cmdOpenSelection      classicui.CommandID = "cmd.file.open_selection"
 	cmdFileRename         classicui.CommandID = "cmd.file.rename"
+	cmdSelectionInfo      classicui.CommandID = "cmd.file.selection_info"
 	cmdNavigateUp         classicui.CommandID = "cmd.file.navigate_up"
 	cmdViewRefresh        classicui.CommandID = "cmd.view.refresh"
 	cmdExit               classicui.CommandID = "cmd.file.exit"
@@ -320,48 +323,191 @@ func demoListViewRows(entries []*demoEntry) []widgets.ListViewItem {
 }
 
 func buildDemoContextMenu(
-	hasEntry bool,
-	entry *demoEntry,
+	selection []*demoEntry,
+	currentFolder *demoEntry,
 	renameItem *widgets.MenuItem,
 	refreshItem *widgets.MenuItem,
 	sortByNameItem *widgets.MenuItem,
 	sortBySizeItem *widgets.MenuItem,
 	sortByTypeItem *widgets.MenuItem,
 ) *widgets.Menu {
-	if !hasEntry || entry == nil {
+	sortMenu := widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
+		cloneMenuItem(sortByNameItem),
+		cloneMenuItem(sortBySizeItem),
+		cloneMenuItem(sortByTypeItem),
+	))
+	refresh := cloneMenuItem(refreshItem)
+	newMenu := widgets.NewSubmenuItem("&New", widgets.NewMenu(
+		widgets.NewMenuItem(cmdFileNewFolder, "&Folder", nil),
+		widgets.NewMenuItem(cmdFileNewTextFile, "&Text Document", nil),
+	))
+	if len(selection) == 0 {
 		return widgets.NewMenu(
+			newMenu,
 			widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
-			refreshItem,
+			refresh,
 			widgets.NewSeparator(),
-			widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
-				sortByNameItem,
-				sortBySizeItem,
-				sortByTypeItem,
-			)),
+			sortMenu,
 		)
 	}
-	openText := "&Open"
-	if !entry.IsFolder() {
-		openText = "&Open File"
+	if len(selection) > 1 {
+		openItem := widgets.NewMenuItem(cmdOpenSelection, "&Open Selection", nil)
+		properties := widgets.NewMenuItem(cmdSelectionInfo, "P&roperties", nil)
+		rename := cloneMenuItem(renameItem)
+		rename.Enabled = false
+		return widgets.NewMenu(
+			openItem,
+			properties,
+			rename,
+			widgets.NewSeparator(),
+			newMenu,
+			refresh,
+			sortMenu,
+		)
 	}
-	items := []*widgets.MenuItem{
-		widgets.NewMenuItem(cmdOpenSelection, openText, nil),
-		renameItem,
+
+	entry := selection[0]
+	if entry == nil {
+		return widgets.NewMenu(refresh, widgets.NewSeparator(), sortMenu)
 	}
-	if entry.IsFolder() {
-		items = append(items, widgets.NewMenuItem(cmdNavigateUp, "Open &Parent", nil))
+	items := make([]*widgets.MenuItem, 0, 6)
+	if !(entry.IsFolder() && entry == currentFolder) {
+		openText := "&Open"
+		if !entry.IsFolder() {
+			openText = "&Open File"
+		}
+		items = append(items, widgets.NewMenuItem(cmdOpenSelection, openText, nil))
+	}
+	items = append(items, widgets.NewMenuItem(cmdSelectionInfo, "P&roperties", nil))
+	items = append(items, cloneMenuItem(renameItem))
+	if entry == currentFolder && currentFolder != nil && currentFolder.Parent != nil {
+		items = append(items, widgets.NewMenuItem(cmdNavigateUp, "Go to &Parent", nil))
 	}
 	items = append(items,
 		widgets.NewSeparator(),
-		widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
-		refreshItem,
-		widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
-			sortByNameItem,
-			sortBySizeItem,
-			sortByTypeItem,
-		)),
+		newMenu,
+		refresh,
+		sortMenu,
 	)
 	return widgets.NewMenu(items...)
+}
+
+func cloneMenuItem(item *widgets.MenuItem) *widgets.MenuItem {
+	if item == nil {
+		return nil
+	}
+	cloned := &widgets.MenuItem{
+		ID:        item.ID,
+		Text:      item.Text,
+		Enabled:   item.Enabled,
+		Checked:   item.Checked,
+		Separator: item.Separator,
+		Shortcut:  item.Shortcut,
+	}
+	if item.Submenu != nil {
+		cloned.Submenu = cloneMenu(item.Submenu)
+	}
+	return cloned
+}
+
+func cloneMenu(menu *widgets.Menu) *widgets.Menu {
+	if menu == nil {
+		return nil
+	}
+	items := make([]*widgets.MenuItem, 0, len(menu.Items))
+	for _, item := range menu.Items {
+		items = append(items, cloneMenuItem(item))
+	}
+	return widgets.NewMenu(items...)
+}
+
+func selectedDemoEntries(entries []*demoEntry, indices []int) []*demoEntry {
+	if len(indices) == 0 {
+		return nil
+	}
+	selected := make([]*demoEntry, 0, len(indices))
+	for _, index := range indices {
+		if index < 0 || index >= len(entries) {
+			continue
+		}
+		if entries[index] != nil {
+			selected = append(selected, entries[index])
+		}
+	}
+	return selected
+}
+
+func selectedTreeEntries(index map[*widgets.TreeNode]*demoEntry, nodes []*widgets.TreeNode) []*demoEntry {
+	if len(nodes) == 0 {
+		return nil
+	}
+	selected := make([]*demoEntry, 0, len(nodes))
+	for _, node := range nodes {
+		if entry := index[node]; entry != nil {
+			selected = append(selected, entry)
+		}
+	}
+	return selected
+}
+
+func uniqueDemoChildName(folder *demoEntry, stem, ext string) string {
+	if folder == nil {
+		return stem + ext
+	}
+	for n := 1; ; n++ {
+		name := stem + ext
+		if n > 1 {
+			name = fmt.Sprintf("%s (%d)%s", stem, n, ext)
+		}
+		duplicate := false
+		for _, child := range folder.Children {
+			if child != nil && strings.EqualFold(child.Name, name) {
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate {
+			return name
+		}
+	}
+}
+
+func summarizeDemoSelection(entries []*demoEntry) string {
+	if len(entries) == 0 {
+		return "当前没有选中任何项目。"
+	}
+	if len(entries) == 1 {
+		entry := entries[0]
+		if entry == nil {
+			return "当前没有选中任何项目。"
+		}
+		if entry.IsFolder() {
+			return "已选 1 项：文件夹 " + entry.Path()
+		}
+		return fmt.Sprintf("已选 1 项：文件 %s (%d KB)", entry.Path(), entry.Size)
+	}
+	folders := 0
+	files := 0
+	totalSize := 0
+	names := make([]string, 0, minInt(len(entries), 3))
+	for i, entry := range entries {
+		if entry == nil {
+			continue
+		}
+		if entry.IsFolder() {
+			folders++
+		} else {
+			files++
+			totalSize += entry.Size
+		}
+		if i < 3 {
+			names = append(names, entry.DisplayName())
+		}
+	}
+	if len(entries) > 3 {
+		names = append(names, "...")
+	}
+	return fmt.Sprintf("已选 %d 项：%d 个文件夹，%d 个文件，文件总大小 %d KB。%s", len(entries), folders, files, totalSize, strings.Join(names, ", "))
 }
 
 func firstDemoFileIndex(entries []*demoEntry) int {
@@ -523,14 +669,26 @@ func main() {
 		Key: event.KeyF2,
 	})
 	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
+	propertiesItem := widgets.NewMenuItem(cmdSelectionInfo, "P&roperties", nil)
 	singleSelectItem := widgets.NewMenuItem(cmdToggleSingleSelect, "&Single Selection", nil)
+
+	currentSort := cmdSortByName
+	sortDescending := false
+	currentFolder := root
+	currentEntries := []*demoEntry(nil)
+	statusMessage := ""
 
 	appWin.SetMenuBar(widgets.NewMenuBar(
 		widgets.NewSubmenuItem("&File", widgets.NewMenu(
+			widgets.NewSubmenuItem("&New", widgets.NewMenu(
+				widgets.NewMenuItem(cmdFileNewFolder, "&Folder", nil),
+				widgets.NewMenuItem(cmdFileNewTextFile, "&Text Document", nil),
+			)),
 			widgets.NewMenuItem(cmdAddPath, "&Add Item", &widgets.Accelerator{
 				Key:       event.KeyN,
 				Modifiers: event.ModCtrl,
 			}),
+			propertiesItem,
 			renameItem,
 			widgets.NewMenuItem(cmdNavigateUp, "&Up", &widgets.Accelerator{
 				Key:       event.KeyBackspace,
@@ -558,23 +716,16 @@ func main() {
 	))
 	treeView.SetContextMenuProvider(func(info widgets.TreeViewContextMenuInfo) *widgets.Menu {
 		if !info.HasNode || info.Node == nil {
-			return buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+			return buildDemoContextMenu(nil, currentFolder, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 		}
-		return buildDemoContextMenu(true, treeIndex[info.Node], renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+		return buildDemoContextMenu(selectedTreeEntries(treeIndex, treeView.SelectedNodes()), currentFolder, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	})
 	list.SetContextMenuProvider(func(info widgets.ListViewContextMenuInfo) *widgets.Menu {
 		if !info.HasItem {
-			return buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+			return buildDemoContextMenu(nil, currentFolder, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 		}
-		entry, _ := info.Item.Data.(*demoEntry)
-		return buildDemoContextMenu(entry != nil, entry, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+		return buildDemoContextMenu(selectedDemoEntries(currentEntries, list.SelectedIndices()), currentFolder, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	})
-
-	currentSort := cmdSortByName
-	sortDescending := false
-	currentFolder := root
-	currentEntries := []*demoEntry(nil)
-	statusMessage := ""
 
 	sortLabelText := func(cmd classicui.CommandID) string {
 		switch cmd {
@@ -706,6 +857,30 @@ func main() {
 
 	runCommand := func(cmd classicui.CommandID) {
 		switch cmd {
+		case cmdFileNewFolder:
+			name := uniqueDemoChildName(currentFolder, "新建文件夹", "")
+			child, errMessage := addEntryToFolder(currentFolder, name, treeIndex)
+			if errMessage != "" {
+				updateStatus(errMessage)
+				return
+			}
+			refreshCurrentFolder(child)
+			if index := findDemoEntryIndex(currentEntries, child); index >= 0 {
+				list.BeginRename(index)
+			}
+			updateStatus("已新建文件夹: " + child.Path())
+		case cmdFileNewTextFile:
+			name := uniqueDemoChildName(currentFolder, "新建文本文档", ".txt")
+			child, errMessage := addEntryToFolder(currentFolder, name, treeIndex)
+			if errMessage != "" {
+				updateStatus(errMessage)
+				return
+			}
+			refreshCurrentFolder(child)
+			if index := findDemoEntryIndex(currentEntries, child); index >= 0 {
+				list.BeginRename(index)
+			}
+			updateStatus("已新建文件: " + child.Path())
 		case cmdAddPath:
 			child, errMessage := addEntryToFolder(currentFolder, pathEdit.Text(), treeIndex)
 			if errMessage != "" {
@@ -715,6 +890,23 @@ func main() {
 			refreshCurrentFolder(child)
 			updateStatus("已添加到当前目录: " + child.DisplayName())
 		case cmdOpenSelection:
+			selectedEntries := selectedDemoEntries(currentEntries, list.SelectedIndices())
+			if len(selectedEntries) > 1 {
+				folders := 0
+				files := 0
+				for _, entry := range selectedEntries {
+					if entry == nil {
+						continue
+					}
+					if entry.IsFolder() {
+						folders++
+					} else {
+						files++
+					}
+				}
+				updateStatus(fmt.Sprintf("已处理 %d 项选择：%d 个文件夹，%d 个文件。", len(selectedEntries), folders, files))
+				return
+			}
 			if index := list.SelectedIndex(); index >= 0 && index < len(currentEntries) {
 				entry := currentEntries[index]
 				treeView.SetSelectedNode(entry.TreeNode)
@@ -737,6 +929,10 @@ func main() {
 			}
 			updateStatus("当前没有可打开的项目。")
 		case cmdFileRename:
+			if len(list.SelectedIndices()) > 1 {
+				updateStatus("多选状态下暂不支持批量重命名。")
+				return
+			}
 			if index := list.SelectedIndex(); index >= 0 && index < len(currentEntries) {
 				if !list.BeginRename(index) {
 					updateStatus("当前项目无法重命名。")
@@ -765,6 +961,16 @@ func main() {
 			}
 			treeView.SetSelectedNode(currentFolder.Parent.TreeNode)
 			updateStatus("已切换到上级目录。")
+		case cmdSelectionInfo:
+			selectedEntries := selectedDemoEntries(currentEntries, list.SelectedIndices())
+			if len(selectedEntries) == 0 {
+				if node := treeView.SelectedNode(); node != nil {
+					if entry := treeIndex[node]; entry != nil {
+						selectedEntries = []*demoEntry{entry}
+					}
+				}
+			}
+			updateStatus(summarizeDemoSelection(selectedEntries))
 		case cmdViewRefresh:
 			refreshCurrentFolder(nil)
 			updateStatus("已刷新当前目录。")
