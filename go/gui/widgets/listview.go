@@ -32,6 +32,7 @@ type ListView struct {
 	items               []ListViewItem
 	header              *HeaderControl
 	scrollbar           *ScrollBar
+	renameEdit          *Edit
 	selection           selectionModel[int]
 	selectionOpts       ListViewSelectionOptions
 	dragAnchor          int
@@ -44,12 +45,16 @@ type ListView struct {
 	dragSelecting       bool
 	focused             bool
 	hotIndex            int
+	renamingIndex       int
+	renameText          string
 	rowHeight           int
 	headerHeight        int
 	scrollbarSize       int
 	onChange            func(int, ListViewItem)
 	onActivate          func(int, ListViewItem)
 	onColumnClick       func(int)
+	onRenameRequest     func(EventContext, int, ListViewItem) bool
+	onRenameCommit      func(int, ListViewItem, string, string)
 	contextMenu         *Menu
 	contextMenuProvider func(ListViewContextMenuInfo) *Menu
 	lastClickIndex      int
@@ -69,6 +74,7 @@ func NewListView(id string, bounds geom.Rect, columns ...ListViewColumn) *ListVi
 		dragAnchor:     -1,
 		pressedIndex:   -1,
 		hotIndex:       -1,
+		renamingIndex:  -1,
 		rowHeight:      16,
 		headerHeight:   18,
 		scrollbarSize:  16,
@@ -117,6 +123,9 @@ func (l *ListView) Columns() []ListViewColumn {
 
 func (l *ListView) SetItems(items []ListViewItem) {
 	l.items = append([]ListViewItem(nil), items...)
+	if l.renamingIndex >= len(l.items) {
+		l.discardRenameEdit()
+	}
 	if len(l.items) == 0 {
 		l.selection.Clear()
 		l.topIndex = 0
@@ -225,6 +234,14 @@ func (l *ListView) OnColumnClick(fn func(int)) {
 	l.onColumnClick = fn
 }
 
+func (l *ListView) OnRenameRequest(fn func(EventContext, int, ListViewItem) bool) {
+	l.onRenameRequest = fn
+}
+
+func (l *ListView) OnRenameCommit(fn func(int, ListViewItem, string, string)) {
+	l.onRenameCommit = fn
+}
+
 func (l *ListView) SetContextMenu(menu *Menu) {
 	l.contextMenu = menu
 }
@@ -281,6 +298,19 @@ func (l *ListView) Paint(ctx PaintContext) error {
 	if rect, ok := l.marqueeRect(); ok {
 		paintSelectionMarquee(ctx, rect)
 	}
+	if l.renamingIndex >= 0 && l.renameEdit != nil && l.renameEdit.Visible() {
+		l.syncRenameEditBounds(func(text string) geom.Size {
+			if ctx.Text == nil {
+				return geom.Size{}
+			}
+			return ctx.Text.MeasureString(text)
+		}, lineHeight)
+		childCtx := ctx.Child(l)
+		if err := l.renameEdit.Paint(childCtx); err != nil {
+			ctx.Canvas.PopClip()
+			return err
+		}
+	}
 	ctx.Canvas.PopClip()
 
 	if err := l.scrollbar.Paint(childCtx); err != nil {
@@ -312,6 +342,13 @@ func (l *ListView) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local 
 	}
 	if ev.Button != event.MouseButtonLeft {
 		return
+	}
+	if l.renamingIndex >= 0 && l.renameEdit != nil && l.renameEdit.Visible() {
+		if l.renameEdit.Bounds().Contains(local) {
+			l.renameEdit.MouseDown(ctx, ev, geom.Point{X: local.X - l.renameEdit.Bounds().X, Y: local.Y - l.renameEdit.Bounds().Y})
+			return
+		}
+		l.commitRename(ctx)
 	}
 	l.syncChrome()
 	if l.header.Bounds().Contains(local) {
@@ -370,6 +407,13 @@ func (l *ListView) MouseDown(ctx EventContext, ev event.MouseButtonEvent, local 
 }
 
 func (l *ListView) MouseUp(ctx EventContext, ev event.MouseButtonEvent, local geom.Point) {
+	if ev.Button != event.MouseButtonLeft {
+		return
+	}
+	if l.renameEdit != nil && l.renameEdit.selecting {
+		l.renameEdit.MouseUp(ctx, ev, geom.Point{X: local.X - l.renameEdit.Bounds().X, Y: local.Y - l.renameEdit.Bounds().Y})
+		return
+	}
 	l.syncChrome()
 	if l.header.Bounds().Contains(local) || l.header.Focused() {
 		l.header.MouseUp(ctx, ev, geom.Point{X: local.X - l.header.Bounds().X, Y: local.Y - l.header.Bounds().Y})
@@ -397,6 +441,9 @@ func (l *ListView) MouseWheel(ctx EventContext, ev event.MouseWheel, _ geom.Poin
 	if len(l.items) == 0 {
 		return true
 	}
+	if l.renamingIndex >= 0 {
+		l.commitRename(ctx)
+	}
 	l.topIndex = clampInt(l.topIndex-ev.Delta, 0, l.maxTopIndex())
 	l.scrollbar.SetValue(l.topIndex)
 	ctx.Invalidate(l)
@@ -404,6 +451,12 @@ func (l *ListView) MouseWheel(ctx EventContext, ev event.MouseWheel, _ geom.Poin
 }
 
 func (l *ListView) MouseMove(ctx EventContext, local geom.Point) {
+	if l.renamingIndex >= 0 && l.renameEdit != nil && l.renameEdit.Visible() {
+		if l.renameEdit.Bounds().Contains(local) {
+			l.renameEdit.MouseMove(ctx, geom.Point{X: local.X - l.renameEdit.Bounds().X, Y: local.Y - l.renameEdit.Bounds().Y})
+			return
+		}
+	}
 	l.syncChrome()
 	if l.header.Bounds().Contains(local) {
 		l.header.MouseMove(ctx, geom.Point{X: local.X - l.header.Bounds().X, Y: local.Y - l.header.Bounds().Y})
@@ -440,6 +493,27 @@ func (l *ListView) MouseMove(ctx EventContext, local geom.Point) {
 func (l *ListView) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 	if !l.Enabled() {
 		return false
+	}
+	if l.renamingIndex >= 0 {
+		switch ev.Key {
+		case event.KeyEnter:
+			l.commitRename(ctx)
+			ctx.Invalidate(l)
+			return true
+		case event.KeyEscape:
+			l.cancelRenameEdit(ctx)
+			ctx.Invalidate(l)
+			return true
+		case event.KeyTab:
+			l.commitRename(ctx)
+			ctx.Invalidate(l)
+			return false
+		default:
+			if l.renameEdit != nil && l.renameEdit.KeyDown(ctx, ev) {
+				return true
+			}
+			return false
+		}
 	}
 	if len(l.items) == 0 {
 		return true
@@ -499,6 +573,14 @@ func (l *ListView) KeyDown(ctx EventContext, ev event.KeyEvent) bool {
 			return true
 		}
 		return false
+	case event.KeyF2:
+		if selected := l.SelectedIndex(); selected >= 0 && selected < len(l.items) {
+			if l.onRenameRequest != nil && l.onRenameRequest(ctx, selected, l.items[selected]) {
+				return true
+			}
+			return l.beginRenameWithContext(ctx, selected)
+		}
+		return false
 	default:
 		return false
 	}
@@ -520,38 +602,103 @@ func (l *ListView) CanFocus() bool {
 
 func (l *ListView) SetFocused(focused bool) {
 	l.focused = focused
+	if !focused {
+		l.clearPressed()
+	}
+	if l.renameEdit != nil {
+		l.renameEdit.SetFocused(focused && l.renamingIndex >= 0)
+	}
 }
 
 func (l *ListView) Focused() bool {
 	return l.focused
 }
 
+func (l *ListView) FocusGained(ctx EventContext) {
+	if l.renamingIndex >= 0 && l.renameEdit != nil {
+		l.renameEdit.SetFocused(true)
+		l.renameEdit.FocusGained(ctx)
+	}
+}
+
+func (l *ListView) FocusLost(ctx EventContext) {
+	if l.renamingIndex >= 0 {
+		l.commitRename(ctx)
+	}
+	if l.renameEdit != nil {
+		l.renameEdit.SetFocused(false)
+		l.renameEdit.FocusLost(ctx)
+	}
+}
+
 func (l *ListView) Tick(ctx EventContext, now time.Time) bool {
+	changed := false
+	if l.renamingIndex >= 0 && l.renameEdit != nil && l.renameEdit.Tick(ctx, now) {
+		changed = true
+	}
 	if !l.dragSelecting || len(l.items) == 0 {
-		return false
+		if changed {
+			ctx.Invalidate(l)
+		}
+		return changed
 	}
 	if !l.lastDragTick.IsZero() && now.Sub(l.lastDragTick) < 50*time.Millisecond {
-		return false
+		if changed {
+			ctx.Invalidate(l)
+		}
+		return changed
 	}
 	l.lastDragTick = now
 	pointer := l.pressedPoint
 	if pointer.Y < l.itemsRect(LocalRect(l)).Y {
 		if l.topIndex == 0 {
-			return false
+			if changed {
+				ctx.Invalidate(l)
+			}
+			return changed
 		}
 		l.topIndex = clampInt(l.topIndex-1, 0, l.maxTopIndex())
 	} else if pointer.Y >= l.itemsRect(LocalRect(l)).Bottom() {
 		if l.topIndex == l.maxTopIndex() {
-			return false
+			if changed {
+				ctx.Invalidate(l)
+			}
+			return changed
 		}
 		l.topIndex = clampInt(l.topIndex+1, 0, l.maxTopIndex())
 	} else {
-		return false
+		if changed {
+			ctx.Invalidate(l)
+		}
+		return changed
 	}
 	l.scrollbar.SetValue(l.topIndex)
 	l.updateDragSelection(pointer, false)
 	ctx.Invalidate(l)
 	return true
+}
+
+func (l *ListView) TextInput(ctx EventContext, ev event.TextInput) bool {
+	if l.renamingIndex < 0 || l.renameEdit == nil {
+		return false
+	}
+	return l.renameEdit.TextInput(ctx, ev)
+}
+
+func (l *ListView) TextEditing(ctx EventContext, ev event.TextEditing) bool {
+	if l.renamingIndex < 0 || l.renameEdit == nil {
+		return false
+	}
+	return l.renameEdit.TextEditing(ctx, ev)
+}
+
+func (l *ListView) TextInputRect(ctx EventContext) geom.Rect {
+	if l.renamingIndex < 0 || l.renameEdit == nil {
+		return geom.Rect{}
+	}
+	l.syncRenameEditBounds(ctx.MeasureText, ctx.LineHeight())
+	rect := l.renameEdit.TextInputRect(ctx)
+	return rect.Move(l.renameEdit.Bounds().X, l.renameEdit.Bounds().Y)
 }
 
 func (l *ListView) paintRow(ctx PaintContext, rowRect geom.Rect, item ListViewItem, selected bool) {
@@ -958,6 +1105,7 @@ func (l *ListView) autoFitColumn(index int, measure func(string) geom.Size) {
 
 func (l *ListView) handleContextMenu(ctx EventContext, local geom.Point) {
 	l.syncChrome()
+	ctx.SetFocus(l)
 	if l.header.Bounds().Contains(local) || l.scrollbar.Bounds().Contains(local) {
 		return
 	}
@@ -1002,4 +1150,191 @@ func (l *ListView) contextMenuFor(info ListViewContextMenuInfo) *Menu {
 		return l.contextMenuProvider(info)
 	}
 	return l.contextMenu
+}
+
+func (l *ListView) BeginRename(index int) bool {
+	if index < 0 || index >= len(l.items) {
+		return false
+	}
+	l.setSelectedIndex(index, true)
+	l.startRename(index)
+	return true
+}
+
+func (l *ListView) beginRenameWithContext(ctx EventContext, index int) bool {
+	if !l.BeginRename(index) {
+		return false
+	}
+	if ctx != nil {
+		l.syncRenameEditBounds(ctx.MeasureText, ctx.LineHeight())
+		if l.renameEdit != nil && l.focused {
+			l.renameEdit.FocusGained(ctx)
+		}
+		ctx.Invalidate(l)
+	}
+	return true
+}
+
+func (l *ListView) ensureRenameEdit() *Edit {
+	if l.renameEdit != nil {
+		return l.renameEdit
+	}
+	edit := NewEdit(l.ID()+".rename", geom.Rect{})
+	edit.SetVisible(false)
+	l.renameEdit = edit
+	return edit
+}
+
+func (l *ListView) startRename(index int) {
+	if index < 0 || index >= len(l.items) {
+		return
+	}
+	edit := l.ensureRenameEdit()
+	l.renamingIndex = index
+	l.renameText = l.primaryText(index)
+	edit.SetVisible(true)
+	edit.SetText(l.renameText)
+	anchor, caret := l.renameSelection(index)
+	edit.anchor = anchor
+	edit.caret = caret
+	edit.selecting = false
+	edit.composition = ""
+	if l.focused {
+		edit.SetFocused(true)
+		edit.resetCaretBlink()
+	}
+}
+
+func (l *ListView) renameSelection(index int) (int, int) {
+	text := l.primaryText(index)
+	end := len([]rune(text))
+	if index < 0 || index >= len(l.items) {
+		return 0, end
+	}
+	stemEnd := fileStemEnd(text)
+	if stemEnd <= 0 || stemEnd >= end {
+		return 0, end
+	}
+	return 0, stemEnd
+}
+
+func (l *ListView) renameEditBounds(measure func(string) geom.Size, lineHeight int) (geom.Rect, bool) {
+	if l.renamingIndex < 0 {
+		return geom.Rect{}, false
+	}
+	rowRect, ok := l.rowRect(l.renamingIndex)
+	if !ok {
+		return geom.Rect{}, false
+	}
+	currentText := l.primaryText(l.renamingIndex)
+	if l.renameEdit != nil {
+		currentText = l.renameEdit.Text()
+	}
+	textHeight := lineHeight
+	if measure != nil && currentText != "" {
+		if size := measure(currentText); size.H > 0 {
+			textHeight = size.H
+		}
+	}
+	cellRect, ok := l.cellRect(l.renamingIndex, 0)
+	if !ok {
+		return geom.Rect{}, false
+	}
+	textWidth := 64
+	if measure != nil {
+		textWidth = maxInt(measure(currentText).W+12, 64)
+	}
+	textRect := cellRect.Inset(4)
+	maxWidth := maxInt(rowRect.Right()-textRect.X-2, 48)
+	return geom.Rect{
+		X: textRect.X - 2,
+		Y: rowRect.Y,
+		W: minInt(textWidth, maxWidth),
+		H: maxInt(textHeight+2, rowRect.H),
+	}, true
+}
+
+func (l *ListView) syncRenameEditBounds(measure func(string) geom.Size, lineHeight int) {
+	if l.renameEdit == nil {
+		return
+	}
+	if bounds, ok := l.renameEditBounds(measure, lineHeight); ok {
+		l.renameEdit.SetBounds(bounds)
+		l.renameEdit.SetVisible(true)
+		return
+	}
+	l.renameEdit.SetVisible(false)
+}
+
+func (l *ListView) commitRename(ctx EventContext) bool {
+	if l.renamingIndex < 0 || l.renameEdit == nil {
+		return false
+	}
+	index := l.renamingIndex
+	item := l.items[index]
+	oldText := l.renameText
+	newText := l.renameEdit.Text()
+	if newText == "" {
+		newText = oldText
+	}
+	l.discardRenameEdit()
+	if newText != oldText {
+		if len(item.Texts) > 0 {
+			item.Texts[0] = newText
+			l.items[index] = item
+		}
+		if l.onRenameCommit != nil {
+			l.onRenameCommit(index, item, oldText, newText)
+		}
+	}
+	if ctx != nil {
+		ctx.ReleaseCapture(l.renameEdit)
+	}
+	return true
+}
+
+func (l *ListView) cancelRenameEdit(ctx EventContext) bool {
+	if l.renamingIndex < 0 || l.renameEdit == nil {
+		return false
+	}
+	if ctx != nil {
+		ctx.ReleaseCapture(l.renameEdit)
+	}
+	l.discardRenameEdit()
+	return true
+}
+
+func (l *ListView) discardRenameEdit() {
+	l.renamingIndex = -1
+	l.renameText = ""
+	if l.renameEdit != nil {
+		l.renameEdit.SetVisible(false)
+		l.renameEdit.SetFocused(false)
+		l.renameEdit.selecting = false
+		l.renameEdit.composition = ""
+	}
+}
+
+func (l *ListView) primaryText(index int) string {
+	if index < 0 || index >= len(l.items) || len(l.items[index].Texts) == 0 {
+		return ""
+	}
+	return l.items[index].Texts[0]
+}
+
+func (l *ListView) cellRect(index, column int) (geom.Rect, bool) {
+	rowRect, ok := l.rowRect(index)
+	if !ok || column < 0 || column >= len(l.columns) {
+		return geom.Rect{}, false
+	}
+	x := rowRect.X
+	for i, col := range l.columns {
+		width := maxInt(col.Width, 1)
+		cellRect := geom.Rect{X: x, Y: rowRect.Y, W: width, H: rowRect.H}
+		if i == column {
+			return cellRect, true
+		}
+		x += width
+	}
+	return geom.Rect{}, false
 }

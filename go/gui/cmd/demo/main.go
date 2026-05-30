@@ -16,7 +16,9 @@ import (
 const (
 	cmdAddPath            classicui.CommandID = "cmd.file.add_path"
 	cmdOpenSelection      classicui.CommandID = "cmd.file.open_selection"
+	cmdFileRename         classicui.CommandID = "cmd.file.rename"
 	cmdNavigateUp         classicui.CommandID = "cmd.file.navigate_up"
+	cmdViewRefresh        classicui.CommandID = "cmd.view.refresh"
 	cmdExit               classicui.CommandID = "cmd.file.exit"
 	cmdSortByName         classicui.CommandID = "cmd.view.sort.name"
 	cmdSortBySize         classicui.CommandID = "cmd.view.sort.size"
@@ -320,6 +322,8 @@ func demoListViewRows(entries []*demoEntry) []widgets.ListViewItem {
 func buildDemoContextMenu(
 	hasEntry bool,
 	entry *demoEntry,
+	renameItem *widgets.MenuItem,
+	refreshItem *widgets.MenuItem,
 	sortByNameItem *widgets.MenuItem,
 	sortBySizeItem *widgets.MenuItem,
 	sortByTypeItem *widgets.MenuItem,
@@ -327,6 +331,7 @@ func buildDemoContextMenu(
 	if !hasEntry || entry == nil {
 		return widgets.NewMenu(
 			widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
+			refreshItem,
 			widgets.NewSeparator(),
 			widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
 				sortByNameItem,
@@ -341,6 +346,7 @@ func buildDemoContextMenu(
 	}
 	items := []*widgets.MenuItem{
 		widgets.NewMenuItem(cmdOpenSelection, openText, nil),
+		renameItem,
 	}
 	if entry.IsFolder() {
 		items = append(items, widgets.NewMenuItem(cmdNavigateUp, "Open &Parent", nil))
@@ -348,6 +354,7 @@ func buildDemoContextMenu(
 	items = append(items,
 		widgets.NewSeparator(),
 		widgets.NewMenuItem(cmdAddPath, "&Add Item", nil),
+		refreshItem,
 		widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
 			sortByNameItem,
 			sortBySizeItem,
@@ -512,6 +519,10 @@ func main() {
 	sortByNameItem.Checked = true
 	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
 	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
+	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{
+		Key: event.KeyF2,
+	})
+	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
 	singleSelectItem := widgets.NewMenuItem(cmdToggleSingleSelect, "&Single Selection", nil)
 
 	appWin.SetMenuBar(widgets.NewMenuBar(
@@ -520,6 +531,7 @@ func main() {
 				Key:       event.KeyN,
 				Modifiers: event.ModCtrl,
 			}),
+			renameItem,
 			widgets.NewMenuItem(cmdNavigateUp, "&Up", &widgets.Accelerator{
 				Key:       event.KeyBackspace,
 				Modifiers: event.ModAlt,
@@ -531,6 +543,8 @@ func main() {
 			}),
 		)),
 		widgets.NewSubmenuItem("&View", widgets.NewMenu(
+			refreshItem,
+			widgets.NewSeparator(),
 			widgets.NewSubmenuItem("&Sort", widgets.NewMenu(
 				sortByNameItem,
 				sortBySizeItem,
@@ -544,16 +558,16 @@ func main() {
 	))
 	treeView.SetContextMenuProvider(func(info widgets.TreeViewContextMenuInfo) *widgets.Menu {
 		if !info.HasNode || info.Node == nil {
-			return buildDemoContextMenu(false, nil, sortByNameItem, sortBySizeItem, sortByTypeItem)
+			return buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 		}
-		return buildDemoContextMenu(true, treeIndex[info.Node], sortByNameItem, sortBySizeItem, sortByTypeItem)
+		return buildDemoContextMenu(true, treeIndex[info.Node], renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	})
 	list.SetContextMenuProvider(func(info widgets.ListViewContextMenuInfo) *widgets.Menu {
 		if !info.HasItem {
-			return buildDemoContextMenu(false, nil, sortByNameItem, sortBySizeItem, sortByTypeItem)
+			return buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 		}
 		entry, _ := info.Item.Data.(*demoEntry)
-		return buildDemoContextMenu(entry != nil, entry, sortByNameItem, sortBySizeItem, sortByTypeItem)
+		return buildDemoContextMenu(entry != nil, entry, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
 	})
 
 	currentSort := cmdSortByName
@@ -722,6 +736,28 @@ func main() {
 				return
 			}
 			updateStatus("当前没有可打开的项目。")
+		case cmdFileRename:
+			if index := list.SelectedIndex(); index >= 0 && index < len(currentEntries) {
+				if !list.BeginRename(index) {
+					updateStatus("当前项目无法重命名。")
+					return
+				}
+				if entry := currentEntries[index]; entry != nil {
+					updateStatus("开始重命名: " + entry.Path())
+				}
+				return
+			}
+			node := treeView.SelectedNode()
+			entry := treeIndex[node]
+			if entry == nil || entry.TreeNode == nil {
+				updateStatus("当前没有可重命名的项目。")
+				return
+			}
+			if !treeView.BeginRename(entry.TreeNode) {
+				updateStatus("当前项目无法重命名。")
+				return
+			}
+			updateStatus("开始重命名: " + entry.Path())
 		case cmdNavigateUp:
 			if currentFolder.Parent == nil {
 				updateStatus("已经在根目录。")
@@ -729,6 +765,9 @@ func main() {
 			}
 			treeView.SetSelectedNode(currentFolder.Parent.TreeNode)
 			updateStatus("已切换到上级目录。")
+		case cmdViewRefresh:
+			refreshCurrentFolder(nil)
+			updateStatus("已刷新当前目录。")
 		case cmdSortByName:
 			sortDescending = false
 			applySort(cmd, "已切换为按名称排序。")
@@ -822,6 +861,39 @@ func main() {
 		}
 		treeView.SetSelectedNode(entry.TreeNode)
 		updateStatus(fmt.Sprintf("已打开文件: %s (%d KB)", entry.Path(), entry.Size))
+	})
+	list.OnRenameRequest(func(_ widgets.EventContext, index int, item widgets.ListViewItem) bool {
+		if index < 0 || index >= len(currentEntries) {
+			return false
+		}
+		entry, _ := item.Data.(*demoEntry)
+		if entry == nil {
+			entry = currentEntries[index]
+		}
+		if entry == nil {
+			return false
+		}
+		updateStatus("开始重命名: " + entry.Path())
+		return false
+	})
+	list.OnRenameCommit(func(index int, item widgets.ListViewItem, oldText, newText string) {
+		if index < 0 || index >= len(currentEntries) {
+			return
+		}
+		entry, _ := item.Data.(*demoEntry)
+		if entry == nil {
+			entry = currentEntries[index]
+		}
+		if entry == nil {
+			return
+		}
+		entry.Name = newText
+		if entry.TreeNode != nil {
+			entry.TreeNode.Text = newText
+		}
+		refreshCurrentFolder(entry)
+		treeView.SetSelectedNode(entry.TreeNode)
+		updateStatus(fmt.Sprintf("已重命名: %s -> %s", oldText, newText))
 	})
 	list.OnColumnClick(func(index int) {
 		nextSort := cmdSortByName

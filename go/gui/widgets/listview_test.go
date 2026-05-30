@@ -154,6 +154,107 @@ func TestListViewEnterActivatesLeadItem(t *testing.T) {
 	}
 }
 
+func TestListViewF2RequestsRenameForLeadItem(t *testing.T) {
+	view := newTestListView()
+	ctx := &fakeContext{}
+
+	requested := -1
+	view.OnRenameRequest(func(_ EventContext, index int, item ListViewItem) bool {
+		requested = index
+		if got := item.Texts[0]; got != "Three" {
+			t.Fatalf("rename item text = %q, want Three", got)
+		}
+		return true
+	})
+
+	view.SetSelectedIndex(2)
+	if !view.KeyDown(ctx, event.KeyEvent{Key: event.KeyF2}) {
+		t.Fatal("F2 should be handled when rename callback is set")
+	}
+	if requested != 2 {
+		t.Fatalf("requested index = %d, want 2", requested)
+	}
+}
+
+func TestListViewInlineRenameCommit(t *testing.T) {
+	view := newTestListView()
+	ctx := &fakeContext{}
+	view.SetFocused(true)
+
+	var oldName, newName string
+	view.OnRenameCommit(func(_ int, _ ListViewItem, oldText, nextText string) {
+		oldName = oldText
+		newName = nextText
+	})
+
+	if !view.BeginRename(2) {
+		t.Fatal("begin rename should succeed")
+	}
+	if view.renamingIndex != 2 || view.renameEdit == nil || !view.renameEdit.Visible() {
+		t.Fatal("begin rename should show inline edit")
+	}
+	if !view.TextInput(ctx, event.TextInput{Text: "Notes"}) {
+		t.Fatal("text input should be forwarded to inline edit")
+	}
+	if !view.KeyDown(ctx, event.KeyEvent{Key: event.KeyEnter}) {
+		t.Fatal("enter should commit inline rename")
+	}
+	if got := view.Items()[2].Texts[0]; got != "Notes" {
+		t.Fatalf("text after commit = %q, want Notes", got)
+	}
+	if oldName != "Three" || newName != "Notes" {
+		t.Fatalf("rename callback = (%q, %q), want (%q, %q)", oldName, newName, "Three", "Notes")
+	}
+	if view.renamingIndex != -1 {
+		t.Fatal("renaming state should clear after commit")
+	}
+}
+
+func TestListViewInlineRenameCancel(t *testing.T) {
+	view := newTestListView()
+	ctx := &fakeContext{}
+	view.SetFocused(true)
+
+	if !view.BeginRename(2) {
+		t.Fatal("begin rename should succeed")
+	}
+	view.TextInput(ctx, event.TextInput{Text: "Draft"})
+	if !view.KeyDown(ctx, event.KeyEvent{Key: event.KeyEscape}) {
+		t.Fatal("escape should cancel inline rename")
+	}
+	if got := view.Items()[2].Texts[0]; got != "Three" {
+		t.Fatalf("text after cancel = %q, want original", got)
+	}
+	if view.renamingIndex != -1 {
+		t.Fatal("renaming state should clear after cancel")
+	}
+}
+
+func TestListViewInlineRenameSelectsFileStemOnly(t *testing.T) {
+	view := NewListView("files", geom.Rect{X: 0, Y: 0, W: 220, H: 140},
+		ListViewColumn{Title: "Name", Width: 120},
+	)
+	view.SetItems([]ListViewItem{
+		{Texts: []string{"archive.tar.gz"}},
+	})
+	ctx := &fakeContext{}
+	view.SetFocused(true)
+
+	if !view.beginRenameWithContext(ctx, 0) {
+		t.Fatal("begin rename should succeed")
+	}
+	if view.renameEdit == nil {
+		t.Fatal("rename edit should be created")
+	}
+	start, end, ok := view.renameEdit.selectionRange()
+	if !ok {
+		t.Fatal("file rename should start with a selection")
+	}
+	if start != 0 || end != len([]rune("archive.tar")) {
+		t.Fatalf("selection = (%d, %d), want (0, %d)", start, end, len([]rune("archive.tar")))
+	}
+}
+
 func TestListViewRightClickSelectsItemAndShowsContextMenu(t *testing.T) {
 	view := newTestListView()
 	ctx := &fakeContext{}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"classicui"
+	"classicui/event"
 	"classicui/widgets"
 )
 
@@ -216,6 +217,63 @@ func TestFirstDemoFileIndex(t *testing.T) {
 	if index := firstDemoFileIndex([]*demoEntry{newFolder("only")}); index != 1 {
 		t.Fatalf("first file index for all-folders = %d, want 1", index)
 	}
+}
+
+func TestBuildDemoContextMenuBlankIncludesRefreshAndNoRename(t *testing.T) {
+	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
+	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
+	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
+	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{Key: event.KeyF2})
+	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
+
+	menu := buildDemoContextMenu(false, nil, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	if menu == nil {
+		t.Fatal("blank context menu should not be nil")
+	}
+	if !menuContainsCommand(menu, cmdViewRefresh) {
+		t.Fatal("blank context menu should include refresh")
+	}
+	if menuContainsCommand(menu, cmdFileRename) {
+		t.Fatal("blank context menu should not include rename")
+	}
+}
+
+func TestBuildDemoContextMenuEntryIncludesRename(t *testing.T) {
+	sortByNameItem := widgets.NewMenuItem(cmdSortByName, "By &Name", nil)
+	sortBySizeItem := widgets.NewMenuItem(cmdSortBySize, "By &Size", nil)
+	sortByTypeItem := widgets.NewMenuItem(cmdSortByType, "By &Type", nil)
+	renameItem := widgets.NewMenuItem(cmdFileRename, "&Rename", &widgets.Accelerator{Key: event.KeyF2})
+	refreshItem := widgets.NewMenuItem(cmdViewRefresh, "&Refresh", nil)
+	entry := newFile("readme.txt", 8)
+
+	menu := buildDemoContextMenu(true, entry, renameItem, refreshItem, sortByNameItem, sortBySizeItem, sortByTypeItem)
+	if menu == nil {
+		t.Fatal("entry context menu should not be nil")
+	}
+	if !menuContainsCommand(menu, cmdFileRename) {
+		t.Fatal("entry context menu should include rename")
+	}
+	if !menuContainsCommand(menu, cmdViewRefresh) {
+		t.Fatal("entry context menu should include refresh")
+	}
+}
+
+func menuContainsCommand(menu *widgets.Menu, cmd classicui.CommandID) bool {
+	if menu == nil {
+		return false
+	}
+	for _, item := range menu.Items {
+		if item == nil {
+			continue
+		}
+		if item.ID == widgets.CommandID(cmd) {
+			return true
+		}
+		if menuContainsCommand(item.Submenu, cmd) {
+			return true
+		}
+	}
+	return false
 }
 
 func assertDemoOrder(t *testing.T, folder *demoEntry, want []string) {
