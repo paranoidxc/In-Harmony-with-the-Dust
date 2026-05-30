@@ -141,3 +141,23 @@ func TestEditableComboBoxEscapeRestoresCommittedValue(t *testing.T) {
 		t.Fatalf("selection after escape = %d, want 0", combo.SelectedIndex())
 	}
 }
+
+func TestComboBoxPopupUsesSingleSelectListBox(t *testing.T) {
+	combo := NewComboBox("sort", geom.Rect{X: 0, Y: 0, W: 120, H: 24})
+	combo.SetItems([]string{"Name", "Length", "Date"})
+	ctx := &fakeContext{}
+
+	combo.KeyDown(ctx, event.KeyEvent{Key: event.KeyEnter})
+	popup, ok := ctx.overlay.Content.(*ListBox)
+	if !ok {
+		t.Fatalf("overlay content = %T, want *ListBox", ctx.overlay.Content)
+	}
+
+	popup.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, geom.Point{X: 8, Y: 24})
+	popup.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModShift}, geom.Point{X: 8, Y: 40})
+
+	selected := popup.SelectedIndices()
+	if len(selected) != 1 || selected[0] != 2 {
+		t.Fatalf("popup selected indices = %#v, want [2]", selected)
+	}
+}

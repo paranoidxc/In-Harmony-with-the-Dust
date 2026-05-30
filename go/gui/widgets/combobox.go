@@ -546,6 +546,9 @@ func (c *ComboBox) openPopup(ctx EventContext) {
 	popupHeight := visibleRows*maxInt(lineHeight+2, 16) + 4
 	popupWidth := maxInt(c.Bounds().W, 96)
 	popup := NewListBox(c.ID()+".popup", geom.Rect{X: 0, Y: 0, W: popupWidth, H: popupHeight})
+	options := DefaultListBoxSelectionOptions()
+	options.MultiSelect = false
+	popup.SetSelectionOptions(options)
 	popup.SetItems(c.items)
 	if match := c.currentCandidateIndex(); match >= 0 {
 		popup.SetSelectedIndexSilent(match)

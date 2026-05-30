@@ -94,6 +94,37 @@ func TestTreeViewCtrlClickTogglesMultiSelection(t *testing.T) {
 	}
 }
 
+func TestTreeViewSingleSelectModeIgnoresMultiSelectModifiers(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	tree.SetMultiSelect(false)
+	ctx := &fakeContext{}
+
+	child1Rect := geom.Rect{X: 3, Y: 18, W: 160, H: tree.rowHeight}
+	child1Click := geom.Point{X: tree.iconRect(child1Rect, 1).Right() + 6, Y: child1Rect.Y + child1Rect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, child1Click)
+
+	child2Rect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	child2Click := geom.Point{X: tree.iconRect(child2Rect, 1).Right() + 6, Y: child2Rect.Y + child2Rect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModShift}, child2Click)
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 1 || selected[0].Text != "Child 2" {
+		t.Fatalf("selected nodes = %#v, want only Child 2", selected)
+	}
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyA, Modifiers: event.ModCtrl}) {
+		t.Fatal("ctrl+a should still be handled in single-select mode")
+	}
+	selected = tree.SelectedNodes()
+	if len(selected) != 1 || selected[0].Text != "Child 2" {
+		t.Fatalf("selected nodes after ctrl+a = %#v, want still only Child 2", selected)
+	}
+}
+
 func TestTreeViewShiftClickSelectsVisibleRange(t *testing.T) {
 	root := NewFolderNode("Root",
 		NewFileNode("Child 1"),
@@ -215,6 +246,282 @@ func TestTreeViewCtrlASelectsAllVisibleNodes(t *testing.T) {
 	}
 	if selected[0].Text != "Root" || selected[1].Text != "Collapsed" || selected[2].Text != "Visible.txt" {
 		t.Fatalf("selected order = [%s %s %s], want only visible nodes", selected[0].Text, selected[1].Text, selected[2].Text)
+	}
+}
+
+func TestTreeViewBlankClickClearsSelectionAndFocuses(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 72})
+
+	if ctx.focused != tree {
+		t.Fatal("blank click should focus the tree")
+	}
+	if tree.SelectedNode() != nil {
+		t.Fatalf("selected node = %#v, want nil", tree.SelectedNode())
+	}
+	if selected := tree.SelectedNodes(); len(selected) != 0 {
+		t.Fatalf("selected nodes = %#v, want none", selected)
+	}
+}
+
+func TestTreeViewCtrlBlankClickPreservesSelection(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 18, W: 160, H: tree.rowHeight}
+	childClick := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, childClick)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, geom.Point{X: 24, Y: 72})
+
+	if ctx.focused != tree {
+		t.Fatal("ctrl+blank click should focus the tree")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 1" {
+		t.Fatalf("selected node = %#v, want Child 1", tree.SelectedNode())
+	}
+	selected := tree.SelectedNodes()
+	if len(selected) != 1 || selected[0].Text != "Child 1" {
+		t.Fatalf("selected nodes = %#v, want only Child 1", selected)
+	}
+}
+
+func TestTreeViewKeyboardRecoversRecentSelectionAfterBlankClear(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	childClick := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, childClick)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 96})
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyDown}) {
+		t.Fatal("down should recover from empty selection")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 2" {
+		t.Fatalf("selected node after recovery = %#v, want Child 2", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewCtrlSpaceRecoversRecentSelectionAfterBlankClear(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 50, W: 160, H: tree.rowHeight}
+	childClick := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, childClick)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 96})
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeySpace, Modifiers: event.ModCtrl}) {
+		t.Fatal("ctrl+space should recover from empty selection")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 3" {
+		t.Fatalf("selected node after ctrl+space recovery = %#v, want Child 3", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewHomeEndOverrideRecentSelectionRecovery(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	childClick := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, childClick)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 96})
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyEnd}) {
+		t.Fatal("end should recover to last visible node")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 3" {
+		t.Fatalf("selected node after end = %#v, want Child 3", tree.SelectedNode())
+	}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 96})
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyHome}) {
+		t.Fatal("home should recover to first visible node")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Root" {
+		t.Fatalf("selected node after home = %#v, want Root", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewSelectionOptionsCanDisableRecentRecovery(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	options := tree.SelectionOptions()
+	options.RecoverFromRecent = false
+	tree.SetSelectionOptions(options)
+	ctx := &fakeContext{}
+
+	childRect := geom.Rect{X: 3, Y: 34, W: 160, H: tree.rowHeight}
+	childClick := geom.Point{X: tree.iconRect(childRect, 1).Right() + 6, Y: childRect.Y + childRect.H/2}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, childClick)
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 96})
+
+	if !tree.KeyDown(ctx, event.KeyEvent{Key: event.KeyDown}) {
+		t.Fatal("down should recover from empty selection")
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Root" {
+		t.Fatalf("selected node with recent recovery disabled = %#v, want Root", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewSelectionOptionsCanDisableBlankDragSelect(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	options := tree.SelectionOptions()
+	options.BlankDragSelect = false
+	tree.SetSelectionOptions(options)
+	ctx := &fakeContext{}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 88})
+	tree.MouseMove(ctx, geom.Point{X: 28, Y: 20})
+
+	if !tree.dragSelecting {
+		t.Fatal("blank drag should still cross the drag threshold")
+	}
+	if _, ok := tree.marqueeRect(); ok {
+		t.Fatal("blank drag marquee should be disabled")
+	}
+	if selected := tree.SelectedNodes(); len(selected) != 0 {
+		t.Fatalf("selected nodes after disabled blank drag = %#v, want none", selected)
+	}
+}
+
+func TestTreeViewDragSelectionStartsAfterThreshold(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	start := geom.Point{X: 24, Y: 24}
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, start)
+	tree.MouseMove(ctx, geom.Point{X: 25, Y: 25})
+	if tree.dragSelecting {
+		t.Fatal("small move should not start drag selection")
+	}
+	tree.MouseMove(ctx, geom.Point{X: 24, Y: 56})
+	if !tree.dragSelecting {
+		t.Fatal("move beyond threshold should start drag selection")
+	}
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 || selected[0].Text != "Child 1" || selected[2].Text != "Child 3" {
+		t.Fatalf("selected nodes after drag = %#v, want Child 1..3", selected)
+	}
+}
+
+func TestTreeViewBlankDragSelectsIntersectingRows(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 88})
+	tree.MouseMove(ctx, geom.Point{X: 28, Y: 20})
+
+	if !tree.dragSelecting {
+		t.Fatal("blank drag should enter drag-select mode")
+	}
+	if _, ok := tree.marqueeRect(); !ok {
+		t.Fatal("blank drag should expose a marquee rect")
+	}
+	selected := tree.SelectedNodes()
+	if len(selected) != 3 || selected[0].Text != "Child 1" || selected[1].Text != "Child 2" || selected[2].Text != "Child 3" {
+		t.Fatalf("selected nodes after blank drag = %#v, want Child 1..3", selected)
+	}
+	if tree.SelectedNode() == nil || tree.SelectedNode().Text != "Child 3" {
+		t.Fatalf("lead selection = %#v, want Child 3", tree.SelectedNode())
+	}
+}
+
+func TestTreeViewCtrlBlankDragUnionsSelection(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 120}, root)
+	ctx := &fakeContext{}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Modifiers: event.ModCtrl}, geom.Point{X: 24, Y: 88})
+	tree.MouseMove(ctx, geom.Point{X: 28, Y: 20})
+
+	selected := tree.SelectedNodes()
+	if len(selected) != 4 || selected[0].Text != "Root" || selected[3].Text != "Child 3" {
+		t.Fatalf("selected nodes after ctrl+blank drag = %#v, want Root plus Child 1..3", selected)
+	}
+}
+
+func TestTreeViewDragAutoScroll(t *testing.T) {
+	root := NewFolderNode("Root",
+		NewFileNode("Child 1"),
+		NewFileNode("Child 2"),
+		NewFileNode("Child 3"),
+		NewFileNode("Child 4"),
+		NewFileNode("Child 5"),
+	)
+	root.Expanded = true
+	tree := NewTreeView("tree", geom.Rect{X: 0, Y: 0, W: 180, H: 52}, root)
+	ctx := &fakeContext{}
+
+	tree.MouseDown(ctx, event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft}, geom.Point{X: 24, Y: 8})
+	tree.MouseMove(ctx, geom.Point{X: 24, Y: 70})
+	if !tree.dragSelecting {
+		t.Fatal("drag should be active")
+	}
+	if !tree.Tick(ctx, time.Date(2026, time.May, 30, 10, 0, 1, 0, time.UTC)) {
+		t.Fatal("tick should auto-scroll while dragging past bottom")
+	}
+	if tree.topIndex == 0 {
+		t.Fatal("auto-scroll should advance top index")
 	}
 }
 
