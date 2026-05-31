@@ -146,6 +146,9 @@ func (d *Desktop) showControlOverlay(win *Window, request widgets.OverlayRequest
 	if win == nil || request.Owner == nil || request.Content == nil {
 		return false
 	}
+	if request.Kind == widgets.PopupKindInteractive {
+		d.clearBaseInteraction()
+	}
 	d.hideControlOverlay(request.Owner, false)
 
 	size := request.Content.Bounds()
@@ -320,6 +323,19 @@ func (d *Desktop) overlayControlScreenRect(overlay *controlOverlayState, control
 
 func (d *Desktop) overlayContextFor(overlay *controlOverlayState) overlayContext {
 	return overlayContext{desktop: d, overlay: overlay}
+}
+
+func (d *Desktop) clearOverlayInteraction() {
+	if d.captureOverlay != nil {
+		d.captureOverlay = nil
+		d.captureOverlayControl = nil
+	}
+	if d.focusedOverlay != nil || d.focusedOverlayControl != nil {
+		d.setFocusedOverlayControl(nil, nil)
+	}
+	if d.hoveredOverlay != nil || d.hoveredOverlayControl != nil {
+		d.setHoveredOverlayControl(nil, nil)
+	}
 }
 
 func (d *Desktop) setHoveredOverlayControl(overlay *controlOverlayState, control widgets.Control) {

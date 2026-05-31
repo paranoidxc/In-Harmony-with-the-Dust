@@ -40,6 +40,33 @@ func (d *Desktop) topPopupRouteKind() popupRouteKind {
 	return popupRouteNone
 }
 
+func (d *Desktop) dismissTopPopupHostOnEscape() bool {
+	host := d.topPopupHost()
+	if host == nil {
+		if d.menuMode {
+			d.closeMenus()
+			return true
+		}
+		return false
+	}
+
+	state := host.popupState()
+	if state == nil || state.kind != widgets.PopupKindInteractive {
+		return false
+	}
+
+	switch popup := host.(type) {
+	case *controlOverlayState:
+		d.dismissControlOverlay(popup, true)
+		return true
+	case *popupMenuState:
+		d.closeMenus()
+		return true
+	default:
+		return false
+	}
+}
+
 func (d *Desktop) handlePopupMouseMove(point geom.Point) popupRouteResult {
 	switch d.topPopupRouteKind() {
 	case popupRouteControlOverlay:
@@ -130,7 +157,43 @@ func (d *Desktop) handlePopupMouseWheel(e event.MouseWheel) bool {
 }
 
 func (d *Desktop) handlePopupKeyDown(active *Window, e event.KeyEvent) bool {
-	if d.handleMenuKeyDown(active, e) {
+	if !e.Repeat && (e.Key == event.KeyLeftAlt || e.Key == event.KeyRightAlt) {
+		return d.handleMenuKeyDown(active, e)
+	}
+	if active != nil && e.Modifiers&event.ModAlt != 0 && e.Modifiers&event.ModCtrl == 0 {
+		if d.handleMenuKeyDown(active, e) {
+			return true
+		}
+	}
+
+	switch d.topPopupRouteKind() {
+	case popupRouteControlOverlay:
+		if d.handleControlOverlayKeyDown(e) {
+			return true
+		}
+		if e.Key == event.KeyEscape && d.dismissTopPopupHostOnEscape() {
+			return true
+		}
+		if d.handleMenuKeyDown(active, e) {
+			return true
+		}
+	case popupRouteMenu:
+		if d.handleMenuKeyDown(active, e) {
+			return true
+		}
+		if e.Key == event.KeyEscape && d.dismissTopPopupHostOnEscape() {
+			return true
+		}
+		if d.handleControlOverlayKeyDown(e) {
+			return true
+		}
+	default:
+		if d.handleMenuKeyDown(active, e) {
+			return true
+		}
+	}
+
+	if e.Key == event.KeyEscape && d.dismissTopPopupHostOnEscape() {
 		return true
 	}
 	if d.handleControlOverlayKeyDown(e) {

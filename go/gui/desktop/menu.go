@@ -287,6 +287,7 @@ func (d *Desktop) showContextMenu(win *Window, owner widgets.Control, anchor geo
 	if win == nil || owner == nil || menu == nil {
 		return false
 	}
+	d.clearOverlayInteraction()
 	if d.menuMode {
 		d.closeMenus()
 	}
@@ -305,6 +306,7 @@ func (d *Desktop) activateMenuBar(win *Window, index int, openPopup bool) {
 	if win == nil || win.MenuBar() == nil || index < 0 || index >= len(win.MenuBar().Items) {
 		return
 	}
+	d.clearOverlayInteraction()
 
 	if d.menuWindow != nil && d.menuWindow != win {
 		d.setMenuBarHighlight(d.menuWindow, -1)

@@ -232,7 +232,12 @@ demo 后续只保留两个用途：
 - 已开始：用共享 helper 收敛 outside-click / dismiss 的几何语义
 - 已开始：把 Desktop 顶层 mouse/key 路由切到统一 popup dispatch 入口
 - 已完成：Desktop 鼠标路由优先按最上层 popup host 类型分发，而不是固定 menu 优先
-- 下一步：继续收敛 menu popup 与普通 popup 的关闭语义、焦点与捕获协议
+- 已完成：Desktop 键盘路由在保留 Alt/menu 特例外，普通按键优先交给最上层 popup host
+- 已完成：overlay focus 接入 Desktop 的 text input / IME rect / tick 链路
+- 已开始：`Escape` 的 dismiss 语义按最上层 interactive popup host 优先收敛
+- 已完成：menu 接管输入时，清理底层 overlay 的 focus / hover / capture 残留状态
+- 已完成：interactive control popup 打开时，显式清理底层 window capture
+- 下一步：继续收敛 menu popup 与普通 popup 的显式焦点模型与统一 input owner helper
 
 完成标准：
 

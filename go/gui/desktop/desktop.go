@@ -161,13 +161,17 @@ func (d *Desktop) Paint(canvas *paint.Canvas, tr *uitext.Renderer) error {
 
 func (d *Desktop) Update(now time.Time) {
 	d.updateTooltip(now)
-	if d.focusedControl == nil || d.focusedWindow == nil {
+	if d.focusedOverlayControl != nil && d.focusedOverlay != nil {
+		if tickable, ok := d.focusedOverlayControl.(widgets.TickHandler); ok {
+			tickable.Tick(d.overlayContextFor(d.focusedOverlay), now)
+		}
 		d.syncTextInputState()
 		return
 	}
-	tickable, ok := d.focusedControl.(widgets.TickHandler)
-	if ok {
-		tickable.Tick(d.contextFor(d.focusedWindow), now)
+	if d.focusedControl != nil && d.focusedWindow != nil {
+		if tickable, ok := d.focusedControl.(widgets.TickHandler); ok {
+			tickable.Tick(d.contextFor(d.focusedWindow), now)
+		}
 	}
 	d.syncTextInputState()
 }
@@ -421,6 +425,14 @@ func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 }
 
 func (d *Desktop) handleTextInput(e event.TextInput) {
+	if d.focusedOverlayControl != nil && d.focusedOverlay != nil {
+		handler, ok := d.focusedOverlayControl.(widgets.TextInputHandler)
+		if !ok {
+			return
+		}
+		handler.TextInput(d.overlayContextFor(d.focusedOverlay), e)
+		return
+	}
 	if d.focusedControl == nil || d.focusedWindow == nil {
 		return
 	}
@@ -432,6 +444,14 @@ func (d *Desktop) handleTextInput(e event.TextInput) {
 }
 
 func (d *Desktop) handleTextEditing(e event.TextEditing) {
+	if d.focusedOverlayControl != nil && d.focusedOverlay != nil {
+		handler, ok := d.focusedOverlayControl.(widgets.TextInputHandler)
+		if !ok {
+			return
+		}
+		handler.TextEditing(d.overlayContextFor(d.focusedOverlay), e)
+		return
+	}
 	if d.focusedControl == nil || d.focusedWindow == nil {
 		return
 	}
@@ -548,6 +568,13 @@ func (d *Desktop) contextFor(win *Window) controlContext {
 	}
 }
 
+func (d *Desktop) clearBaseInteraction() {
+	if d.captureWindow != nil || d.captureControl != nil {
+		d.captureWindow = nil
+		d.captureControl = nil
+	}
+}
+
 func (d *Desktop) setHoveredControl(win *Window, control widgets.Control) {
 	if d.hoveredControl == control && d.hoveredWindow == win {
 		return
@@ -632,6 +659,17 @@ func (d *Desktop) syncTextInputState() {
 	}
 	if d.menuMode {
 		d.platform.SetTextInput(false, geom.Rect{})
+		return
+	}
+	if d.focusedOverlayControl != nil && d.focusedOverlay != nil {
+		handler, ok := d.focusedOverlayControl.(widgets.TextInputHandler)
+		if !ok {
+			d.platform.SetTextInput(false, geom.Rect{})
+			return
+		}
+		controlRect := d.overlayControlScreenRect(d.focusedOverlay, d.focusedOverlayControl)
+		inputRect := handler.TextInputRect(d.overlayContextFor(d.focusedOverlay)).Move(controlRect.X, controlRect.Y)
+		d.platform.SetTextInput(true, inputRect)
 		return
 	}
 	if d.focusedWindow == nil || d.focusedControl == nil {

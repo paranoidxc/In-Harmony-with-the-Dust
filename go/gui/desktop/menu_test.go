@@ -14,6 +14,8 @@ type popupProbeControl struct {
 	*widgets.Panel
 	downCount int
 	lastDown  geom.Point
+	keyCount  int
+	lastKey   event.Key
 }
 
 func newPopupProbeControl(bounds geom.Rect) *popupProbeControl {
@@ -26,6 +28,58 @@ func (p *popupProbeControl) MouseDown(ctx widgets.EventContext, ev event.MouseBu
 	p.downCount++
 	p.lastDown = local
 	p.Panel.MouseDown(ctx, ev, local)
+}
+
+func (p *popupProbeControl) KeyDown(ctx widgets.EventContext, ev event.KeyEvent) bool {
+	p.keyCount++
+	p.lastKey = ev.Key
+	return true
+}
+
+type captureProbeControl struct {
+	*widgets.Panel
+	focused        bool
+	focusLostCount int
+}
+
+func newCaptureProbeControl(bounds geom.Rect) *captureProbeControl {
+	return &captureProbeControl{
+		Panel: widgets.NewPanel("capture-probe", bounds),
+	}
+}
+
+func (p *captureProbeControl) FocusLost(widgets.EventContext) {
+	p.focusLostCount++
+}
+
+func (p *captureProbeControl) FocusGained(widgets.EventContext) {}
+
+func (p *captureProbeControl) CanFocus() bool {
+	return true
+}
+
+func (p *captureProbeControl) SetFocused(focused bool) {
+	p.focused = focused
+}
+
+func (p *captureProbeControl) Focused() bool {
+	return p.focused
+}
+
+type testPlatform struct {
+	textInputEnabled bool
+	textInputRect    geom.Rect
+}
+
+func (p *testPlatform) ClipboardText() string {
+	return ""
+}
+
+func (p *testPlatform) SetClipboardText(string) {}
+
+func (p *testPlatform) SetTextInput(enabled bool, rect geom.Rect) {
+	p.textInputEnabled = enabled
+	p.textInputRect = rect
 }
 
 func TestDesktopDispatchesMenuAccelerator(t *testing.T) {
@@ -223,8 +277,6 @@ func TestDesktopRoutesMouseToTopmostControlPopupBeforeMenu(t *testing.T) {
 	win.Content().Add(owner)
 	d.AddWindow(win)
 
-	client := win.ClientRect(d.theme)
-	menuPoint := geom.Point{X: client.X + 30, Y: client.Y + 30}
 	if !d.showContextMenu(win, owner, geom.Rect{X: 8, Y: 8, W: 1, H: 1}, widgets.NewMenu(
 		widgets.NewMenuItem("cmd.open", "&Open", nil),
 	)) {
@@ -263,6 +315,234 @@ func TestDesktopRoutesMouseToTopmostControlPopupBeforeMenu(t *testing.T) {
 	if popupContent.lastDown != (geom.Point{X: 10, Y: 10}) {
 		t.Fatalf("popup local point = %+v, want {X:10 Y:10}", popupContent.lastDown)
 	}
+}
 
-	_ = menuPoint
+func TestDesktopRoutesKeyToTopmostControlPopupBeforeMenu(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+	d.setFocus(win, owner)
+
+	if !d.showContextMenu(win, owner, geom.Rect{X: 8, Y: 8, W: 1, H: 1}, widgets.NewMenu(
+		widgets.NewMenuItem("cmd.open", "&Open", nil),
+	)) {
+		t.Fatal("showContextMenu should succeed")
+	}
+
+	popupContent := newPopupProbeControl(geom.Rect{X: 0, Y: 0, W: 96, H: 48})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        popupContent,
+		Anchor:         geom.Rect{X: 16, Y: 16, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+	d.setFocusedOverlayControl(d.topControlOverlay(), popupContent)
+
+	d.HandleEvent(event.KeyEvent{Down: true, Key: event.KeyEnter})
+
+	if popupContent.keyCount != 1 {
+		t.Fatalf("popup key count = %d, want 1", popupContent.keyCount)
+	}
+	if popupContent.lastKey != event.KeyEnter {
+		t.Fatalf("popup last key = %v, want %v", popupContent.lastKey, event.KeyEnter)
+	}
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("menu popup should remain open when top control popup handles key")
+	}
+}
+
+func TestDesktopEscapeClosesTopControlPopupBeforeMenu(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+	d.setFocus(win, owner)
+
+	if !d.showContextMenu(win, owner, geom.Rect{X: 8, Y: 8, W: 1, H: 1}, widgets.NewMenu(
+		widgets.NewMenuItem("cmd.open", "&Open", nil),
+	)) {
+		t.Fatal("showContextMenu should succeed")
+	}
+
+	popupContent := newPopupProbeControl(geom.Rect{X: 0, Y: 0, W: 96, H: 48})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        popupContent,
+		Anchor:         geom.Rect{X: 16, Y: 16, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+
+	if d.topControlOverlay() == nil {
+		t.Fatal("control overlay should be visible")
+	}
+
+	d.HandleEvent(event.KeyEvent{Down: true, Key: event.KeyEscape})
+
+	if d.topControlOverlay() != nil {
+		t.Fatal("top control popup should close on escape")
+	}
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("underlying menu popup should remain open after top control popup closes")
+	}
+}
+
+func TestDesktopFocusedOverlayControlReceivesTextInputAndIMEState(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	platform := &testPlatform{}
+	d.BindPlatform(platform)
+
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+
+	edit := widgets.NewEdit("popup-edit", geom.Rect{X: 0, Y: 0, W: 120, H: 24})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        edit,
+		Anchor:         geom.Rect{X: 8, Y: 8, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+	overlay := d.topControlOverlay()
+	if overlay == nil {
+		t.Fatal("control overlay should be visible")
+	}
+	d.setFocusedOverlayControl(overlay, edit)
+
+	d.syncTextInputState()
+	if !platform.textInputEnabled {
+		t.Fatal("IME/text input should be enabled for focused overlay control")
+	}
+	if platform.textInputRect.Empty() {
+		t.Fatal("text input rect should be non-empty for focused overlay control")
+	}
+
+	d.HandleEvent(event.TextInput{Text: "B"})
+	if got := edit.Text(); got != "B" {
+		t.Fatalf("edit text after overlay text input = %q, want %q", got, "B")
+	}
+}
+
+func TestDesktopOpeningMenuClearsOverlayFocus(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+
+	probe := newCaptureProbeControl(geom.Rect{X: 0, Y: 0, W: 120, H: 24})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        probe,
+		Anchor:         geom.Rect{X: 8, Y: 8, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+	overlay := d.topControlOverlay()
+	if overlay == nil {
+		t.Fatal("control overlay should be visible")
+	}
+	d.setFocusedOverlayControl(overlay, probe)
+	if d.focusedOverlayControl != probe {
+		t.Fatal("overlay control should be focused before opening menu")
+	}
+
+	if !d.showContextMenu(win, owner, geom.Rect{X: 8, Y: 8, W: 1, H: 1}, widgets.NewMenu(
+		widgets.NewMenuItem("cmd.open", "&Open", nil),
+	)) {
+		t.Fatal("showContextMenu should succeed")
+	}
+
+	if d.focusedOverlay != nil || d.focusedOverlayControl != nil {
+		t.Fatal("opening menu should clear overlay focus")
+	}
+	if probe.focusLostCount != 1 {
+		t.Fatalf("focusLost count = %d, want 1", probe.focusLostCount)
+	}
+}
+
+func TestDesktopOpeningMenuClearsOverlayCapture(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	win.SetMenuBar(widgets.NewMenuBar(
+		widgets.NewSubmenuItem("&File", widgets.NewMenu(
+			widgets.NewMenuItem("cmd.open", "&Open", nil),
+		)),
+	))
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+
+	probe := newCaptureProbeControl(geom.Rect{X: 0, Y: 0, W: 120, H: 24})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        probe,
+		Anchor:         geom.Rect{X: 8, Y: 8, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+	overlay := d.topControlOverlay()
+	if overlay == nil {
+		t.Fatal("control overlay should be visible")
+	}
+	d.captureOverlay = overlay
+	d.captureOverlayControl = probe
+
+	d.activateMenuBar(win, 0, false)
+
+	if d.captureOverlay != nil || d.captureOverlayControl != nil {
+		t.Fatal("opening menu bar should clear overlay capture")
+	}
+}
+
+func TestDesktopOpeningInteractivePopupClearsBaseCapture(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	baseCapture := widgets.NewButton("base-capture", "Base", geom.Rect{X: 12, Y: 48, W: 80, H: 24})
+	win.Content().Add(owner)
+	win.Content().Add(baseCapture)
+	d.AddWindow(win)
+
+	d.captureWindow = win
+	d.captureControl = baseCapture
+
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        widgets.NewListBox("popup", geom.Rect{X: 0, Y: 0, W: 96, H: 48}),
+		Anchor:         geom.Rect{X: 8, Y: 8, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+
+	if d.captureWindow != nil || d.captureControl != nil {
+		t.Fatal("opening interactive popup should clear base capture")
+	}
+	if d.topControlOverlay() == nil {
+		t.Fatal("control overlay should still open")
+	}
 }
