@@ -533,8 +533,8 @@ func (c *ComboBox) togglePopup(ctx EventContext) {
 }
 
 func (c *ComboBox) openPopup(ctx EventContext) {
-	presenter, ok := ctx.(OverlayContext)
-	if !ok || presenter.OverlayVisible(c) || len(c.items) == 0 {
+	presenter, ok := ctx.(PopupContext)
+	if !ok || presenter.PopupVisible(c) || len(c.items) == 0 {
 		return
 	}
 
@@ -560,12 +560,13 @@ func (c *ComboBox) openPopup(ctx EventContext) {
 		c.closePopup(ctx)
 	})
 
-	request := OverlayRequest{
+	request := PopupRequest{
 		Owner:          c,
 		Content:        popup,
 		Anchor:         LocalRect(c),
-		Placement:      OverlayBelowStart,
+		Placement:      PopupBelowStart,
 		CloseOnOutside: true,
+		Kind:           PopupKindInteractive,
 		OnClose: func() {
 			c.dropped = false
 			c.pressed = false
@@ -574,7 +575,7 @@ func (c *ComboBox) openPopup(ctx EventContext) {
 			ctx.Invalidate(c)
 		},
 	}
-	if presenter.ShowOverlay(request) {
+	if presenter.ShowPopup(request) {
 		c.popup = popup
 		c.dropped = true
 		c.pressed = true
@@ -582,14 +583,14 @@ func (c *ComboBox) openPopup(ctx EventContext) {
 }
 
 func (c *ComboBox) closePopup(ctx EventContext) {
-	presenter, ok := ctx.(OverlayContext)
+	presenter, ok := ctx.(PopupContext)
 	if !ok {
 		c.dropped = false
 		c.pressed = false
 		c.popup = nil
 		return
 	}
-	if !presenter.HideOverlay(c) {
+	if !presenter.HidePopup(c) {
 		c.dropped = false
 		c.pressed = false
 		c.popup = nil

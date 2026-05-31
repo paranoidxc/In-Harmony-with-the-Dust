@@ -13,15 +13,25 @@ type desktopOverlay interface {
 	Paint(*Desktop, *paint.Canvas) error
 }
 
-type controlOverlayState struct {
+type popupHost interface {
+	desktopOverlay
+	popupState() *popupHostState
+}
+
+type popupHostState struct {
 	ownerWindow    *Window
 	owner          widgets.Control
-	content        widgets.Control
 	rect           geom.Rect
 	closeOnOutside bool
+	kind           widgets.PopupKind
 	onClose        func()
-	hovered        widgets.Control
-	focused        widgets.Control
+}
+
+type controlOverlayState struct {
+	popupHostState
+	content widgets.Control
+	hovered widgets.Control
+	focused widgets.Control
 }
 
 type overlayContext struct {
@@ -29,8 +39,15 @@ type overlayContext struct {
 	overlay *controlOverlayState
 }
 
-func (o *controlOverlayState) Bounds() geom.Rect {
-	return o.rect
+func (s *popupHostState) popupState() *popupHostState {
+	return s
+}
+
+func (s *popupHostState) Bounds() geom.Rect {
+	if s == nil {
+		return geom.Rect{}
+	}
+	return s.rect
 }
 
 func (o *controlOverlayState) Paint(d *Desktop, canvas *paint.Canvas) error {
@@ -141,12 +158,15 @@ func (d *Desktop) showControlOverlay(win *Window, request widgets.OverlayRequest
 	origin := d.fitOverlayOrigin(anchor, geom.Size{W: size.W, H: size.H}, request.Placement)
 	request.Content.SetBounds(geom.Rect{X: 0, Y: 0, W: size.W, H: size.H})
 	overlay := &controlOverlayState{
-		ownerWindow:    win,
-		owner:          request.Owner,
-		content:        request.Content,
-		rect:           geom.Rect{X: origin.X, Y: origin.Y, W: size.W, H: size.H},
-		closeOnOutside: request.CloseOnOutside,
-		onClose:        request.OnClose,
+		popupHostState: popupHostState{
+			ownerWindow:    win,
+			owner:          request.Owner,
+			rect:           geom.Rect{X: origin.X, Y: origin.Y, W: size.W, H: size.H},
+			closeOnOutside: request.CloseOnOutside,
+			kind:           request.Kind,
+			onClose:        request.OnClose,
+		},
+		content: request.Content,
 	}
 	d.pushOverlay(overlay)
 	return true
@@ -181,10 +201,7 @@ func (d *Desktop) dismissControlOverlay(overlay *controlOverlayState, notify boo
 		d.captureOverlay = nil
 		d.captureOverlayControl = nil
 	}
-	d.removeOverlay(overlay)
-	if notify && overlay.onClose != nil {
-		overlay.onClose()
-	}
+	d.dismissPopupHost(overlay, notify)
 }
 
 func (d *Desktop) overlayVisible(owner widgets.Control) bool {
@@ -192,12 +209,81 @@ func (d *Desktop) overlayVisible(owner widgets.Control) bool {
 		return false
 	}
 	for _, raw := range d.overlays {
-		overlay, ok := raw.(*controlOverlayState)
-		if ok && overlay.owner == owner {
+		overlay, ok := raw.(popupHost)
+		if ok && overlay.popupState().owner == owner {
 			return true
 		}
 	}
 	return false
+}
+
+func (d *Desktop) dismissPopupHost(host popupHost, notify bool) {
+	if host == nil {
+		return
+	}
+	d.removeOverlay(host)
+	state := host.popupState()
+	if notify && state != nil && state.onClose != nil {
+		state.onClose()
+	}
+}
+
+func (d *Desktop) topPopupHost() popupHost {
+	for i := len(d.overlays) - 1; i >= 0; i-- {
+		if overlay, ok := d.overlays[i].(popupHost); ok {
+			return overlay
+		}
+	}
+	return nil
+}
+
+func (d *Desktop) popupHostVisible() bool {
+	return d.topPopupHost() != nil
+}
+
+func (d *Desktop) topInteractivePopupHost() popupHost {
+	for i := len(d.overlays) - 1; i >= 0; i-- {
+		overlay, ok := d.overlays[i].(popupHost)
+		if !ok {
+			continue
+		}
+		state := overlay.popupState()
+		if state != nil && state.kind == widgets.PopupKindInteractive {
+			return overlay
+		}
+	}
+	return nil
+}
+
+func (d *Desktop) popupHostAt(point geom.Point) (popupHost, int) {
+	for i := len(d.overlays) - 1; i >= 0; i-- {
+		overlay, ok := d.overlays[i].(popupHost)
+		if ok && overlay.Bounds().Contains(point) {
+			return overlay, i
+		}
+	}
+	return nil, -1
+}
+
+func (d *Desktop) popupOwnerContains(host popupHost, point geom.Point) bool {
+	if host == nil {
+		return false
+	}
+	state := host.popupState()
+	if state == nil || state.ownerWindow == nil || state.owner == nil {
+		return false
+	}
+	return d.controlScreenRect(state.ownerWindow, state.owner).Contains(point)
+}
+
+func (d *Desktop) pointWithinPopupHostOrOwner(host popupHost, point geom.Point) bool {
+	if host == nil {
+		return false
+	}
+	if host.Bounds().Contains(point) {
+		return true
+	}
+	return d.popupOwnerContains(host, point)
 }
 
 func (d *Desktop) topControlOverlay() *controlOverlayState {
@@ -291,7 +377,7 @@ func (d *Desktop) handleControlOverlayMouseMove(point geom.Point) bool {
 		return true
 	}
 
-	if d.topControlOverlay() == nil {
+	if d.topInteractivePopupHost() == nil {
 		return false
 	}
 
@@ -316,8 +402,7 @@ func (d *Desktop) handleControlOverlayMouseDown(e event.MouseButtonEvent) (*cont
 
 	hitOverlay, _ := d.controlOverlayAt(e.Position)
 	if hitOverlay == nil {
-		ownerRect := d.controlScreenRect(overlay.ownerWindow, overlay.owner)
-		if ownerRect.Contains(e.Position) {
+		if d.pointWithinPopupHostOrOwner(overlay, e.Position) {
 			return nil, false
 		}
 		if overlay.closeOnOutside {
@@ -370,7 +455,7 @@ func (d *Desktop) handleControlOverlayMouseUp(e event.MouseButtonEvent) bool {
 func (d *Desktop) handleControlOverlayMouseWheel(e event.MouseWheel) bool {
 	overlay, _ := d.controlOverlayAt(e.Position)
 	if overlay == nil {
-		return d.topControlOverlay() != nil
+		return d.topInteractivePopupHost() != nil
 	}
 	control := widgets.HitTest(overlay.content, geom.Point{X: e.Position.X - overlay.rect.X, Y: e.Position.Y - overlay.rect.Y})
 	if control == nil {
@@ -455,4 +540,31 @@ func (c overlayContext) LineHeight() int {
 		return 0
 	}
 	return c.desktop.text.LineHeight()
+}
+
+func (c overlayContext) ShowPopup(request widgets.PopupRequest) bool {
+	if c.overlay == nil || c.overlay.ownerWindow == nil {
+		return false
+	}
+	return c.desktop.showControlOverlay(c.overlay.ownerWindow, request)
+}
+
+func (c overlayContext) HidePopup(owner widgets.Control) bool {
+	return c.desktop.hideControlOverlay(owner, true)
+}
+
+func (c overlayContext) PopupVisible(owner widgets.Control) bool {
+	return c.desktop.overlayVisible(owner)
+}
+
+func (c overlayContext) ShowOverlay(request widgets.OverlayRequest) bool {
+	return c.ShowPopup(request)
+}
+
+func (c overlayContext) HideOverlay(owner widgets.Control) bool {
+	return c.HidePopup(owner)
+}
+
+func (c overlayContext) OverlayVisible(owner widgets.Control) bool {
+	return c.PopupVisible(owner)
 }

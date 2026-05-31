@@ -63,7 +63,7 @@ func (d *Desktop) noteTooltipTarget(win *Window, control widgets.Control, local 
 }
 
 func (d *Desktop) updateTooltip(now time.Time) {
-	if d.tooltipControl == nil || d.tooltipText == "" || d.menuMode || d.drag != nil || d.captureControl != nil || d.captureOverlay != nil {
+	if d.tooltipControl == nil || d.tooltipText == "" || d.popupHostVisible() || d.drag != nil || d.captureControl != nil || d.captureOverlay != nil {
 		d.hideTooltipOverlay()
 		return
 	}

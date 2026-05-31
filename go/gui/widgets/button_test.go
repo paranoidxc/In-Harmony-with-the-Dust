@@ -14,7 +14,7 @@ type fakeContext struct {
 	releaseCapture int
 	clipboard      string
 	commands       []CommandID
-	overlay        *OverlayRequest
+	overlay        *PopupRequest
 	overlayOwner   Control
 	contextOwner   Control
 	contextAnchor  geom.Rect
@@ -67,13 +67,13 @@ func (f *fakeContext) LineHeight() int {
 	return 14
 }
 
-func (f *fakeContext) ShowOverlay(request OverlayRequest) bool {
+func (f *fakeContext) ShowPopup(request PopupRequest) bool {
 	f.overlay = &request
 	f.overlayOwner = request.Owner
 	return true
 }
 
-func (f *fakeContext) HideOverlay(owner Control) bool {
+func (f *fakeContext) HidePopup(owner Control) bool {
 	if f.overlayOwner != owner {
 		return false
 	}
@@ -85,8 +85,20 @@ func (f *fakeContext) HideOverlay(owner Control) bool {
 	return true
 }
 
-func (f *fakeContext) OverlayVisible(owner Control) bool {
+func (f *fakeContext) PopupVisible(owner Control) bool {
 	return f.overlayOwner == owner && f.overlay != nil
+}
+
+func (f *fakeContext) ShowOverlay(request OverlayRequest) bool {
+	return f.ShowPopup(request)
+}
+
+func (f *fakeContext) HideOverlay(owner Control) bool {
+	return f.HidePopup(owner)
+}
+
+func (f *fakeContext) OverlayVisible(owner Control) bool {
+	return f.PopupVisible(owner)
 }
 
 func TestButtonMouseCaptureAndClick(t *testing.T) {

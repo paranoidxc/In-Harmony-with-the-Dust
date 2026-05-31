@@ -17,8 +17,8 @@ const (
 )
 
 type popupMenuState struct {
+	popupHostState
 	menu     *widgets.Menu
-	rect     geom.Rect
 	items    []popupMenuLayout
 	selected int
 }
@@ -119,6 +119,9 @@ func (d *Desktop) handleMenuMouseDown(point geom.Point) bool {
 			return true
 		}
 
+		if d.pointWithinAnyMenuPopupOrOwner(point) {
+			return true
+		}
 		d.closeMenus()
 	}
 
@@ -178,6 +181,9 @@ func (d *Desktop) handleMenuMouseUp(e event.MouseButtonEvent) bool {
 		return true
 	}
 
+	if d.pointWithinAnyMenuPopupOrOwner(point) {
+		return true
+	}
 	d.closeMenus()
 	return true
 }
@@ -289,7 +295,7 @@ func (d *Desktop) showContextMenu(win *Window, owner widgets.Control, anchor geo
 	d.menuWindow = win
 	d.menuMode = true
 	d.trimPopupStack(0)
-	popup := d.buildPopupMenu(menu, anchorRect, false)
+	popup := d.buildPopupMenu(win, owner, menu, anchorRect, false)
 	d.menuPopups = append(d.menuPopups, popup)
 	d.pushOverlay(popup)
 	return true
@@ -338,7 +344,7 @@ func (d *Desktop) openCurrentTopLevelPopup() {
 		return
 	}
 
-	popup := d.buildPopupMenu(item.Submenu, d.menuWindow.MenuBarItemRect(index, d.theme, d.text), false)
+	popup := d.buildPopupMenu(d.menuWindow, nil, item.Submenu, d.menuWindow.MenuBarItemRect(index, d.theme, d.text), false)
 	d.menuPopups = append(d.menuPopups, popup)
 	d.pushOverlay(popup)
 }
@@ -349,7 +355,11 @@ func (d *Desktop) openSubmenu(level int, anchorRect geom.Rect, menu *widgets.Men
 		return
 	}
 
-	popup := d.buildPopupMenu(menu, anchorRect, true)
+	owner := widgets.Control(nil)
+	if level >= 0 && level < len(d.menuPopups) {
+		owner = d.menuPopups[level].owner
+	}
+	popup := d.buildPopupMenu(d.menuWindow, owner, menu, anchorRect, true)
 	if len(d.menuPopups) > level+1 {
 		existing := d.menuPopups[level+1]
 		if existing.menu == popup.menu && existing.rect == popup.rect {
@@ -448,12 +458,33 @@ func (d *Desktop) closeMenus() {
 	}
 
 	for _, popup := range d.menuPopups {
-		d.removeOverlay(popup)
+		d.dismissPopupHost(popup, false)
 	}
 
 	d.menuWindow = nil
 	d.menuMode = false
 	d.menuPopups = nil
+}
+
+func (d *Desktop) menuPopupAt(point geom.Point) (*popupMenuState, int) {
+	host, index := d.popupHostAt(point)
+	if host == nil {
+		return nil, -1
+	}
+	popup, ok := host.(*popupMenuState)
+	if !ok {
+		return nil, -1
+	}
+	return popup, index
+}
+
+func (d *Desktop) pointWithinAnyMenuPopupOrOwner(point geom.Point) bool {
+	for i := len(d.menuPopups) - 1; i >= 0; i-- {
+		if d.pointWithinPopupHostOrOwner(d.menuPopups[i], point) {
+			return true
+		}
+	}
+	return false
 }
 
 func (d *Desktop) trimPopupStack(keep int) {
@@ -465,7 +496,7 @@ func (d *Desktop) trimPopupStack(keep int) {
 	}
 
 	for _, popup := range d.menuPopups[keep:] {
-		d.removeOverlay(popup)
+		d.dismissPopupHost(popup, false)
 	}
 	d.menuPopups = d.menuPopups[:keep]
 }
@@ -511,7 +542,7 @@ func (d *Desktop) findPopupMnemonic(key event.Key) (int, int) {
 	return -1, -1
 }
 
-func (d *Desktop) buildPopupMenu(menu *widgets.Menu, anchorRect geom.Rect, submenu bool) *popupMenuState {
+func (d *Desktop) buildPopupMenu(win *Window, owner widgets.Control, menu *widgets.Menu, anchorRect geom.Rect, submenu bool) *popupMenuState {
 	lineHeight := d.menuLineHeight()
 	rowHeight := max(d.theme.Metrics.MenuHeight, lineHeight+6)
 	labelWidth := 0
@@ -550,8 +581,13 @@ func (d *Desktop) buildPopupMenu(menu *widgets.Menu, anchorRect geom.Rect, subme
 	}
 	origin := d.fitOverlayOrigin(anchorRect, geom.Size{W: width, H: height}, placement)
 	popup := &popupMenuState{
+		popupHostState: popupHostState{
+			ownerWindow: win,
+			owner:       owner,
+			rect:        geom.Rect{X: origin.X, Y: origin.Y, W: width, H: height},
+			kind:        widgets.PopupKindInteractive,
+		},
 		menu:     menu,
-		rect:     geom.Rect{X: origin.X, Y: origin.Y, W: width, H: height},
 		selected: nextSelectableMenuBarIndex(menu.Items, -1, 1),
 	}
 

@@ -206,6 +206,12 @@ demo 后续只保留两个用途：
 - 明确哪些属于正式控件 API
 - 写清楚哪些属于 demo 逻辑，不再继续扩
 
+当前进度：
+
+- 已完成：`widgets-api-overview.md`
+- 已完成：`popup-overlay-architecture.md`
+- 下一步：开始 `PopupWindow` 抽象
+
 完成标准：
 
 - `gui/docs` 中有一份明确的控件/API 收口文档
@@ -215,6 +221,18 @@ demo 后续只保留两个用途：
 
 - 从 overlay 机制中提炼正式 popup API
 - 菜单/下拉/提示框统一走这套协议
+
+当前进度：
+
+- 已开始：新增 `PopupRequest / PopupContext / PopupKind`
+- 已接入：`ComboBox` 走新 popup 抽象兼容层
+- 已接入：menu popup 共享 popup host 生命周期基础结构
+- 已开始：抽取 popup host 通用命中与 owner 边界 helper
+- 已开始：用 popup host 可见性统一 tooltip / interactive popup 顶层判断
+- 已开始：用共享 helper 收敛 outside-click / dismiss 的几何语义
+- 已开始：把 Desktop 顶层 mouse/key 路由切到统一 popup dispatch 入口
+- 已完成：Desktop 鼠标路由优先按最上层 popup host 类型分发，而不是固定 menu 优先
+- 下一步：继续收敛 menu popup 与普通 popup 的关闭语义、焦点与捕获协议
 
 完成标准：
 

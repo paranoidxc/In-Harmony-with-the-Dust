@@ -48,13 +48,36 @@ const (
 	OverlayRightTop
 )
 
-type OverlayRequest struct {
+type PopupPlacement = OverlayPlacement
+
+const (
+	PopupBelowStart PopupPlacement = OverlayBelowStart
+	PopupRightTop   PopupPlacement = OverlayRightTop
+)
+
+type PopupKind int
+
+const (
+	PopupKindInteractive PopupKind = iota
+	PopupKindPassive
+)
+
+type PopupRequest struct {
 	Owner          Control
 	Content        Control
 	Anchor         geom.Rect
-	Placement      OverlayPlacement
+	Placement      PopupPlacement
 	CloseOnOutside bool
+	Kind           PopupKind
 	OnClose        func()
+}
+
+type OverlayRequest = PopupRequest
+
+type PopupContext interface {
+	ShowPopup(PopupRequest) bool
+	HidePopup(Control) bool
+	PopupVisible(Control) bool
 }
 
 type OverlayContext interface {

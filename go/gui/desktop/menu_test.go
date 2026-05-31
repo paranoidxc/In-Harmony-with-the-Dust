@@ -10,6 +10,24 @@ import (
 	"classicui/widgets"
 )
 
+type popupProbeControl struct {
+	*widgets.Panel
+	downCount int
+	lastDown  geom.Point
+}
+
+func newPopupProbeControl(bounds geom.Rect) *popupProbeControl {
+	return &popupProbeControl{
+		Panel: widgets.NewPanel("popup-probe", bounds),
+	}
+}
+
+func (p *popupProbeControl) MouseDown(ctx widgets.EventContext, ev event.MouseButtonEvent, local geom.Point) {
+	p.downCount++
+	p.lastDown = local
+	p.Panel.MouseDown(ctx, ev, local)
+}
+
 func TestDesktopDispatchesMenuAccelerator(t *testing.T) {
 	d := New(geom.Size{W: 320, H: 200}, theme.DefaultClassic())
 	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 140})
@@ -196,4 +214,55 @@ func TestDesktopRightMouseUpDoesNotImmediatelyCloseContextMenu(t *testing.T) {
 	if !d.menuMode || len(d.menuPopups) != 1 {
 		t.Fatal("right mouse up should not immediately close the context menu")
 	}
+}
+
+func TestDesktopRoutesMouseToTopmostControlPopupBeforeMenu(t *testing.T) {
+	d := New(geom.Size{W: 320, H: 220}, theme.DefaultClassic())
+	win := NewWindow("main", geom.Rect{X: 20, Y: 20, W: 220, H: 160})
+	owner := widgets.NewButton("owner", "Owner", geom.Rect{X: 12, Y: 12, W: 80, H: 24})
+	win.Content().Add(owner)
+	d.AddWindow(win)
+
+	client := win.ClientRect(d.theme)
+	menuPoint := geom.Point{X: client.X + 30, Y: client.Y + 30}
+	if !d.showContextMenu(win, owner, geom.Rect{X: 8, Y: 8, W: 1, H: 1}, widgets.NewMenu(
+		widgets.NewMenuItem("cmd.open", "&Open", nil),
+	)) {
+		t.Fatal("showContextMenu should succeed")
+	}
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("context menu should be open")
+	}
+
+	popupContent := newPopupProbeControl(geom.Rect{X: 0, Y: 0, W: 96, H: 48})
+	if !d.showControlOverlay(win, widgets.PopupRequest{
+		Owner:          owner,
+		Content:        popupContent,
+		Anchor:         geom.Rect{X: 16, Y: 16, W: 1, H: 1},
+		Placement:      widgets.PopupBelowStart,
+		CloseOnOutside: true,
+		Kind:           widgets.PopupKindInteractive,
+	}) {
+		t.Fatal("showControlOverlay should succeed")
+	}
+
+	overlay := d.topControlOverlay()
+	if overlay == nil {
+		t.Fatal("control overlay should be topmost")
+	}
+
+	click := geom.Point{X: overlay.rect.X + 10, Y: overlay.rect.Y + 10}
+	d.HandleEvent(event.MouseButtonEvent{Down: true, Button: event.MouseButtonLeft, Position: click})
+
+	if popupContent.downCount != 1 {
+		t.Fatalf("popup down count = %d, want 1", popupContent.downCount)
+	}
+	if !d.menuMode || len(d.menuPopups) != 1 {
+		t.Fatal("menu popup should remain open when clicking top control popup")
+	}
+	if popupContent.lastDown != (geom.Point{X: 10, Y: 10}) {
+		t.Fatalf("popup local point = %+v, want {X:10 Y:10}", popupContent.lastDown)
+	}
+
+	_ = menuPoint
 }

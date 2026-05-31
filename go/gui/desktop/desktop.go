@@ -209,13 +209,11 @@ func (d *Desktop) HandleEvent(evt event.Event) {
 
 func (d *Desktop) handleMouseMove(p geom.Point) {
 	d.pointerPos = p
-	if d.handleMenuMouseMove(p) {
+	if routed := d.handlePopupMouseMove(p); routed.handled {
 		d.clearTooltip()
-		return
-	}
-	if d.handleControlOverlayMouseMove(p) {
-		d.setHoveredControl(nil, nil)
-		d.clearTooltip()
+		if routed.clearBaseHover {
+			d.setHoveredControl(nil, nil)
+		}
 		return
 	}
 
@@ -264,17 +262,16 @@ func (d *Desktop) handleMouseMove(p geom.Point) {
 func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 	d.pointerPos = e.Position
 	d.clearTooltip()
-	if d.handleMenuMouseDown(e.Position) {
+	if routed := d.handlePopupMouseDown(e); routed.handled {
+		if routed.clearBaseHover {
+			d.setHoveredControl(nil, nil)
+		}
 		return
-	}
-	if closed, handled := d.handleControlOverlayMouseDown(e); handled {
-		d.setHoveredControl(nil, nil)
-		return
-	} else if closed != nil {
+	} else if routed.swallowOwner != nil {
 		win, _ := d.windowAt(e.Position)
 		if win != nil && win.HitTest(e.Position, d.theme) == HitClient {
 			control := win.ControlAt(e.Position, d.theme)
-			if control == closed.owner {
+			if control == routed.swallowOwner {
 				d.setHoveredControl(nil, nil)
 				return
 			}
@@ -335,11 +332,10 @@ func (d *Desktop) handleMouseDown(e event.MouseButtonEvent) {
 func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 	d.pointerPos = e.Position
 	d.clearTooltip()
-	if d.handleMenuMouseUp(e) {
-		return
-	}
-	if d.handleControlOverlayMouseUp(e) {
-		d.setHoveredControl(nil, nil)
+	if routed := d.handlePopupMouseUp(e); routed.handled {
+		if routed.clearBaseHover {
+			d.setHoveredControl(nil, nil)
+		}
 		return
 	}
 
@@ -374,7 +370,7 @@ func (d *Desktop) handleMouseUp(e event.MouseButtonEvent) {
 func (d *Desktop) handleMouseWheel(e event.MouseWheel) {
 	d.pointerPos = e.Position
 	d.clearTooltip()
-	if d.handleControlOverlayMouseWheel(e) {
+	if d.handlePopupMouseWheel(e) {
 		return
 	}
 	win, _ := d.windowAt(e.Position)
@@ -399,10 +395,7 @@ func (d *Desktop) handleKeyDown(e event.KeyEvent) {
 		return
 	}
 
-	if d.handleMenuKeyDown(active, e) {
-		return
-	}
-	if d.handleControlOverlayKeyDown(e) {
+	if d.handlePopupKeyDown(active, e) {
 		return
 	}
 
@@ -735,17 +728,29 @@ func (c controlContext) LineHeight() int {
 	return c.desktop.text.LineHeight()
 }
 
-func (c controlContext) ShowOverlay(request widgets.OverlayRequest) bool {
+func (c controlContext) ShowPopup(request widgets.PopupRequest) bool {
 	if c.window == nil {
 		return false
 	}
 	return c.desktop.showControlOverlay(c.window, request)
 }
 
-func (c controlContext) HideOverlay(owner widgets.Control) bool {
+func (c controlContext) HidePopup(owner widgets.Control) bool {
 	return c.desktop.hideControlOverlay(owner, true)
 }
 
-func (c controlContext) OverlayVisible(owner widgets.Control) bool {
+func (c controlContext) PopupVisible(owner widgets.Control) bool {
 	return c.desktop.overlayVisible(owner)
+}
+
+func (c controlContext) ShowOverlay(request widgets.OverlayRequest) bool {
+	return c.ShowPopup(request)
+}
+
+func (c controlContext) HideOverlay(owner widgets.Control) bool {
+	return c.HidePopup(owner)
+}
+
+func (c controlContext) OverlayVisible(owner widgets.Control) bool {
+	return c.PopupVisible(owner)
 }
