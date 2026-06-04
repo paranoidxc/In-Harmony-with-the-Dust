@@ -350,6 +350,29 @@ func TestSessionCommit(t *testing.T) {
 	}
 }
 
+func TestIBusQuotedFormatSearch(t *testing.T) {
+	engine := NewEngine()
+	engine.syllables = map[string]struct{}{
+		"hen": {},
+		"bu":  {},
+		"cuo": {},
+	}
+	engine.segmenter = NewSegmenter(engine.syllables)
+	engine.addExact("henbucuo", Candidate{
+		Word:    "很不错",
+		Key:     "henbucuo",
+		Source:  "ibus",
+		Order:   0,
+		Pattern: "hen'bu'cuo",
+	})
+	engine.exactKeys = []string{"henbucuo"}
+
+	result := engine.Search("henbucuo", 5)
+	if len(result.Items) != 1 || result.Items[0].Word != "很不错" {
+		t.Fatalf("expected 很不错, got %#v", result.Items)
+	}
+}
+
 func TestLoadEngineWithConfig(t *testing.T) {
 	source := &fakeSource{
 		name:      "fake",
@@ -387,15 +410,16 @@ func TestBuildSourceConfig(t *testing.T) {
 	config, err := BuildSourceConfig([]string{
 		"sogou-syllables=data/dicts/sogou/vimim.pinyin.txt",
 		"fcitx=data/dicts/fcitx/vimim.pinyin.txt",
+		"ibus=data/dicts/ibus/vimim.pinyin.txt",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(config.Sources) != 2 {
-		t.Fatalf("expected 2 sources, got %d", len(config.Sources))
+	if len(config.Sources) != 3 {
+		t.Fatalf("expected 3 sources, got %d", len(config.Sources))
 	}
-	if config.Sources[0].Name() != "sogou-syllables" || config.Sources[1].Name() != "fcitx" {
-		t.Fatalf("unexpected source order: %s, %s", config.Sources[0].Name(), config.Sources[1].Name())
+	if config.Sources[0].Name() != "sogou-syllables" || config.Sources[1].Name() != "fcitx" || config.Sources[2].Name() != "ibus" {
+		t.Fatalf("unexpected source order: %s, %s, %s", config.Sources[0].Name(), config.Sources[1].Name(), config.Sources[2].Name())
 	}
 }
 
@@ -424,6 +448,16 @@ func TestResolveDefaultDictPathsFromEnv(t *testing.T) {
 func TestRegisteredSourceKinds(t *testing.T) {
 	kinds := RegisteredSourceKinds()
 	if len(kinds) < 3 {
+		t.Fatalf("expected builtin source kinds, got %#v", kinds)
+	}
+	foundIBus := false
+	for _, kind := range kinds {
+		if kind == "ibus" {
+			foundIBus = true
+			break
+		}
+	}
+	if !foundIBus {
 		t.Fatalf("expected builtin source kinds, got %#v", kinds)
 	}
 }

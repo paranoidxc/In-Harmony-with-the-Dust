@@ -53,14 +53,18 @@ func RegisteredSourceKinds() []string {
 }
 
 func DefaultSourceConfig(fcitxPath, sogouPath string) SourceConfig {
+	sources := []Source{
+		NewSogouSyllableSource(sogouPath),
+		NewFCITXSource(fcitxPath),
+		NewSogouSource(sogouPath),
+	}
+	if hasDefaultIBusDict() {
+		sources = append(sources, NewIBusSource(defaultIBusPath()))
+	}
 	return SourceConfig{
 		FCITXPath: fcitxPath,
 		SogouPath: sogouPath,
-		Sources: []Source{
-			NewSogouSyllableSource(sogouPath),
-			NewFCITXSource(fcitxPath),
-			NewSogouSource(sogouPath),
-		},
+		Sources:   sources,
 	}
 }
 
