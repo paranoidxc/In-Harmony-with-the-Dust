@@ -1,0 +1,79 @@
+# ==============================================
+# Go + Vue 项目 AI 协作助手 (支持 Claude / Codex)
+# ==============================================
+go-dev() {
+    # 1. 检查需求参数
+    local REQ="$1"
+    if [ -z "$REQ" ]; then
+        echo "用法: go-dev '你的需求描述'"
+        return 1
+    fi
+
+    # 2. 读取项目规则（优先取项目根目录的 AGENTS.md）
+    local RULES=$(cat ./AGENTS.md 2>/dev/null)
+    if [ -z "$RULES" ]; then
+        RULES="技术栈: Go+Gin+GORM+MySQL, Vue3+Vuetify3(CDN无构建)。流程铁律: 先Spec后代码。前端禁npm包，后端禁循环内查DB(防N+1)。"
+    fi
+
+    # 3. 智能检测 AI 工具（优先 Claude，其次 Codex）
+    local AI_CMD=""
+    if command -v claude &> /dev/null; then
+        AI_CMD="claude"
+    elif command -v codex &> /dev/null; then
+        AI_CMD="codex"
+    else
+        echo "❌ 错误: 未找到 'claude' 或 'codex' 命令。请安装其中之一。"
+        return 1
+    fi
+    if [ "$USE_CODEX" = "1" ]; then AI_CMD="codex";
+    echo "✅ 检测到 AI 工具: $AI_CMD"
+
+    # ---------- 第一步：生成 Spec ----------
+    echo ""
+    echo "📋 [步骤 1/2] 正在向 $AI_CMD 索要 Spec..."
+    local PROMPT1="【系统规则】$RULES。\n\n【任务】针对需求 '$REQ'，请严格执行'先Spec后代码'。现在只输出Spec文档，包含：\n1. 用户故事\n2. 验收标准 (Given-When-Then 格式)\n3. Out of Scope 边界（明确这次不做什么）\n\n代码先不要写，等我确认。"
+
+    local SPEC_OUTPUT=""
+    if [ "$AI_CMD" = "claude" ]; then
+        # Claude 使用 Session 保持长记忆
+        SPEC_OUTPUT=$(echo -e "$PROMPT1" | claude -p --session "go-dev-session")
+        echo "$SPEC_OUTPUT"
+    else
+        # Codex 无状态，缓存 Spec 供第二步使用
+        SPEC_OUTPUT=$(echo -e "$PROMPT1" | codex)
+        echo "$SPEC_OUTPUT"
+        echo "$SPEC_OUTPUT" > /tmp/codex_spec_cache.txt
+    fi
+
+    # ---------- 人工确认阀门 ----------
+    echo ""
+    echo "--------------------------------------------------"
+    echo "⏳ 请仔细阅读上面的 Spec。"
+    echo "输入 '确认' 继续生成代码，或按 Ctrl+C / 输入其他内容取消。"
+    read confirm
+
+    if [ "$confirm" != "确认" ]; then
+        echo "❌ 已取消操作。"
+        return 0
+    fi
+
+    # ---------- 第二步：生成代码 ----------
+    echo ""
+    echo "💻 [步骤 2/2] 正在生成代码和 MR 描述..."
+    local PROMPT2="用户已确认上述 Spec。请生成完整代码（Go+Gin 后端，Vue3 CDN 前端），完成后附带 MR 描述草稿（含 API 变更、手动测试步骤、未改动模块声明）。"
+
+    if [ "$AI_CMD" = "claude" ]; then
+        # Claude：直接沿用刚才的 Session，它记得 Spec 内容
+        echo -e "$PROMPT2" | claude -p --session "go-dev-session"
+    else
+        # Codex：把之前缓存的 Spec 塞回上下文，让它“想起来”
+        local SPEC_CACHE=$(cat /tmp/codex_spec_cache.txt 2>/dev/null)
+        if [ -z "$SPEC_CACHE" ]; then
+            SPEC_CACHE="需求: $REQ"
+        fi
+        echo -e "【之前已确认的 Spec 上下文】\n$SPEC_CACHE\n\n【新指令】用户已确认。请直接生成代码，并附 MR 描述。" | codex
+    fi
+
+    echo ""
+    echo "✅ 全部流程执行完毕！"
+}
